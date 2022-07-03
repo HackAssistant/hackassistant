@@ -1,0 +1,10 @@
+/mails/
+!*/mails/
+venv/
+env/
+*.sqlite3
+.idea
+__pycache__/
+
+/files/*
+!files/.keep

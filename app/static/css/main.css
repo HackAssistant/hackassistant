@@ -1,0 +1,46 @@
+@font-face {
+    font-family: ProximaNovaRegular;
+    src: url(../fonts/ProximaNovaRegular.ttf);
+}
+
+body {
+    background-position: center center;
+    background-attachment: fixed;
+    font-family: ProximaNovaRegular, 'Roboto', sans-serif;
+}
+
+body.dark {
+    background-image: linear-gradient(#60288d, #8a69d4);
+}
+
+body.light {
+    background-image: linear-gradient(#60288d, #8a69d4);
+}
+
+.background {
+
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: repeat repeat;
+
+    min-height: 100%;
+    min-width: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.dark > .background {
+    background-image: url("../img/background-dark.png");
+}
+
+.light > .background {
+    background-image: url("../img/background-light.png");
+}
+
+.content {
+    font-size: 15px;
+}
+footer {
+    margin-top: auto;
+}

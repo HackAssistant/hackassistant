@@ -1,0 +1,29 @@
+{% load i18n %}
+<li class="nav-item" style="cursor: pointer">
+    <a class="nav-link" onclick="switch_theme(this)"><i class="bi bi-brightness-high"></i> {% translate 'Switch mode' %}</a>
+</li>
+<script>
+    let theme = '{{ theme }}'
+    const trans_text_theme = {dark: 'white', light: 'black'}
+    const trans_switch_theme = {dark: 'light', light: 'dark'}
+    function switch_theme(link) {
+        $(`.bg-${theme}`).toggleClass('bg-light bg-dark')
+        $(`.border-${theme}`).toggleClass('border-light border-dark')
+        $(`.navbar-${theme}`).toggleClass('navbar-light navbar-dark')
+        $(`.dropdown-menu-${theme}`).toggleClass('dropdown-menu-light dropdown-menu-dark')
+        $(`.text-${trans_text_theme[theme]}`).toggleClass('text-white text-black')
+        $('body').toggleClass('light dark')
+        $(`img[src*=${theme}]`).attr('src', $(`img[src*=${theme}]`).attr('src').replace(theme, trans_switch_theme[theme]))
+        theme = trans_switch_theme[theme]
+        setCookie('theme', theme, 1000)
+    }
+    function setCookie(name,value,days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days*24*60*60*1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+</script>

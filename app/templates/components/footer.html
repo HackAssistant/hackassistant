@@ -1,0 +1,37 @@
+<!-- Footer -->
+{% load i18n %}
+<footer class="bg-{{ theme }} text-center text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+    <!-- Grid container -->
+    <div class="container-lg p-3">
+        <div class="row">
+            <div class="col-6">
+                <p>{% translate "Have a question? We're happy to help!" %} {{ h_contact_email | urlize }}</p>
+            </div>
+            <div class="col-6">
+                {% for url, icon in app_socials %}
+                    <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="{{ url }}" role="button"><i class="fab {{ icon }}"></i></a>
+                {% endfor %}
+            </div>
+        </div>
+
+
+        <!-- Section: Text -->
+        <section class="mb-4">
+            <p>
+                <small>Made with <i class="fa fa-laptop" aria-hidden="true"></i> and <i class="fa fa-heart" aria-hidden="true"></i> by {{ app_hack }} </small>
+                {# OH NO YOU FOUND ME! This is just an internal joke that appeared at the first edition of HackUPC. #}
+                {# You can remove it, but if you dont care, please keep it. I'm a sentimental - Gerard Casas contact@gerard.space #}
+                <span style="display: none">BIENE {{ app_author }}</span>
+                <br><br>
+                <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/legal_notice/">{% translate 'Legal notice' %}</a> |
+                <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/terms_and_conditions/">{% translate 'Terms and conditions' %}</a> |
+                <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/privacy_and_cookies/">{% translate 'Privacy and cookies' %}</a>
+            </p>
+
+        </section>
+        <!-- Section: Text -->
+
+    </div>
+    <!-- Grid container -->
+</footer>
+<!-- Footer -->

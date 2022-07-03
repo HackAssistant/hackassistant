@@ -1,0 +1,23 @@
+{% load util %}
+{% for title, item in main_nav %}
+    {% if item|get_type == 'str' %}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ item }}">{{ title }}</a>
+        </li>
+    {% elif item|get_type == 'list' %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle {% if title|lower in request.build_absolute_uri %}active{% endif %}" href="#" id="navbarDropdownMainMenu{{ forloop.counter }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ title }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-{{ theme }}" aria-labelledby="navbarDropdownMainMenu{{ forloop.counter }}">
+                {% for sub_title, sub_item in item %}
+                    {% if sub_item != 'divider' %}
+                        <li><a class="dropdown-item text-reset" href="{{ sub_item }}">{{ sub_title }}</a></li>
+                    {% else %}
+                        <li role="separator" class="divider"></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </li>
+    {% endif %}
+{% endfor %}

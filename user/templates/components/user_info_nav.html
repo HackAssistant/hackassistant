@@ -1,0 +1,19 @@
+{% if not request.user.is_authenticated %}
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Log in</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'register' %}"><i class="bi bi-person-fill"></i> Register</a>
+    </li>
+{% else %}
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ request.user.email }}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-{{ theme }}" aria-labelledby="navbarDropdownMenuLink">
+            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person-fill"></i> Profile</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Log out</a></li>
+        </ul>
+    </li>
+{% endif %}

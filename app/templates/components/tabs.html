@@ -1,0 +1,89 @@
+<ul class="nav nav-tabs border-primary" id="ul-tabs">
+    <li class="nav-item tab-arrow" style="display: none; cursor: pointer">
+        <a onclick="left_arrow_tabs()" class="nav-link bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}"><i class="bi bi-arrow-left"></i></a>
+    </li>
+    {% for title, url, needs_action in tabs %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.path != url %}bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}{% else %}bg-primary text-light{% endif %} border-{{ theme }}" href="{{ url }}">{{ title }}{% if needs_action %} <span class="{% if request.path != url %}text-primary{% else %}text-light{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i></span>{% endif %}</a>
+        </li>
+    {% endfor %}
+    <li class="nav-item tab-arrow" style="display: none; cursor: pointer">
+        <a onclick="right_arrow_tabs()" class="nav-link bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}"><i class="bi bi-arrow-right"></i></a>
+    </li>
+</ul>
+<script>
+    $(document).ready(() => {
+        calculate_tabs()
+        resize_tabs()
+    })
+    $(window).resize(() => {
+        resize_tabs()
+    })
+    let tabs = {length: 0, list: [], active: null, hidden_length: 0, pointer: null}
+    function calculate_tabs() {
+        let ul_tabs = $('#ul-tabs')
+        let il_tabs = ul_tabs.children()
+        il_tabs.each((i, item) => {
+            let tab_object = {tab: $(item), active: false}
+            tab_object.length = tab_object.tab.width()
+            if (!tab_object.tab.is(":hidden")) tabs.length += tab_object.length
+            if (tab_object.tab.children('.bg-primary').length > 0) {
+                tab_object.active = true
+                tabs.active = i
+            } else {
+                tab_object.active = false
+            }
+            tabs.list.push(tab_object)
+        })
+        tabs.hidden_length = tabs.list[0].tab.width() + tabs.list[tabs.list.length - 1].tab.width()
+        tabs.pointer = tabs.active ?? 0
+        ul_tabs.addClass('nav-fill')
+        tabs.list[0].tab.css('flex', `0 0 ${tabs.list[0].length}px`)
+        tabs.list[tabs.list.length - 1].tab.css('flex', `0 0 ${tabs.list[tabs.list.length - 1].length}px`)
+    }
+    function resize_tabs() {
+        let ul_tabs = $('#ul-tabs')
+        let width = ul_tabs.width()
+        if (width < tabs.length) {
+            $('.nav-tabs > .nav-item').hide()
+            $('.nav-tabs > .tab-arrow').show()
+            tabs.list[tabs.pointer].tab.show()
+            let new_length = tabs.hidden_length + tabs.list[tabs.pointer].length
+            let aux_pointer = tabs.pointer + 1
+            while (aux_pointer < tabs.list.length - 1 && new_length + tabs.list[aux_pointer].length < width) {
+                tabs.list[aux_pointer].tab.show()
+                new_length += tabs.list[aux_pointer].length
+                aux_pointer++
+            }
+            if (aux_pointer === tabs.list.length - 1) tabs.list[tabs.list.length - 1].tab.hide()
+            if (tabs.pointer === 1) tabs.list[0].tab.hide()
+            aux_pointer = tabs.pointer - 1
+            while (aux_pointer > 0 && new_length + tabs.list[aux_pointer].length < width) {
+                tabs.list[aux_pointer].tab.show()
+                new_length += tabs.list[aux_pointer].length
+                aux_pointer--
+            }
+            tabs.pointer = aux_pointer + 1
+        } else {
+            $('.nav-tabs > .nav-item').show()
+            $('.nav-tabs > .tab-arrow').hide()
+        }
+    }
+    function left_arrow_tabs() {
+        tabs.pointer--
+        resize_tabs()
+    }
+    function right_arrow_tabs() {
+        tabs.pointer++
+        resize_tabs()
+    }
+
+</script>
+<style>
+    .nav-tabs > .nav-item > .nav-link {
+        margin-bottom: 0;
+        border: none;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+</style>

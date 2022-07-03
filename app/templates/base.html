@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block full_title %}{{ app_name }} | {% block subtitle %}{% endblock %}{% endblock %}</title>
+        <meta name="apple-mobile-web-app-title" content="{{ app_name }}">
+	    <meta name="application-name" content="{{ app_name }}">
+        <meta name="author" content="{{ app_author }}">
+        <meta name="description" content="{{ app_description }}">
+
+        {% include 'components/imports.html' %}
+
+        {% include 'components/favicon.html' %}
+    </head>
+    <body class="{{ theme }}" style="min-height: 100%">
+        <div class="background" style="display: flex; flex-direction: column;">
+            {% block navbar %}
+                <nav class="navbar navbar-default navbar-fixed-top navbar-expand-xl bg-{{ theme }} navbar-{{ theme }}">
+                    <div class="container-lg">
+                        <a class="navbar-brand" style="height: auto" href="{% url 'home' %}">
+                            <img id="logo" alt="" height="24" src="{% static 'img/logo-'|add:theme|add:'.png' %}"/>
+                        </a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav">
+                                {% block navbar_main_menu %}
+                                    {% include 'components/main_nav.html' %}
+                                {% endblock %}
+                            </ul>
+                            <ul class="navbar-nav ms-auto">
+                                {% block navbar_user_menu %}
+                                    {% if app_theme %}
+                                        {% include 'components/theme_switch.html' %}
+                                    {% endif %}
+                                    {% include 'components/user_info_nav.html' %}
+                                {% endblock %}
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            {% endblock %}
+            {% block container %}
+                <div class="container-lg" style="margin-top: 40px; margin-bottom: 40px">
+                    {% if tabs %}
+                        {% include 'components/tabs.html' %}
+                    {% endif %}
+                    <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+                        <div style="padding: 20px">
+                            {% block content %}
+                            {% endblock %}
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+            {% include 'components/toast.html' %}
+            {% block footer %}
+                {% include 'components/footer.html' %}
+            {% endblock %}
+        </div>
+        {% block scripts %}
+        {% endblock %}
+    </body>
+</html>

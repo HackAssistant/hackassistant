@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block subtitle %}{% translate 'Profile' %}{% endblock %}
+{% block content %}
+    <h1 style="text-align: center">{% translate 'Profile' %}</h1>
+    <form method="post" id="profile-form">
+        {% csrf_token %}
+        {% include 'components/bootstrap5_form.html' %}
+        <div class="d-grid gap-4 d-flex justify-content-around">
+            <button type="button" data-bs-toggle="modal" data-bs-target="#modal-delete-user" class="btn btn-block btn-danger col-4">{% translate 'Delete user' %}</button>
+            <button type="submit" class="btn btn-block btn-primary col-4">{% translate 'Change profile' %}</button>
+        </div>
+        <div class="modal" tabindex="-1" id="modal-delete-user">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-{{ theme }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{% translate 'Delete user' %}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>{% translate 'Warning!' %}</strong> {% translate 'Your username will be deleted with all your application data and your applications will be cancelled.' %}</p>
+                    </div>
+                    <div class="modal-footer flex-column">
+                        <div style="width: 100%">
+                            <p style="margin: 0; text-align: left">{% translate 'Please type' %} <strong>{{ request.user.email }}</strong> {% translate 'in order to confirm this action.' %}</p>
+                        </div>
+                        <div style="width: 100%">
+                            <input name="delete" id="delete-user-input" class="form-control bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}" type="text"/>
+                        </div>
+                        <div>
+                            <button onclick="delete_user()" type="button" class="btn btn-danger">{% translate '  I understand, delete my user.' %}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block scripts %}
+    <script>
+        function delete_user() {
+            if ($('#delete-user-input').val() === '{{ request.user.email }}') {
+                $('#profile-form').submit()
+            }
+        }
+    </script>
+{% endblock %}

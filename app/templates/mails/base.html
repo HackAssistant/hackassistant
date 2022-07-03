@@ -1,0 +1,275 @@
+{% load static %}
+{# Based on https://github.com/leemunroe/responsive-html-email-template #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{{ subject }}</title>
+    <style type="text/css">
+	a {
+	    color: #c3aff1;
+	    text-decoration: none;
+	    -webkit-transition: all .1s linear;
+	    -moz-transition: all .1s linear;
+	    -o-transition: all .1s linear;
+	    transition: all .1s linear;
+	}
+
+	a:hover, a:active, a:focus {
+	    color: #8a69d4;
+	    text-decoration: none;
+	}
+
+        @media only screen and (max-width: 620px) {
+            table[class=body] h1 {
+                font-size: 28px !important;
+                margin-bottom: 10px !important;
+            }
+
+            table[class=body] p,
+            table[class=body] ul,
+            table[class=body] ol,
+            table[class=body] td,
+            table[class=body] span,
+            table[class=body] a {
+                font-size: 16px !important;
+            }
+
+            table[class=body] .wrapper,
+            table[class=body] .article {
+                padding: 10px !important;
+            }
+
+            table[class=body] .content {
+                padding: 0 !important;
+            }
+
+            table[class=body] .container {
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            table[class=body] .main {
+                border-left-width: 0 !important;
+                border-radius: 0 !important;
+                border-right-width: 0 !important;
+            }
+
+            table[class=body] .btn table {
+                width: 100% !important;
+            }
+
+            table[class=body] .btn a {
+                width: 100% !important;
+            }
+
+            table[class=body] .img-responsive {
+                height: auto !important;
+                max-width: 100% !important;
+                width: auto !important;
+            }
+        }
+
+        p {
+            font-family: sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            margin: 0;
+            Margin-bottom: 15px;
+        }
+
+        @media all {
+            .ExternalClass {
+                width: 100%;
+            }
+
+            .ExternalClass,
+            .ExternalClass p,
+            .ExternalClass span,
+            .ExternalClass font,
+            .ExternalClass td,
+            .ExternalClass div {
+                line-height: 100%;
+            }
+
+            .apple-link a {
+                color: inherit !important;
+                font-family: inherit !important;
+                font-size: inherit !important;
+                font-weight: inherit !important;
+                line-height: inherit !important;
+                text-decoration: none !important;
+            }
+
+            .btn-primary table td:hover {
+                background-color: #8a69d4 !important;
+            }
+
+            .btn-primary a:hover {
+                background-color: #8a69d4 !important;
+                border-color: #8a69d4 !important;
+            }
+        }
+    </style>
+</head>
+<body class=""
+      style="background-color:#111111;font-family:sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.4;margin:0;padding:0;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;">
+<table border="0" cellpadding="0" cellspacing="0" class="body"
+       style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#111111;width:100%;">
+    <tr>
+        <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">&nbsp;</td>
+        <td class="container"
+            style="font-family:sans-serif;font-size:14px;vertical-align:top;display:block;max-width:580px;padding:10px;width:580px;Margin:0 auto !important;">
+            <div class="content"
+                 style="box-sizing:border-box;display:block;margin:0 auto;max-width:580px;padding:10px;">
+                <img class="max-width"
+                     src="{{ h_logo }}"
+                     alt="" border="0"
+                     style="display: block; color: #000; margin: 0 auto; text-decoration: none; font-family: Helvetica, arial, sans-serif; font-size: 16px; margin-top: 20px; width: 100% !important; height: auto !important; "/>
+                <!-- START CENTERED WHITE CONTAINER -->
+                <span class="preheader"
+                      style="color:transparent;display:none;height:0;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;visibility:hidden;width:0;">
+                    {% block preheader %}
+                        New {{ h_name }} email for you!
+                    {% endblock %}</span>
+                {% block main %}
+                    <table class="main"
+                           style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;border-radius:3px;width:100%;background-color: #222222; color: #EEEEEE">
+                        <!-- START MAIN CONTENT AREA -->
+                        <tr>
+                            <td class="wrapper"
+                                style="font-family:sans-serif;font-size:14px;vertical-align:top;box-sizing:border-box;padding:20px;">
+
+                                <table border="0" cellpadding="0" cellspacing="0"
+                                       style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;width:100%;">
+                                    <tr>
+                                        <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
+                                            {% block content %}
+                                                <p>
+                                                    Hi there
+                                                    {% if user.is_authenticated %}
+                                                        {{ user.username }}
+                                                    {% endif %},</p>
+                                                <p>This is just a sample text. Replace it with what you need. Sometimes
+                                                    you just want to send a simple HTML email with a simple design and
+                                                    clear call to action. This is it.</p>
+                                                {% include 'mails/include/email_button.html' with url='https://gerard.space' text='Call to action!' %}
+                                                <p>This is a really simple email template. Its sole purpose is to get
+                                                    the recipient to click the button with no distractions.</p>
+                                                <p>Good luck! Hope it works.</p>
+                                            {% endblock %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <!-- END MAIN CONTENT AREA -->
+                    </table>
+                {% endblock %}
+                {% block footer %}
+                    <!-- START FOOTER -->
+                    <div class="footer" style="clear:both;padding-top:10px;text-align:center;width:100%;">
+                        <table border="0" cellpadding="0" cellspacing="0"
+                               style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;width:100%;">
+                            <tr>
+                                <td class="content-block"
+                                    style="font-family:sans-serif;font-size:14px;vertical-align:top;color:#999999;font-size:12px;text-align:center;">
+
+                                    <span class="apple-link" style="color:#999999;font-size:12px;text-align:center;">You are receiving this because you applied to {{ h_name }}.</span><br>
+                                    <span class="apple-link" style="color:#999999;font-size:12px;text-align:center;"> If you think this is a mistake, please send us an email
+                                           at {{ h_contact_email|urlize }}.</span>
+                                    <table style="padding-top: 20px" cellpadding="0" cellspacing="0" border="0"
+                                           align="center">
+                                        <tr>
+                                            {% if h_me %}
+                                                <td style="padding: 0px 5px;">
+                                                    <a role="social-icon-link"
+                                                       href="https://medium.com/@{{ h_me }}"
+                                                       target="_blank" border="0" alt="Medium" title="Medium"
+                                                       style="border-radius: 5px; -webkit-border-radius:5px; -moz-border-radius:5px; -ms-border-radius:5px; -o-border-radius:5px; color: white; display: inline-block; outline: none; text-decoration:none; border: none; font-family: Helvetica, arial, sans-serif;">
+                                                        <img role="social-icon" alt="Medium" title="Medium"
+                                                             border="0"
+                                                             height="20" width="20"
+                                                             style="height: 20px; width: 20px; border:none; font-family: Helvetica, arial, sans-serif;"
+                                                             src="https://i.imgur.com/tSZmX7E.png"
+                                                        />
+                                                    </a>
+                                                </td>
+                                            {% endif %}
+                                            {% if h_ig %}
+                                                <td style="padding: 0px 5px;">
+                                                    <a role="social-icon-link"
+                                                       href="https://instagram.com/{{ h_ig }}"
+                                                       target="_blank" border="0" alt="Instagram" title="Instagram"
+                                                       style="border-radius: 5px; -webkit-border-radius:5px; -moz-border-radius:5px; -ms-border-radius:5px; -o-border-radius:5px; color: white; display: inline-block; outline: none; text-decoration:none; border: none; font-family: Helvetica, arial, sans-serif;">
+                                                        <img role="social-icon" alt="Instagram" title="Instagram"
+                                                             border="0"
+                                                             height="20" width="20"
+                                                             style="height: 20px; width: 20px; border:none; font-family: Helvetica, arial, sans-serif;"
+                                                             src="https://i.imgur.com/0QEoQ66.png"
+                                                        />
+                                                    </a>
+                                                </td>
+                                            {% endif %}
+                                            {% if h_fb %}
+                                                <td style="padding: 0px 5px;">
+                                                    <a role="social-icon-link"
+                                                       href="http://www.facebook.com/{{ h_fb }}"
+                                                       target="_blank" border="0" alt="Facebook" title="Facebook"
+                                                       style="border-radius: 5px; -webkit-border-radius:5px; -moz-border-radius:5px; -ms-border-radius:5px; -o-border-radius:5px; color: white; display: inline-block; outline: none; text-decoration:none; border: none; font-family: Helvetica, arial, sans-serif;">
+                                                        <img role="social-icon" alt="Facebook" title="Facebook"
+                                                             border="0"
+                                                             height="20" width="20"
+                                                             style="height: 20px; width: 20px; border:none; font-family: Helvetica, arial, sans-serif;"
+                                                             src="https://i.imgur.com/aYCS2kb.png"
+                                                        />
+                                                    </a>
+                                                </td>
+                                            {% endif %}
+                                            {% if h_yt %}
+                                                <td style="padding: 0px 5px;">
+                                                    <a role="social-icon-link"
+                                                       href="https://youtube.com/channel/{{ h_yt }}"
+                                                       target="_blank" border="0" alt="YouTube" title="YouTube"
+                                                       style="border-radius: 5px; -webkit-border-radius:5px; -moz-border-radius:5px; -ms-border-radius:5px; -o-border-radius:5px; color: white; display: inline-block; outline: none; text-decoration:none; border: none; font-family: Helvetica, arial, sans-serif;">
+                                                        <img role="social-icon" alt="YouTube" title="YouTube"
+                                                             border="0"
+                                                             height="20" width="20"
+                                                             style="height: 20px; width: 20px; border:none; font-family: Helvetica, arial, sans-serif;"
+                                                             src="https://imgur.com/4hzPSg1.png"
+                                                        />
+                                                    </a>
+                                                </td>
+                                            {% endif %}
+                                            {% if h_tw %}
+                                                <td style="padding: 0px 5px;"><a role="social-icon-link"
+                                                                                 href="http://www.twitter.com/{{ h_tw }}"
+                                                                                 target="_blank" border="0"
+                                                                                 alt="Twitter"
+                                                                                 title="Twitter"
+                                                                                 style="border-radius: 5px; -webkit-border-radius:5px; -moz-border-radius:5px; -ms-border-radius:5px; -o-border-radius:5px; color: white; display: inline-block; outline: none; text-decoration:none; border: none; font-family: Helvetica, arial, sans-serif;">
+                                                    <img role="social-icon" alt="Twitter" title="Twitter" border="0"
+                                                         height="20" width="20"
+                                                         style="height: 20px; width: 20px; border:none; font-family: Helvetica, arial, sans-serif;"
+                                                         src="https://i.imgur.com/YGn0PlH.png"
+                                                    />
+                                                </a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                {% endblock %}
+                <!-- END FOOTER -->
+                <!-- END CENTERED WHITE CONTAINER -->
+            </div>
+        </td>
+        <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">&nbsp;</td>
+    </tr>
+</table>
+</body>
+</html>

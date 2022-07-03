@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block subtitle %}{{ auth|title }}{% endblock %}
+{% block container %}
+    <div class="row justify-content-md-center" style="margin: 0">
+        <div class="col-lg-4" style="margin: 40px 10px;">
+            {% if tabs %}
+                {% include 'components/tabs.html' %}
+            {% endif %}
+            <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="content" style="padding: 20px">
+                        {% include 'components/bootstrap5_form.html' %}
+                        {% if auth == 'register' %}
+                            {% if captcha_site_key %}
+                                <script src='https://www.google.com/recaptcha/api.js'></script>
+                                <div class="g-recaptcha" data-sitekey="{{ captcha_site_key }}"></div>
+                            {% endif %}
+                        {% else %}
+                            <p><a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" style="text-decoration: none" href="{% url 'forgot_password' %}">{% translate 'Forgot your password?' %}</a></p>
+                        {% endif %}
+                        <div class="d-grid col-6 mx-auto">
+                            <button type="submit" class="btn btn-primary">{{ auth|title }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
