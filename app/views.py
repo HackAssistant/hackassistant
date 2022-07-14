@@ -1,11 +1,13 @@
-from django.urls import reverse
+from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
 
 class BaseView(TemplateView):
-    template_name = 'base.html'
+    template_name = 'home.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({'tabs': [('Aaaaaaa', reverse('home'), True),('Bbbbbbbb1', '/b', False), ('Bbbbbbbb2', '/b', False), ('Bbbbbbbb3', '/b', False) ,('Bbbbbbbb4', '/b', False) ,('Bbbbbbbb5', '/b', False) ,('Bbbbbbbb6', '/b', False),('Bbbbbbbb7', '/b', False),('Bbbbbbbb8', '/b', False),('Here', '/a', False),('Bbbbbbbb', '/a', False)]})
-        return context
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.is_organizer():
+            return redirect('apply_home')
+        elif request.user.is_authenticated:
+            return redirect('apply_home')
+        return super().get(request, *args, **kwargs)

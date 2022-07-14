@@ -1,6 +1,8 @@
 import copy
 
-from django.forms import model_to_dict
+from django.forms import model_to_dict, FileField
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
 
 class TabsViewMixin:
@@ -50,6 +52,20 @@ class BootstrapFormMixin:
     bootstrap_field_info = {}
     read_only = []
 
+    def __init__(self, *args, **kwargs):
+        self.make_not_required()
+        super().__init__(*args, **kwargs)
+
+    def make_not_required(self):
+        bootstrap_info = self.get_bootstrap_field_info()
+        bootstrap_fields = set()
+        for list_fields in bootstrap_info.values():
+            for field in list_fields.get('fields', []):
+                bootstrap_fields.add(field.get('name'))
+        for name, field in self.declared_fields.items():
+            if name not in bootstrap_fields:
+                field.required = False
+
     def get_bootstrap_field_info(self):
         return copy.deepcopy(self.bootstrap_field_info)
 
@@ -67,14 +83,23 @@ class BootstrapFormMixin:
     def get_fields(self):
         result = self.get_bootstrap_field_info()
         for list_fields in result.values():
-            sum = 0
-            for field in list_fields.get('fields'):
-                if sum + field.get('space') > 12:
-                    sum = field.get('space')
-                    field['new_row'] = True
-                else:
-                    sum += field.get('space')
-                    field['new_row'] = False
+            visible = {}
+            for field in list_fields.get('fields', []):
                 name = field.get('name')
                 field.update({'field': self.fields.get(name).get_bound_field(self, name)})
+                visible[field['field'].auto_id] = {
+                    self.fields.get(visible_name).get_bound_field(self, visible_name).auto_id:
+                        (values if isinstance(values, list) else [values])
+                    for visible_name, values in field.get('visible', {}).items()
+                }
+                if field['field'].field.required:
+                    field['field'].label = mark_safe(field['field'].label + ' <span class="text-danger">*</span>')
+                api_fields = getattr(getattr(self, 'Meta', None), 'api_fields', {})
+                if name in api_fields:
+                    field['api'] = api_fields[name]
+                    if field['api'].get('restrict', False):
+                        field['field'].help_text += _("Please select one of the dropdown options or write 'Others'.")
+                if not visible[field['field'].auto_id]:
+                    del visible[field['field'].auto_id]
+            list_fields['visible'] = visible
         return result

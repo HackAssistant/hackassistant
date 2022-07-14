@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 
 from app.mixins import TabsViewMixin
 from user import emails
-from user.forms import LoginForm, UserCreationForm, UserProfileForm, ForgotPasswordForm, SetPasswordForm, \
+from user.forms import LoginForm, UserProfileForm, ForgotPasswordForm, SetPasswordForm, \
     RegistrationForm
 from user.mixins import LoginRequiredMixin, EmailNotVerifiedMixin
 from user.models import User

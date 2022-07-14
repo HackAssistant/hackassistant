@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', BaseView.as_view(), name='home'),
     path('auth/', include('user.urls')),
+    path('application/', include('application.urls')),
 ]
 
 # JWT fake login on DEBUG for development purposes

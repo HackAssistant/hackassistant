@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'corsheaders',
     'user',
+    'application',
 ]
 
 MIDDLEWARE = [
@@ -142,6 +143,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'app' / 'static',
 ]
 
+MEDIA_ROOT = 'files'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
@@ -152,6 +155,7 @@ THEME = 'both'
 
 # UserModel default
 AUTH_USER_MODEL = 'user.User'
+LOGIN_URL = '/auth/login'
 
 # JWT settings
 JWT_CLIENT = {

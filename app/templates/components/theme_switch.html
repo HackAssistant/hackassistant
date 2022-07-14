@@ -6,12 +6,19 @@
     let theme = '{{ theme }}'
     const trans_text_theme = {dark: 'white', light: 'black'}
     const trans_switch_theme = {dark: 'light', light: 'dark'}
+    function switch_elements(text, dark_text='dark', light_text='light') {
+        let dark = $(`.${text}-${dark_text}`)
+        let light = $(`.${text}-${light_text}`)
+        dark.toggleClass(`${text}-${light_text} ${text}-${dark_text}`)
+        light.toggleClass(`${text}-${light_text} ${text}-${dark_text}`)
+    }
     function switch_theme(link) {
-        $(`.bg-${theme}`).toggleClass('bg-light bg-dark')
-        $(`.border-${theme}`).toggleClass('border-light border-dark')
-        $(`.navbar-${theme}`).toggleClass('navbar-light navbar-dark')
-        $(`.dropdown-menu-${theme}`).toggleClass('dropdown-menu-light dropdown-menu-dark')
-        $(`.text-${trans_text_theme[theme]}`).toggleClass('text-white text-black')
+        switch_elements('bg')
+        switch_elements('border')
+        switch_elements('navbar')
+        switch_elements('dropdown-menu')
+        switch_elements('text', 'white', 'black')
+        switch_elements('list-group-item')
         $('body').toggleClass('light dark')
         $(`img[src*=${theme}]`).attr('src', $(`img[src*=${theme}]`).attr('src').replace(theme, trans_switch_theme[theme]))
         theme = trans_switch_theme[theme]

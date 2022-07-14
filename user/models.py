@@ -79,6 +79,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_("last names"), max_length=150)
     email = models.EmailField(_("email address"), unique=True)
     email_verified = models.BooleanField(_('email verified'), default=False)
+    email_subscribe = models.BooleanField(_('email subscribed'), default=False)
     is_staff = models.BooleanField(
         _("staff status"),
         default=False,
@@ -134,14 +135,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class LoginRequest(models.Model):
     ip = models.CharField(max_length=30)
-    latestRequest = models.DateTimeField()
+    latest_request = models.DateTimeField()
     login_tries = models.IntegerField(default=1)
 
     def get_latest_request(self):
-        return self.latestRequest
+        return self.latest_request
 
     def set_latest_request(self, latest_request):
-        self.latestRequest = latest_request
+        self.latest_request = latest_request
 
     def reset_tries(self):
         self.login_tries = 1

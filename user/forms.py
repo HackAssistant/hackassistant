@@ -4,7 +4,6 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import password_validation
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
@@ -69,7 +68,8 @@ class RegistrationForm(UserCreationForm):
     bootstrap_field_info = {'': {'fields': [{'name': 'first_name', 'space': 6}, {'name': 'last_name', 'space': 6},
                                             {'name': 'email', 'space': 12}, {'name': 'password1', 'space': 12},
                                             {'name': 'password2', 'space': 12},
-                                            {'name': 'terms_and_conditions', 'space': 12}]}}
+                                            {'name': 'terms_and_conditions', 'space': 12},
+                                            {'name': 'email_subscribe', 'space': 12}]}}
 
     terms_and_conditions = forms.BooleanField(
         label=mark_safe(_('I\'ve read, understand and accept <a href="/privacy_and_cookies" target="_blank">HackUPC '
@@ -86,14 +86,17 @@ class RegistrationForm(UserCreationForm):
         # self.instance.pk is None if there's no Application existing before
         # https://stackoverflow.com/questions/9704067/test-if-django-modelform-has-instance
         if not cc and not self.instance.pk:
-            raise forms.ValidationError(
+            raise forms.ValidationError(_(
                 "In order to apply and attend you have to accept our Terms & Conditions and"
                 " our Privacy and Cookies Policy."
-            )
+            ))
         return cc
 
     class Meta(UserCreationForm.Meta):
-        required = ('first_name', 'last_name', 'email', 'password1', 'password2')
+        fields = ('first_name', 'last_name', 'email', 'password1', 'password2', 'email_subscribe')
+        labels = {
+            'email_subscribe': _('Subscribe to our Marketing list in order to inform you about our next events.')
+        }
 
 
 class UserChangeForm(forms.ModelForm):
