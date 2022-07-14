@@ -13,7 +13,20 @@ from application.models import Application
 from application.validators import validate_file_extension
 
 
-class ApplicationForm(forms.ModelForm):
+class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
+    terms_and_conditions = forms.BooleanField(
+        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
+                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
+                          'Privacy and Cookies Policy</a>.' % (
+                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
+                          )))
+    )
+
+    diet_notice = forms.BooleanField(
+        label=_('I authorize %s to use my food allergies and intolerances information to '
+                'manage the catering service only.') % getattr(settings, 'HACKATHON_ORG')
+    )
+
     def save(self, commit=True):
         model_fields = [field.name for field in self.Meta.model._meta.fields]
         extra_fields = [field for field in self.declared_fields if field not in model_fields and
@@ -47,6 +60,29 @@ class ApplicationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.initial.update(self.instance.form_data)
 
+    def get_bootstrap_field_info(self):
+        fields = super().get_bootstrap_field_info()
+        instance = getattr(self, 'instance', None)
+        if instance is not None and instance._state.adding:  # instance not in DB
+            policy_fields = self.get_policy_fields()
+            fields.update({
+                'HackUPC Polices': {
+                    'fields': policy_fields,
+                    'description': '<p style="color: margin-top: 1em;display: block;'
+                                   'margin-bottom: 1em;line-height: 1.25em;">We, Hackers at UPC, '
+                                   'process your information to organize an awesome hackathon. It '
+                                   'will also include images and videos of yourself during the event. '
+                                   'Your data will be used for admissions mainly.'
+                                   'For more information on the processing of your '
+                                   'personal data and on how to exercise your rights of access, '
+                                   'rectification, suppression, limitation, portability and opposition '
+                                   'please visit our Privacy and Cookies Policy.</p>'
+                }})
+        return fields
+
+    def get_policy_fields(self):
+        return [{'name': 'terms_and_conditions', 'space': 12}, {'name': 'diet_notice', 'space': 12}]
+
     class Meta:
         model = Application
         exclude = ['user', 'uuid', 'data', 'submission_date', 'status_update_date', 'status', 'contacted_by', 'type']
@@ -66,7 +102,8 @@ class ApplicationForm(forms.ModelForm):
 
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
-class HackerForm(BootstrapFormMixin, ApplicationForm):
+class HackerForm(ApplicationForm):
+
     YEARS = [(year, str(year)) for year in range(datetime.now().year - 1, datetime.now().year + 6)]
     DEFAULT_YEAR = datetime.now().year + 1
     EXTENSIONS = getattr(settings, 'SUPPORTED_RESUME_EXTENSIONS', None)
@@ -96,28 +133,6 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
         }
     }
 
-    def get_bootstrap_field_info(self):
-        fields = super().get_bootstrap_field_info()
-        instance = getattr(self, 'instance', None)
-        if instance is not None and instance._state.adding:  # instance not in DB
-            fields.update({
-                'HackUPC Polices': {
-                    'fields': [{'name': 'terms_and_conditions', 'space': 12}, {'name': 'diet_notice', 'space': 12},
-                               {'name': 'resume_share', 'space': 12}],
-                    'description': '<p style="color: margin-top: 1em;display: block;'
-                                   'margin-bottom: 1em;line-height: 1.25em;">We, Hackers at UPC, '
-                                   'process your information to organize an awesome hackaton. It '
-                                   'will also include images and videos of yourself during the event. '
-                                   'Your data will be used for admissions mainly. We may also reach '
-                                   'out to you (sending you an e-mail) about other events that we are '
-                                   'organizing and that are of a similar nature to those previously '
-                                   'requested by you. For more information on the processing of your '
-                                   'personal data and on how to exercise your rights of access, '
-                                   'rectification, suppression, limitation, portability and opposition '
-                                   'please visit our Privacy and Cookies Policy.</p>'
-                }})
-        return fields
-
     exclude_save = ['terms_and_conditions', 'diet_notice']
 
     under_age = forms.TypedChoiceField(
@@ -127,19 +142,6 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
         coerce=lambda x: x == 'True',
         choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
         widget=forms.RadioSelect
-    )
-
-    terms_and_conditions = forms.BooleanField(
-        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
-                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
-                          'Privacy and Cookies Policy</a>.' % (
-                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
-                          )))
-    )
-
-    diet_notice = forms.BooleanField(
-        label=_('I authorize "Hackers at UPC" to use my food allergies and intolerances information to '
-                'manage the catering service only.')
     )
 
     phone_number = forms.CharField(validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$')], required=False,
@@ -200,6 +202,11 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
     resume = forms.FileField(validators=[validate_file_extension], label=_('Upload your resume'), help_text=_(
         'Accepted file formats: %s' % (', '.join(EXTENSIONS) if EXTENSIONS else 'Any')))
 
+    def get_policy_fields(self):
+        policy_fields = super().get_policy_fields()
+        policy_fields.extend([{'name': 'resume_share', 'space': 12}])
+        return policy_fields
+
     class Meta(ApplicationForm.Meta):
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
@@ -208,7 +215,7 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
         }
 
 
-class VolunteerForm(BootstrapFormMixin, ApplicationForm):
+class VolunteerForm(ApplicationForm):
     bootstrap_field_info = {_('Personal Info'): {'fields': [
         # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
         {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
