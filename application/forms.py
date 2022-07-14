@@ -4,7 +4,6 @@ from django import forms
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import RegexValidator
-from django.forms.utils import ErrorList
 from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -81,7 +80,7 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
         {'name': 'graduation_year', 'space': 8},
         {'name': 'lennyface', 'space': 4}],
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
-        'Hackathons?': {
+        'Hackathons': {
             'fields': [{'name': 'description', 'space': 6}, {'name': 'projects', 'space': 6},
                        {'name': 'first_timer', 'space': 12}, ]
         },
@@ -207,3 +206,44 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
             'university': {'url': static('data/universities.json')},
             'degree': {'url': static('data/degrees.json')},
         }
+
+
+class VolunteerForm(BootstrapFormMixin, ApplicationForm):
+    bootstrap_field_info = {_('Personal Info'): {'fields': [
+        # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
+        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
+        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
+        {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
+        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
+        {'name': 'first_time_volunteering', 'space': 4}, {'name': 'night_shifts', 'space': 4}],
+        'description': _('Hey there, before we begin we would like to know a little more about you.')},
+
+    }
+
+    first_time_volunteering = forms.TypedChoiceField(
+        required=True,
+        label=_('Have you volunteered in %s before?') % getattr(settings, 'HACKATHON_NAME'),
+        initial=False,
+        coerce=lambda x: x == 'True',
+        choices=((False, _('No')), (True, _('Yes'))),
+        widget=forms.RadioSelect
+    )
+
+    night_shifts = forms.TypedChoiceField(
+        required=True,
+        label=_('Would you be ok doing night shifts?'),
+        help_text=_('Volunteering during 2am - 5am'),
+        coerce=lambda x: x == 'True',
+        choices=((False, _('No')), (True, _('Yes'))),
+        widget=forms.RadioSelect
+    )
+
+    under_age = forms.TypedChoiceField(
+        required=True,
+        label=_('How old are you?'),
+        initial=False,
+        coerce=lambda x: x == 'True',
+        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
+        widget=forms.RadioSelect
+    )
+
