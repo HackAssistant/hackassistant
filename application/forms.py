@@ -324,3 +324,9 @@ class VolunteerForm(ApplicationForm):
     discover_hack = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
                                   label=_('How did you discover %s?' % getattr(settings, 'HACKATHON_NAME')))
 
+    class Meta(ApplicationForm.Meta):
+        api_fields = {
+            'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
+            'university': {'url': static('data/universities.json')},
+            'degree': {'url': static('data/degrees.json')},
+        }
