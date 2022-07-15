@@ -228,15 +228,25 @@ class VolunteerForm(ApplicationForm):
         {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
         {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
         {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
+        {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
         {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}],
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
         'Hackathons': {
             'fields': [{'name': 'night_shifts', 'space': 4}, {'name': 'first_time_volunteering', 'space': 4},
                        {'name': 'which_hack', 'space':4, 'visible': {'first_time_volunteering': 'True'}},
                        {'name': 'attendance', 'space':4}, {'name': 'english_level', 'space':4},
-                       {'name': 'friends', 'space':6}, {'name': 'more_information', 'space':6}],
-        'description': _('Tell us a bit about your experience and preferences in this type of event')},
+                       {'name': 'lennyface', 'space':4}, {'name': 'friends', 'space':6},
+                       {'name': 'more_information', 'space':6}, {'name': 'description', 'space':6},
+                       {'name': 'discover_hack', 'space':6}],
+        'description': _('Tell us a bit about your experience and preferences in this type of event.')},
+
     }
+
+    university = forms.CharField(max_length=300, label=_('What university do you study at?'),
+                                 help_text=_('Current or most recent school you attended.'))
+
+    degree = forms.CharField(max_length=300, label=_('What\'s your major/degree?'),
+                             help_text=_('Current or most recent degree you\'ve received'))
 
     first_time_volunteering = forms.TypedChoiceField(
         required=True,
@@ -291,12 +301,26 @@ class VolunteerForm(ApplicationForm):
         help_text = _('1: I don\'t feel comfortable at all - 5: I\'m proficient '),
     )
 
+    lennyface = forms.CharField(max_length=300, initial='-.-', label=_('Describe yourself in one "lenny face"?'),
+                                help_text=mark_safe(
+                                    _('tip: you can chose from here <a href="http://textsmili.es/" target="_blank"> http://textsmili.es/</a>')))
+
     friends = forms.CharField(
         required=False,
-        label=_('If you\'re applying with friends, please mention their names')
+        label=_('If you\'re applying with friends, please mention their names.')
     )
 
     more_information = forms.CharField(
         required=False,
         label=_('There\'s something else we need to know?')
     )
+
+    description = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
+                                  label=_('Why are you excited about %s?' % getattr(settings, 'HACKATHON_NAME')))
+
+    description = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
+                                  label=_('Why are you excited about %s?' % getattr(settings, 'HACKATHON_NAME')))
+
+    discover_hack = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
+                                  label=_('How did you discover %s?' % getattr(settings, 'HACKATHON_NAME')))
+
