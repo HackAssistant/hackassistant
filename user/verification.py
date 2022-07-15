@@ -68,7 +68,7 @@ def check_client_ip(view_func):
                     login_request.set_latest_request(request_time)
                     login_request.save()
             except LoginRequest.DoesNotExist:
-                login_request = LoginRequest.objects.create(ip=client_ip, latestRequest=request_time)
+                login_request = LoginRequest.objects.create(ip=client_ip, latest_request=request_time)
                 login_request.save()
             if login_request.login_tries < getattr(settings, 'LOGIN_TRIES', 4):
                 request.client_req_is_valid = True

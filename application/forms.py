@@ -4,7 +4,6 @@ from django import forms
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import RegexValidator
-from django.forms.utils import ErrorList
 from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -13,8 +12,30 @@ from app.mixins import BootstrapFormMixin
 from application.models import Application
 from application.validators import validate_file_extension
 
+YEARS = [(year, str(year)) for year in range(datetime.now().year - 1, datetime.now().year + 6)]
+DEFAULT_YEAR = datetime.now().year + 1
+EXTENSIONS = getattr(settings, 'SUPPORTED_RESUME_EXTENSIONS', None)
 
-class ApplicationForm(forms.ModelForm):
+HACK_NAME = getattr(settings, 'HACKATHON_NAME')
+EXTRA_NAME = [' 2016 Fall', ' 2016 Winter', ' 2017 Fall', '  2017 Winter', ' 2018', ' 2019', ' 2021', ' 2022']
+PREVIOUS_HACKS = [(i, HACK_NAME + EXTRA_NAME[i]) for i in range(0, len(EXTRA_NAME))]
+HACK_DAYS = [(x, x) for x in ['Friday', 'Saturday', 'Sunday']]
+ENGLISH_LEVELS = [(x,x) for x in ['1','2','3','4','5']]
+
+class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
+    terms_and_conditions = forms.BooleanField(
+        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
+                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
+                          'Privacy and Cookies Policy</a>.' % (
+                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
+                          )))
+    )
+
+    diet_notice = forms.BooleanField(
+        label=_('I authorize %s to use my food allergies and intolerances information to '
+                'manage the catering service only.') % getattr(settings, 'HACKATHON_ORG')
+    )
+
     def save(self, commit=True):
         model_fields = [field.name for field in self.Meta.model._meta.fields]
         extra_fields = [field for field in self.declared_fields if field not in model_fields and
@@ -48,6 +69,29 @@ class ApplicationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.initial.update(self.instance.form_data)
 
+    def get_bootstrap_field_info(self):
+        fields = super().get_bootstrap_field_info()
+        instance = getattr(self, 'instance', None)
+        if instance is not None and instance._state.adding:  # instance not in DB
+            policy_fields = self.get_policy_fields()
+            fields.update({
+                'HackUPC Polices': {
+                    'fields': policy_fields,
+                    'description': '<p style="color: margin-top: 1em;display: block;'
+                                   'margin-bottom: 1em;line-height: 1.25em;">We, Hackers at UPC, '
+                                   'process your information to organize an awesome hackathon. It '
+                                   'will also include images and videos of yourself during the event. '
+                                   'Your data will be used for admissions mainly.'
+                                   'For more information on the processing of your '
+                                   'personal data and on how to exercise your rights of access, '
+                                   'rectification, suppression, limitation, portability and opposition '
+                                   'please visit our Privacy and Cookies Policy.</p>'
+                }})
+        return fields
+
+    def get_policy_fields(self):
+        return [{'name': 'terms_and_conditions', 'space': 12}, {'name': 'diet_notice', 'space': 12}]
+
     class Meta:
         model = Application
         exclude = ['user', 'uuid', 'data', 'submission_date', 'status_update_date', 'status', 'contacted_by', 'type']
@@ -67,10 +111,7 @@ class ApplicationForm(forms.ModelForm):
 
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
-class HackerForm(BootstrapFormMixin, ApplicationForm):
-    YEARS = [(year, str(year)) for year in range(datetime.now().year - 1, datetime.now().year + 6)]
-    DEFAULT_YEAR = datetime.now().year + 1
-    EXTENSIONS = getattr(settings, 'SUPPORTED_RESUME_EXTENSIONS', None)
+class HackerForm(ApplicationForm):
 
     bootstrap_field_info = {_('Personal Info'): {'fields': [
         {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
@@ -81,7 +122,7 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
         {'name': 'graduation_year', 'space': 8},
         {'name': 'lennyface', 'space': 4}],
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
-        'Hackathons?': {
+        'Hackathons': {
             'fields': [{'name': 'description', 'space': 6}, {'name': 'projects', 'space': 6},
                        {'name': 'first_timer', 'space': 12}, ]
         },
@@ -97,28 +138,6 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
         }
     }
 
-    def get_bootstrap_field_info(self):
-        fields = super().get_bootstrap_field_info()
-        instance = getattr(self, 'instance', None)
-        if instance is not None and instance._state.adding:  # instance not in DB
-            fields.update({
-                'HackUPC Polices': {
-                    'fields': [{'name': 'terms_and_conditions', 'space': 12}, {'name': 'diet_notice', 'space': 12},
-                               {'name': 'resume_share', 'space': 12}],
-                    'description': '<p style="color: margin-top: 1em;display: block;'
-                                   'margin-bottom: 1em;line-height: 1.25em;">We, Hackers at UPC, '
-                                   'process your information to organize an awesome hackaton. It '
-                                   'will also include images and videos of yourself during the event. '
-                                   'Your data will be used for admissions mainly. We may also reach '
-                                   'out to you (sending you an e-mail) about other events that we are '
-                                   'organizing and that are of a similar nature to those previously '
-                                   'requested by you. For more information on the processing of your '
-                                   'personal data and on how to exercise your rights of access, '
-                                   'rectification, suppression, limitation, portability and opposition '
-                                   'please visit our Privacy and Cookies Policy.</p>'
-                }})
-        return fields
-
     exclude_save = ['terms_and_conditions', 'diet_notice']
 
     under_age = forms.TypedChoiceField(
@@ -128,19 +147,6 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
         coerce=lambda x: x == 'True',
         choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
         widget=forms.RadioSelect
-    )
-
-    terms_and_conditions = forms.BooleanField(
-        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
-                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
-                          'Privacy and Cookies Policy</a>.' % (
-                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
-                          )))
-    )
-
-    diet_notice = forms.BooleanField(
-        label=_('I authorize "Hackers at UPC" to use my food allergies and intolerances information to '
-                'manage the catering service only.')
     )
 
     phone_number = forms.CharField(validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$')], required=False,
@@ -201,9 +207,120 @@ class HackerForm(BootstrapFormMixin, ApplicationForm):
     resume = forms.FileField(validators=[validate_file_extension], label=_('Upload your resume'), help_text=_(
         'Accepted file formats: %s' % (', '.join(EXTENSIONS) if EXTENSIONS else 'Any')))
 
+    def get_policy_fields(self):
+        policy_fields = super().get_policy_fields()
+        policy_fields.extend([{'name': 'resume_share', 'space': 12}])
+        return policy_fields
+
     class Meta(ApplicationForm.Meta):
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},
             'degree': {'url': static('data/degrees.json')},
         }
+
+
+class VolunteerForm(ApplicationForm):
+
+    bootstrap_field_info = {_('Personal Info'): {'fields': [
+        # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
+        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
+        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
+        {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
+        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
+        {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
+        {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}],
+        'description': _('Hey there, before we begin we would like to know a little more about you.')},
+        'Hackathons': {
+            'fields': [{'name': 'night_shifts', 'space': 4}, {'name': 'first_time_volunteering', 'space': 4},
+                       {'name': 'which_hack', 'space':4, 'visible': {'first_time_volunteering': 'True'}},
+                       {'name': 'attendance', 'space':4}, {'name': 'english_level', 'space':4},
+                       {'name': 'lennyface', 'space':4}, {'name': 'friends', 'space':6},
+                       {'name': 'more_information', 'space':6}, {'name': 'description', 'space':6},
+                       {'name': 'discover_hack', 'space':6}],
+        'description': _('Tell us a bit about your experience and preferences in this type of event.')},
+
+    }
+
+    university = forms.CharField(max_length=300, label=_('What university do you study at?'),
+                                 help_text=_('Current or most recent school you attended.'))
+
+    degree = forms.CharField(max_length=300, label=_('What\'s your major/degree?'),
+                             help_text=_('Current or most recent degree you\'ve received'))
+
+    first_time_volunteering = forms.TypedChoiceField(
+        required=True,
+        label=_('Have you volunteered in %s before?') % getattr(settings, 'HACKATHON_NAME'),
+        initial=False,
+        coerce=lambda x: x == 'True',
+        choices=((False, _('No')), (True, _('Yes'))),
+        widget=forms.RadioSelect
+    )
+
+    which_hack = forms.MultipleChoiceField(
+        required=False,
+        label=_('Which %s editions have you volunteered in') % getattr(settings, 'HACKATHON_NAME'),
+        widget=forms.CheckboxSelectMultiple,
+        choices=PREVIOUS_HACKS
+    )
+
+    night_shifts = forms.TypedChoiceField(
+        required=True,
+        label=_('Would you be ok doing night shifts?'),
+        help_text=_('Volunteering during 2am - 5am'),
+        coerce=lambda x: x == 'True',
+        choices=((False, _('No')), (True, _('Yes'))),
+        widget=forms.RadioSelect
+    )
+
+    under_age = forms.TypedChoiceField(
+        required=True,
+        label=_('How old are you?'),
+        initial=False,
+        coerce=lambda x: x == 'True',
+        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
+        widget=forms.RadioSelect
+    )
+
+    origin = forms.CharField(max_length=300, label=_('From which city?'))
+
+    country = forms.CharField(max_length=300, label=_('From which country are you joining us?'))
+
+    attendance = forms.MultipleChoiceField(
+        required=True,
+        label=_('Which days will you attend to %s?') % getattr(settings, 'HACKATHON_NAME'),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'inline'}),
+        choices=HACK_DAYS
+    )
+
+    english_level = forms.MultipleChoiceField(
+        required=True,
+        label=_('How much confident are you talking in English?'),
+        widget=forms.RadioSelect(attrs={'class': 'inline'}),
+        choices=ENGLISH_LEVELS,
+        help_text = _('1: I don\'t feel comfortable at all - 5: I\'m proficient '),
+    )
+
+    lennyface = forms.CharField(max_length=300, initial='-.-', label=_('Describe yourself in one "lenny face"?'),
+                                help_text=mark_safe(
+                                    _('tip: you can chose from here <a href="http://textsmili.es/" target="_blank"> http://textsmili.es/</a>')))
+
+    friends = forms.CharField(
+        required=False,
+        label=_('If you\'re applying with friends, please mention their names.')
+    )
+
+    more_information = forms.CharField(
+        required=False,
+        label=_('There\'s something else we need to know?')
+    )
+
+    description = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
+                                  label=_('Why are you excited about %s?' % getattr(settings, 'HACKATHON_NAME')))
+
+    description = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
+                                  label=_('Why are you excited about %s?' % getattr(settings, 'HACKATHON_NAME')))
+
+    discover_hack = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
+                                  label=_('How did you discover %s?' % getattr(settings, 'HACKATHON_NAME')))
+

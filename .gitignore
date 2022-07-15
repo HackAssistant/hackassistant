@@ -5,6 +5,7 @@ env/
 *.sqlite3
 .idea
 __pycache__/
+.DS_Store
 
 /files/*
 !files/.keep

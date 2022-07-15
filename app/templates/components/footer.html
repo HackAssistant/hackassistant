@@ -9,7 +9,7 @@
             </div>
             <div class="col-6">
                 {% for url, icon in app_socials %}
-                    <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="{{ url }}" role="button"><i class="fab {{ icon }}"></i></a>
+                    <a target="_blank" class="text-{% if theme == 'dark' %}white{% else %}black{% endif %} ms-1" href="{{ url }}" role="button"><i class="bi {{ icon }}"></i></a>
                 {% endfor %}
             </div>
         </div>
