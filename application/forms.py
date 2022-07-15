@@ -242,6 +242,8 @@ class VolunteerForm(ApplicationForm):
 
     }
 
+    exclude_save = ['terms_and_conditions', 'diet_notice']
+
     university = forms.CharField(max_length=300, label=_('What university do you study at?'),
                                  help_text=_('Current or most recent school you attended.'))
 
@@ -293,12 +295,12 @@ class VolunteerForm(ApplicationForm):
         choices=HACK_DAYS
     )
 
-    english_level = forms.MultipleChoiceField(
+    english_level = forms.ChoiceField(
         required=True,
         label=_('How much confident are you talking in English?'),
         widget=forms.RadioSelect(attrs={'class': 'inline'}),
         choices=ENGLISH_LEVELS,
-        help_text = _('1: I don\'t feel comfortable at all - 5: I\'m proficient '),
+        help_text=_('1: I don\'t feel comfortable at all - 5: I\'m proficient '),
     )
 
     lennyface = forms.CharField(max_length=300, initial='-.-', label=_('Describe yourself in one "lenny face"?'),
@@ -330,3 +332,47 @@ class VolunteerForm(ApplicationForm):
             'university': {'url': static('data/universities.json')},
             'degree': {'url': static('data/degrees.json')},
         }
+
+
+class SponsorForm(ApplicationForm):
+
+    bootstrap_field_info = {_('Personal Info'): {'fields': [
+        {'name': 'full_name', 'space': 4}, {'name': 'email', 'space': 4}, {'name': 'phone_number', 'space': 4},
+        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
+        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}}, {'name': 'gender', 'space': 4},
+        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},],},
+        'Sponsor Info': {
+            'fields': [{'name': 'company', 'space':  4}, {'name': 'position', 'space':  4},
+                       {'name': 'attendance', 'space':  4}]}
+
+    }
+
+    exclude_save = ['terms_and_conditions', 'diet_notice']
+
+    full_name = forms.CharField(
+        label=_('Full name')
+    )
+
+    phone_number = forms.CharField(validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$')], required=False,
+                                   help_text=_("Phone number must be entered in the format: +#########'. "
+                                               "Up to 15 digits allowed."),
+                                   widget=forms.TextInput(attrs={'placeholder': '+#########'}))
+
+    email = forms.EmailField(
+        label=_('Email')
+    )
+
+    company = forms.CharField(
+        label=_('Which company do you work for?')
+    )
+
+    position = forms.CharField(
+        label=_('What is your job position?')
+    )
+
+    attendance = forms.MultipleChoiceField(
+        required=True,
+        label=_('Which days will you attend to %s?') % getattr(settings, 'HACKATHON_NAME'),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'inline'}),
+        choices=HACK_DAYS
+    )
