@@ -20,7 +20,8 @@ HACK_NAME = getattr(settings, 'HACKATHON_NAME')
 EXTRA_NAME = [' 2016 Fall', ' 2016 Winter', ' 2017 Fall', '  2017 Winter', ' 2018', ' 2019', ' 2021', ' 2022']
 PREVIOUS_HACKS = [(i, HACK_NAME + EXTRA_NAME[i]) for i in range(0, len(EXTRA_NAME))]
 HACK_DAYS = [(x, x) for x in ['Friday', 'Saturday', 'Sunday']]
-ENGLISH_LEVELS = [(x,x) for x in ['1','2','3','4','5']]
+ENGLISH_LEVELS = [(x, x) for x in ['1', '2', '3', '4', '5']]
+
 
 class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
     terms_and_conditions = forms.BooleanField(
@@ -112,7 +113,6 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
 class HackerForm(ApplicationForm):
-
     bootstrap_field_info = {_('Personal Info'): {'fields': [
         {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
         {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
@@ -171,7 +171,8 @@ class HackerForm(ApplicationForm):
     # Random lenny face
     lennyface = forms.CharField(max_length=300, initial='-.-', label=_('Describe yourself in one "lenny face"?'),
                                 help_text=mark_safe(
-                                    _('tip: you can chose from here <a href="http://textsmili.es/" target="_blank"> http://textsmili.es/</a>')))
+                                    _('tip: you can chose from here <a href="https://textsmili.es/" target="_blank"> '
+                                      'https://textsmili.es/</a>')))
 
     # University
     graduation_year = forms.IntegerField(initial=DEFAULT_YEAR,
@@ -221,9 +222,7 @@ class HackerForm(ApplicationForm):
 
 
 class VolunteerForm(ApplicationForm):
-
     bootstrap_field_info = {_('Personal Info'): {'fields': [
-        # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
         {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
         {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
         {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
@@ -233,12 +232,12 @@ class VolunteerForm(ApplicationForm):
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
         'Hackathons': {
             'fields': [{'name': 'night_shifts', 'space': 4}, {'name': 'first_time_volunteering', 'space': 4},
-                       {'name': 'which_hack', 'space':4, 'visible': {'first_time_volunteering': 'True'}},
-                       {'name': 'attendance', 'space':4}, {'name': 'english_level', 'space':4},
-                       {'name': 'lennyface', 'space':4}, {'name': 'friends', 'space':6},
-                       {'name': 'more_information', 'space':6}, {'name': 'description', 'space':6},
-                       {'name': 'discover_hack', 'space':6}],
-        'description': _('Tell us a bit about your experience and preferences in this type of event.')},
+                       {'name': 'which_hack', 'space': 4, 'visible': {'first_time_volunteering': True}},
+                       {'name': 'attendance', 'space': 4}, {'name': 'english_level', 'space': 4},
+                       {'name': 'lennyface', 'space': 4}, {'name': 'friends', 'space': 6},
+                       {'name': 'more_information', 'space': 6}, {'name': 'description', 'space': 6},
+                       {'name': 'discover_hack', 'space': 6}],
+            'description': _('Tell us a bit about your experience and preferences in this type of event.')},
 
     }
 
@@ -305,7 +304,8 @@ class VolunteerForm(ApplicationForm):
 
     lennyface = forms.CharField(max_length=300, initial='-.-', label=_('Describe yourself in one "lenny face"?'),
                                 help_text=mark_safe(
-                                    _('tip: you can chose from here <a href="http://textsmili.es/" target="_blank"> http://textsmili.es/</a>')))
+                                    _('tip: you can chose from here <a href="https://textsmili.es/" target="_blank"> '
+                                      'https://textsmili.es/</a>')))
 
     friends = forms.CharField(
         required=False,
@@ -320,11 +320,8 @@ class VolunteerForm(ApplicationForm):
     description = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
                                   label=_('Why are you excited about %s?' % getattr(settings, 'HACKATHON_NAME')))
 
-    description = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
-                                  label=_('Why are you excited about %s?' % getattr(settings, 'HACKATHON_NAME')))
-
     discover_hack = forms.CharField(max_length=500, widget=forms.Textarea(attrs={'rows': 3}),
-                                  label=_('How did you discover %s?' % getattr(settings, 'HACKATHON_NAME')))
+                                    label=_('How did you discover %s?' % getattr(settings, 'HACKATHON_NAME')))
 
     class Meta(ApplicationForm.Meta):
         api_fields = {
@@ -335,15 +332,14 @@ class VolunteerForm(ApplicationForm):
 
 
 class SponsorForm(ApplicationForm):
-
     bootstrap_field_info = {_('Personal Info'): {'fields': [
         {'name': 'full_name', 'space': 4}, {'name': 'email', 'space': 4}, {'name': 'phone_number', 'space': 4},
         {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
         {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}}, {'name': 'gender', 'space': 4},
-        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},],},
+        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}}, ], },
         'Sponsor Info': {
-            'fields': [{'name': 'company', 'space':  4}, {'name': 'position', 'space':  4},
-                       {'name': 'attendance', 'space':  4}]}
+            'fields': [{'name': 'company', 'space': 4}, {'name': 'position', 'space': 4},
+                       {'name': 'attendance', 'space': 4}]}
 
     }
 

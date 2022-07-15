@@ -69,21 +69,36 @@
         {% endfor %}
         </div>
         <script>
-            {% for field_id, item in zone.visible.items %}
-                {% for cond_field_id, values in item.items %}
-                    $('#{{ cond_field_id }}').change({first: false}, (event) => {
-                        let field = $('.mb-3').has('#{{ field_id }}')
-                        if ({{ values|safe }}.includes($(event.target).val())) {
-                            field.fadeIn()
-                        } else {
-                            field.fadeOut()
+            function objectifyForm(form) {
+                let formArray = form.serializeArray()
+                //serialize data function
+                let returnArray = {}
+                for (let i = 0; i < formArray.length; i++){
+                    returnArray[formArray[i]['name']] = formArray[i]['value']
+                }
+                return returnArray
+            }
+            $(document).ready(() => {
+                let form = null
+                {% for field_id, item in zone.visible.items %}
+                    {% for cond_field_name, values in item.items %}
+                        if (form === null) {
+                            form = $('form').has('[name="{{ cond_field_name }}"]')
                         }
-                    })
-                    if (!{{ values|safe }}.includes($('#{{ cond_field_id }}').val())) {
-                        $('.mb-3').has('#{{ field_id }}').hide()
-                    }
+                        form.find('[name="{{ cond_field_name }}"]').change({}, (event) => {
+                            let field = $('.mb-3').has('#{{ field_id }}')
+                            if ({{ values|safe }}.includes($(event.target).val())) {
+                                field.fadeIn()
+                            } else {
+                                field.fadeOut()
+                            }
+                        })
+                        if (!{{ values|safe }}.includes(objectifyForm(form)['{{ cond_field_name }}'])) {
+                            $('.mb-3').has('#{{ field_id }}').hide()
+                        }
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
+            })
         </script>
     </fieldset>
 {% endfor %}
