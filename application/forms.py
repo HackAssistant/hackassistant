@@ -12,6 +12,15 @@ from app.mixins import BootstrapFormMixin
 from application.models import Application
 from application.validators import validate_file_extension
 
+YEARS = [(year, str(year)) for year in range(datetime.now().year - 1, datetime.now().year + 6)]
+DEFAULT_YEAR = datetime.now().year + 1
+EXTENSIONS = getattr(settings, 'SUPPORTED_RESUME_EXTENSIONS', None)
+
+HACK_NAME = getattr(settings, 'HACKATHON_NAME')
+EXTRA_NAME = [' 2016 Fall', ' 2016 Winter', ' 2017 Fall', '  2017 Winter', ' 2018', ' 2019', ' 2021', ' 2022']
+PREVIOUS_HACKS = [(i, HACK_NAME + EXTRA_NAME[i]) for i in range(0, len(EXTRA_NAME))]
+HACK_DAYS = [(x, x) for x in ['Friday', 'Saturday', 'Sunday']]
+ENGLISH_LEVELS = [(x,x) for x in ['1','2','3','4','5']]
 
 class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
     terms_and_conditions = forms.BooleanField(
@@ -103,10 +112,6 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
 class HackerForm(ApplicationForm):
-
-    YEARS = [(year, str(year)) for year in range(datetime.now().year - 1, datetime.now().year + 6)]
-    DEFAULT_YEAR = datetime.now().year + 1
-    EXTENSIONS = getattr(settings, 'SUPPORTED_RESUME_EXTENSIONS', None)
 
     bootstrap_field_info = {_('Personal Info'): {'fields': [
         {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
@@ -216,15 +221,21 @@ class HackerForm(ApplicationForm):
 
 
 class VolunteerForm(ApplicationForm):
+
     bootstrap_field_info = {_('Personal Info'): {'fields': [
         # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
         {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
         {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
         {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
         {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
-        {'name': 'first_time_volunteering', 'space': 4}, {'name': 'night_shifts', 'space': 4}],
+        {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}],
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
-
+        'Hackathons': {
+            'fields': [{'name': 'night_shifts', 'space': 4}, {'name': 'first_time_volunteering', 'space': 4},
+                       {'name': 'which_hack', 'space':4, 'visible': {'first_time_volunteering': 'True'}},
+                       {'name': 'attendance', 'space':4}, {'name': 'english_level', 'space':4},
+                       {'name': 'friends', 'space':6}, {'name': 'more_information', 'space':6}],
+        'description': _('Tell us a bit about your experience and preferences in this type of event')},
     }
 
     first_time_volunteering = forms.TypedChoiceField(
@@ -234,6 +245,13 @@ class VolunteerForm(ApplicationForm):
         coerce=lambda x: x == 'True',
         choices=((False, _('No')), (True, _('Yes'))),
         widget=forms.RadioSelect
+    )
+
+    which_hack = forms.MultipleChoiceField(
+        required=False,
+        label=_('Which %s editions have you volunteered in') % getattr(settings, 'HACKATHON_NAME'),
+        widget=forms.CheckboxSelectMultiple,
+        choices=PREVIOUS_HACKS
     )
 
     night_shifts = forms.TypedChoiceField(
@@ -254,3 +272,31 @@ class VolunteerForm(ApplicationForm):
         widget=forms.RadioSelect
     )
 
+    origin = forms.CharField(max_length=300, label=_('From which city?'))
+
+    country = forms.CharField(max_length=300, label=_('From which country are you joining us?'))
+
+    attendance = forms.MultipleChoiceField(
+        required=True,
+        label=_('Which days will you attend to %s?') % getattr(settings, 'HACKATHON_NAME'),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'inline'}),
+        choices=HACK_DAYS
+    )
+
+    english_level = forms.MultipleChoiceField(
+        required=True,
+        label=_('How much confident are you talking in English?'),
+        widget=forms.RadioSelect(attrs={'class': 'inline'}),
+        choices=ENGLISH_LEVELS,
+        help_text = _('1: I don\'t feel comfortable at all - 5: I\'m proficient '),
+    )
+
+    friends = forms.CharField(
+        required=False,
+        label=_('If you\'re applying with friends, please mention their names')
+    )
+
+    more_information = forms.CharField(
+        required=False,
+        label=_('There\'s something else we need to know?')
+    )
