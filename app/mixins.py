@@ -88,8 +88,8 @@ class BootstrapFormMixin:
                 name = field.get('name')
                 field.update({'field': self.fields.get(name).get_bound_field(self, name)})
                 visible[field['field'].auto_id] = {
-                    self.fields.get(visible_name).get_bound_field(self, visible_name).auto_id:
-                        (values if isinstance(values, list) else [values])
+                    self.fields.get(visible_name).get_bound_field(self, visible_name).html_name:
+                        ([str(x) for x in values] if isinstance(values, list) else [str(values)])
                     for visible_name, values in field.get('visible', {}).items()
                 }
                 if field['field'].field.required:
