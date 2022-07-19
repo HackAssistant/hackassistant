@@ -389,14 +389,11 @@ class MentorForm(ApplicationForm):
         {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}, {'name': 'study_work', 'space': 6},
         {'name': 'company', 'space': 6, 'visible': {'study_work': 'True'}}],
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
-        # 'Hackathons': {
-        #     'fields': [{'name': 'night_shifts', 'space': 4}, {'name': 'first_time_volunteering', 'space': 4},
-        #                {'name': 'which_hack', 'space':4, 'visible': {'first_time_volunteering': 'True'}},
-        #                {'name': 'attendance', 'space':4}, {'name': 'english_level', 'space':4},
-        #                {'name': 'lennyface', 'space':4}, {'name': 'friends', 'space':6},
-        #                {'name': 'more_information', 'space':6}, {'name': 'description', 'space':6},
-        #                {'name': 'discover_hack', 'space':6}],
-        # 'description': _('Tell us a bit about your experience and preferences in this type of event.')},
+        'Hackathons': {
+            'fields': [{'name': 'first_timer', 'space': 4},
+                       {'name': 'previous_roles', 'space':4, 'visible': {'first_timer': 'False'}},
+                       {'name': 'more_information', 'space': 12}],
+        'description': _('Tell us a bit about your experience and preferences in this type of event.')},
 
     }
 
@@ -432,6 +429,27 @@ class MentorForm(ApplicationForm):
     company = forms.CharField(required=False,
                               help_text='Current or most recent company you attended',
                               label='Where are you working at?')
+
+    first_timer = forms.TypedChoiceField(
+        required=True,
+        label=_('Will %s be your first hackathon?' % getattr(settings, 'HACKATHON_NAME')),
+        initial=True,
+        coerce=lambda x: x == 'True',
+        choices=((False, _('No')), (True, _('Yes'))),
+        widget=forms.RadioSelect
+    )
+
+    previous_roles = forms.MultipleChoiceField(
+        required=False,
+        label=_('Did you participate as a hacker, mentor, or volunteer?'),
+        widget=forms.CheckboxSelectMultiple,
+        choices=(('Hacker', _('Hacker')), ('Mentor', _('Mentor')), ('Volunteer', _('Volunteer')))
+    )
+
+    more_information = forms.CharField(
+        required=False,
+        label=_('There\'s something else we need to know?')
+    )
 
     class Meta(ApplicationForm.Meta):
         api_fields = {
