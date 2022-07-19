@@ -43,7 +43,7 @@ class ApplicationApplyTemplate(TemplateView):
     public = True
 
     def get_form(self):
-        application_type = self.kwargs.get('type').lower().title()
+        application_type = self.request.GET.get('type', 'Hacker').lower().title()
         ApplicationForm = getattr(forms, application_type + 'Form', None)
         if ApplicationForm is None:
             raise Http404()
@@ -51,7 +51,8 @@ class ApplicationApplyTemplate(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        application_type = get_object_or_404(ApplicationTypeConfig, name__iexact=kwargs.get('type').lower(),
+        application_type = get_object_or_404(ApplicationTypeConfig,
+                                             name__iexact=self.request.GET.get('type', 'Hacker').lower(),
                                              public=self.public)
         ApplicationForm = self.get_form()
         context.update({'edit': False, 'form': ApplicationForm(), 'application_type': application_type})
@@ -65,7 +66,8 @@ class ApplicationApplyTemplate(TemplateView):
             try:
                 if not self.public:
                     raise Application.DoesNotExist()
-                Application.objects.get(user=request.user, type__name__iexact=kwargs.get('type').lower())
+                Application.objects.get(user=request.user,
+                                        type__name__iexact=self.request.GET.get('type', 'Hacker').lower())
             except Application.DoesNotExist:
                 instance = form.save(commit=False)
                 if self.public:
@@ -93,7 +95,8 @@ class ApplicationApplyPrivate(ApplicationApplyTemplate):
     public = False
 
     def dispatch(self, request, *args, **kwargs):
-        application_type = get_object_or_404(ApplicationTypeConfig, name__iexact=kwargs.get('type').lower(),
+        application_type = get_object_or_404(ApplicationTypeConfig,
+                                             name__iexact=self.request.GET.get('type', 'Hacker').lower(),
                                              public=self.public)
         if not application_type.token_is_valid(kwargs.get('token')):
             raise PermissionDenied()
@@ -103,27 +106,23 @@ class ApplicationApplyPrivate(ApplicationApplyTemplate):
 class ApplicationEdit(LoginRequiredMixin, TemplateView):
     template_name = 'application_form.html'
 
-    def get_form(self):
-        application_type = self.kwargs.get('type').lower().title()
-        ApplicationForm = getattr(forms, application_type + 'Form', None)
+    def get_form(self, application_type):
+        ApplicationForm = getattr(forms, application_type.name.lower().title() + 'Form', None)
         if ApplicationForm is None:
             raise Http404(_('Type not active'))
         return ApplicationForm
 
-    def get_application(self, application_type):
+    def get_application(self):
         application = get_object_or_404(Application, uuid=self.kwargs.get('uuid'))
         if not self.request.user.is_organizer() and self.request.user != application.user:
             raise PermissionDenied()
-        if application.type != application_type:
-            raise Http404
         return application
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        application_type = get_object_or_404(ApplicationTypeConfig, name__iexact=kwargs.get('type').lower(),
-                                             public=True)
-        ApplicationForm = self.get_form()
-        application = self.get_application(application_type)
+        application = self.get_application()
+        application_type = application.type
+        ApplicationForm = self.get_form(application_type)
         form = ApplicationForm(instance=application)
         if not application.can_edit():
             form.set_read_only()
@@ -133,7 +132,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
 
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
-        ApplicationForm = self.get_form()
+        ApplicationForm = self.get_form(context.get('application_type'))
         form = ApplicationForm(request.POST, request.FILES, instance=context['form'].instance)
         if form.is_valid():
             application = form.save(commit=False)
