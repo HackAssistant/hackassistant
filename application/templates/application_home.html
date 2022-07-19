@@ -24,12 +24,12 @@
                             </p>
                             <div class="d-grid gap-4 d-flex justify-content-around">
                                 <a style="flex: inherit" href="{% url 'change_status_application' application_type.user_instance.get_uuid application_type.user_instance.STATUS_CANCELLED %}" onclick="return confirm('{% trans 'Are you sure you want to cancel this application?' %}')" class="btn btn-danger col-4">{% trans 'Cancel application' %}</a>
-                                <a style="flex: inherit" href="{% url 'edit_application' application_type.name application_type.user_instance.get_uuid %}" class="btn btn-secondary col-4">{% trans 'View application' %}</a>
+                                <a style="flex: inherit" href="{% url 'edit_application' application_type.user_instance.get_uuid %}" class="btn btn-secondary col-4">{% trans 'View application' %}</a>
                                 <a style="flex: inherit" href="{% url 'change_status_application' application_type.user_instance.get_uuid application_type.user_instance.STATUS_CONFIRMED %}" onclick="return confirm('{% blocktrans %}Your {{ application_type }} invitation will be confirmed. This means that all your other applications will be cancelled. Are you sure you want to confirm this one?{% endblocktrans %}')" class="btn btn-primary col-4">{% trans 'Confirm invitation' %}</a>
                         </div>
                         </div>
                     {% else %}
-                        <a href="{% if application_type.user_instance %}{% url 'edit_application' application_type.name application_type.user_instance.get_uuid %}{% elif application_type.active %}{% url 'apply' application_type.name %}{% endif %}" class="list-group-item list-group-item-action list-group-item-{{ application_type.user_instance.get_public_status_color|default:theme }} {% if not application_type.user_instance and not application_type.active %}disabled{% endif %}">
+                        <a href="{% if application_type.user_instance %}{% url 'edit_application' application_type.user_instance.get_uuid %}{% elif application_type.active %}{% url 'apply' %}?type={{ application_type.name }}{% endif %}" class="list-group-item list-group-item-action list-group-item-{{ application_type.user_instance.get_public_status_color|default:theme }} {% if not application_type.user_instance and not application_type.active %}disabled{% endif %}">
                             <div class="d-flex w-100 justify-content-between">
                                 <h3 class="mb-1">{{ application_type.name }}</h3>
                                 {% if not application_type.user_instance %}
@@ -56,7 +56,7 @@
                     </p>
                     <div class="d-grid gap-4 d-flex justify-content-around">
                         <a href="{% url 'change_status_application' accepted_application.get_uuid accepted_application.STATUS_CANCELLED %}" onclick="return confirm('{% trans 'Are you sure you want to cancel this application? You will lose your invitation.' %}')" class="btn btn-danger col-4">{% trans 'Cancel application' %}</a>
-                        <a style="flex: inherit" href="{% url 'edit_application' accepted_application.type.name accepted_application.get_uuid %}" class="btn btn-secondary col-4">{% trans 'View application' %}</a>
+                        <a style="flex: inherit" href="{% url 'edit_application' accepted_application.get_uuid %}" class="btn btn-secondary col-4">{% trans 'View application' %}</a>
                     </div>
                 </div>
             </div>
