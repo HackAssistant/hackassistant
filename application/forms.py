@@ -223,7 +223,6 @@ class HackerForm(ApplicationForm):
 class VolunteerForm(ApplicationForm):
 
     bootstrap_field_info = {_('Personal Info'): {'fields': [
-        # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
         {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
         {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
         {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
@@ -376,3 +375,68 @@ class SponsorForm(ApplicationForm):
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'inline'}),
         choices=HACK_DAYS
     )
+
+
+class MentorForm(ApplicationForm):
+
+    bootstrap_field_info = {_('Personal Info'): {'fields': [
+        # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
+        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
+        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
+        {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
+        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
+        {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
+        {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}, {'name': 'study_work', 'space': 6},
+        {'name': 'company', 'space': 6, 'visible': {'study_work': 'True'}}],
+        'description': _('Hey there, before we begin we would like to know a little more about you.')},
+        # 'Hackathons': {
+        #     'fields': [{'name': 'night_shifts', 'space': 4}, {'name': 'first_time_volunteering', 'space': 4},
+        #                {'name': 'which_hack', 'space':4, 'visible': {'first_time_volunteering': 'True'}},
+        #                {'name': 'attendance', 'space':4}, {'name': 'english_level', 'space':4},
+        #                {'name': 'lennyface', 'space':4}, {'name': 'friends', 'space':6},
+        #                {'name': 'more_information', 'space':6}, {'name': 'description', 'space':6},
+        #                {'name': 'discover_hack', 'space':6}],
+        # 'description': _('Tell us a bit about your experience and preferences in this type of event.')},
+
+    }
+
+    exclude_save = ['terms_and_conditions', 'diet_notice']
+
+    under_age = forms.TypedChoiceField(
+        required=True,
+        label=_('How old are you?'),
+        initial=False,
+        coerce=lambda x: x == 'True',
+        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
+        widget=forms.RadioSelect
+    )
+
+    university = forms.CharField(max_length=300, label=_('What university do you study at?'),
+                                 help_text=_('Current or most recent school you attended.'))
+
+    degree = forms.CharField(max_length=300, label=_('What\'s your major/degree?'),
+                             help_text=_('Current or most recent degree you\'ve received'))
+
+    origin = forms.CharField(max_length=300, label=_('From which city?'))
+
+    country = forms.CharField(max_length=300, label=_('From which country are you joining us?'))
+
+    study_work = forms.TypedChoiceField(
+        required=True,
+        label='Are you studying or working?',
+        coerce=lambda x: x == 'True',
+        choices=((False, _('Study')), (True, _('Work'))),
+        widget=forms.RadioSelect(attrs={'class': 'inline'})
+    )
+
+    company = forms.CharField(required=False,
+                              help_text='Current or most recent company you attended',
+                              label='Where are you working at?')
+
+    class Meta(ApplicationForm.Meta):
+        api_fields = {
+            'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
+            'university': {'url': static('data/universities.json')},
+            'degree': {'url': static('data/degrees.json')},
+        }
+
