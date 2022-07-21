@@ -35,8 +35,19 @@ The method `exclude_save` is used to not store the information of the specified 
 have to be accepted in order to participate in the event. Therefore, once the application is submitted, this field will
 always be `True`, so it's not necessary to consider that information anymore.
 
-The `Meta` class is useful to link a json file to a specific field, so the user has already some possible answers. For 
-example, in this application, it has been used to list all the possible countries and avoid fake answers.
+The `Meta` class is useful to link a json file to a specific field, so the user has already some possible answers.
+This information is stored in the `api_fields` where the API url is required. Other optional fields are `restrict` and 
+`others` field to restrict the options of the field or add the Others option. For example, in this application, 
+it has been used to list all the possible countries and avoid custom answers.
+
+```python
+class Meta(ApplicationForm.Meta):
+    api_fields = {
+        'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
+        'university': {'url': static('data/universities.json')},
+        'degree': {'url': static('data/degrees.json')},
+    }
+```
 
 It's important to notice that all the text that will be printed out is surrounded by a low bash and parentheses. In 
 future versions, this will allow to translate the displayed text in an easy way.
