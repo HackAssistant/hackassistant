@@ -28,6 +28,9 @@ jobs:
     - name: Check coding style
       run: |
         flake8
+    - name: Migrate
+      run: |
+        python manage.py migrate
     - name: Run Tests
       run: |
         python manage.py test
