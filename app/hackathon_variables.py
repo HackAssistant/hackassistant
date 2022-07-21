@@ -8,9 +8,9 @@ HACKATHON_SOCIALS = [('https://www.facebook.com/hackupc', 'bi-facebook'),
                      ('https://www.youtube.com/channel/UCiiRorGg59Xd5Sjj9bjIt-g', 'bi-youtube'),
                      ('https://www.twitch.tv/hackersupc?lang=es', 'bi-twitch'),
                      ('mailto:contact@hackupc.com', 'bi-envelope'),
-                     ('https://github.com/HackAssistant', 'bi-github'),]
+                     ('https://github.com/HackAssistant', 'bi-github'), ]
 HACKATHON_LANDING = 'https://hackupc.com'
-REGEX_HACKATHON_ORGANIZER_EMAIL = '^.*@hackupc\.com$'
+REGEX_HACKATHON_ORGANIZER_EMAIL = "^.*@hackupc\.com$"
 HACKATHON_ORGANIZER_EMAILS = []
 APP_NAME = 'MyHackUPC'
 APP_EMAIL = ''

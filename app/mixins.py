@@ -1,6 +1,6 @@
 import copy
 
-from django.forms import model_to_dict, FileField
+from django.forms import model_to_dict
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
