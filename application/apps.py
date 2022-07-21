@@ -2,6 +2,7 @@ import inspect
 import sys
 
 from django.apps import AppConfig
+from django.db import OperationalError
 from django.utils import timezone
 
 
