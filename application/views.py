@@ -5,8 +5,6 @@ from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _

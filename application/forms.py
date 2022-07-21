@@ -124,18 +124,15 @@ class HackerForm(ApplicationForm):
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
         'Hackathons': {
             'fields': [{'name': 'description', 'space': 6}, {'name': 'projects', 'space': 6},
-                       {'name': 'first_timer', 'space': 12}, ]
-        },
+                       {'name': 'first_timer', 'space': 12}, ]},
         'Show us what you\'ve built': {
             'fields': [{'name': 'github', 'space': 6}, {'name': 'devpost', 'space': 6},
                        {'name': 'linkedin', 'space': 6}, {'name': 'site', 'space': 6},
                        {'name': 'resume', 'space': 12}, ],
             'description': 'Some of our sponsors may use this information for recruitment purposes, '
-                           'so please include as much as you can.'
-        },
+                           'so please include as much as you can.'},
         'Traveling': {
-            'fields': [{'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}],
-        }
+            'fields': [{'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}], }
     }
 
     exclude_save = ['terms_and_conditions', 'diet_notice']
@@ -388,7 +385,7 @@ class MentorForm(ApplicationForm):
         'description': _('Hey there, before we begin we would like to know a little more about you.')},
         'Hackathons': {
             'fields': [{'name': 'first_timer', 'space': 4},
-                       {'name': 'previous_roles', 'space':4, 'visible': {'first_timer': 'False'}},
+                       {'name': 'previous_roles', 'space': 4, 'visible': {'first_timer': 'False'}},
                        {'name': 'more_information', 'space': 12}],
         'description': _('Tell us a bit about your experience and preferences in this type of event.')},
 
