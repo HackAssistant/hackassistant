@@ -2,6 +2,7 @@ import inspect
 import sys
 
 from django.apps import AppConfig
+from django.db import OperationalError
 from django.utils import timezone
 
 
@@ -14,7 +15,10 @@ class ApplicationConfig(AppConfig):
         from django.contrib.auth.models import Group
 
         ApplicationTypeConfig = self.get_model('ApplicationTypeConfig')
-        group = Group.objects.get_or_create(name='Organizer')[0]
+        try:
+            group = Group.objects.get_or_create(name='Organizer')[0]
+        except OperationalError:
+            return
 
         for name, obj in inspect.getmembers(sys.modules['application.forms']):
             if inspect.isclass(obj) and issubclass(obj, ApplicationForm) and obj != ApplicationForm:
