@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth import password_validation
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from app.mixins import BootstrapFormMixin
