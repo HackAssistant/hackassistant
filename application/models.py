@@ -132,71 +132,14 @@ class Application(models.Model):
         STATUS_ATTENDED: _('You have arrived at the event. Have fun!'),
     }
 
-    GENDER_NO_ANSWER = 'NA'
-    GENDER_MALE = 'M'
-    GENDER_FEMALE = 'F'
-    GENDER_NON_BINARY = 'NB'
-    GENDER_OTHER = 'X'
-    GENDERS = [
-        (GENDER_NO_ANSWER, _('Prefer not to answer')),
-        (GENDER_MALE, _('Male')),
-        (GENDER_FEMALE, _('Female')),
-        (GENDER_NON_BINARY, _('Non-binary')),
-        (GENDER_OTHER, _('Prefer to self-describe')),
-    ]
-
-    DIET_NONE = 'None'
-    DIET_VEGETARIAN = 'Vegetarian'
-    DIET_VEGAN = 'Vegan'
-    DIET_NO_PORK = 'No pork'
-    DIET_GLUTEN_FREE = 'Gluten-free'
-    DIET_OTHER = 'Others'
-
-    DIETS = [
-        (DIET_NONE, _('No requirements')),
-        (DIET_VEGETARIAN, _('Vegetarian')),
-        (DIET_VEGAN, _('Vegan')),
-        (DIET_NO_PORK, _('No pork')),
-        (DIET_GLUTEN_FREE, _('Gluten-free')),
-        (DIET_OTHER, _('Others')),
-    ]
-
-    TSHIRT_XS = 'XS'
-    TSHIRT_S = 'S'
-    TSHIRT_M = 'M'
-    TSHIRT_L = 'L'
-    TSHIRT_XL = 'XL'
-    TSHIRT_XXL = 'XXL'
-    TSHIRT_XXXL = 'XXXL'
-
-    TSHIRT_SIZES = [
-        (TSHIRT_XS, "Unisex - XS"),
-        (TSHIRT_S, "Unisex - S"),
-        (TSHIRT_M, "Unisex - M"),
-        (TSHIRT_L, "Unisex - L"),
-        (TSHIRT_XL, "Unisex - XL"),
-        (TSHIRT_XXL, "Unisex - XXL"),
-        (TSHIRT_XXXL, "Unisex - XXXL"),
-    ]
-
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
     type = models.ForeignKey(ApplicationTypeConfig, on_delete=models.DO_NOTHING)
 
     submission_date = models.DateTimeField(default=timezone.now, editable=False)
     status_update_date = models.DateTimeField(default=timezone.now)
 
-    diet = models.CharField(max_length=300, choices=DIETS, default=DIET_NONE)
-    other_diet = models.CharField(max_length=600, blank=True, null=True)
-
-    tshirt_size = models.CharField(max_length=5, default=TSHIRT_M, choices=TSHIRT_SIZES)
-
     status = models.CharField(choices=STATUS, default=STATUS_PENDING, max_length=2)
-
-    gender = models.CharField(max_length=23, choices=GENDERS, default=GENDER_NO_ANSWER)
-    other_gender = models.CharField(max_length=50, blank=True, null=True)
-
-    under_age = models.BooleanField(default=False)
 
     data = models.TextField(blank=True)
 
@@ -272,6 +215,9 @@ class Application(models.Model):
 
     def can_edit(self):
         return self.status in [self.STATUS_PENDING, self.STATUS_NEEDS_CHANGE]
+
+    class Meta:
+        unique_together = ('type', 'user')
 
 
 class ApplicationLog(models.Model):

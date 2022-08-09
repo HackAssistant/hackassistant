@@ -2,6 +2,7 @@ from django.contrib import auth
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import PermissionsMixin, Group
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -75,6 +76,53 @@ class UserManager(BaseUserManager):
 
 # User default from Django without username field
 class User(AbstractBaseUser, PermissionsMixin):
+    GENDER_NO_ANSWER = 'NA'
+    GENDER_MALE = 'M'
+    GENDER_FEMALE = 'F'
+    GENDER_NON_BINARY = 'NB'
+    GENDER_OTHER = 'X'
+    GENDERS = [
+        (GENDER_NO_ANSWER, _('Prefer not to answer')),
+        (GENDER_MALE, _('Male')),
+        (GENDER_FEMALE, _('Female')),
+        (GENDER_NON_BINARY, _('Non-binary')),
+        (GENDER_OTHER, _('Prefer to self-describe')),
+    ]
+
+    DIET_NONE = 'None'
+    DIET_VEGETARIAN = 'Vegetarian'
+    DIET_VEGAN = 'Vegan'
+    DIET_NO_PORK = 'No pork'
+    DIET_GLUTEN_FREE = 'Gluten-free'
+    DIET_OTHER = 'Others'
+
+    DIETS = [
+        (DIET_NONE, _('No requirements')),
+        (DIET_VEGETARIAN, _('Vegetarian')),
+        (DIET_VEGAN, _('Vegan')),
+        (DIET_NO_PORK, _('No pork')),
+        (DIET_GLUTEN_FREE, _('Gluten-free')),
+        (DIET_OTHER, _('Others')),
+    ]
+
+    TSHIRT_XS = 'XS'
+    TSHIRT_S = 'S'
+    TSHIRT_M = 'M'
+    TSHIRT_L = 'L'
+    TSHIRT_XL = 'XL'
+    TSHIRT_XXL = 'XXL'
+    TSHIRT_XXXL = 'XXXL'
+
+    TSHIRT_SIZES = [
+        (TSHIRT_XS, "Unisex - XS"),
+        (TSHIRT_S, "Unisex - S"),
+        (TSHIRT_M, "Unisex - M"),
+        (TSHIRT_L, "Unisex - L"),
+        (TSHIRT_XL, "Unisex - XL"),
+        (TSHIRT_XXL, "Unisex - XXL"),
+        (TSHIRT_XXXL, "Unisex - XXXL"),
+    ]
+
     first_name = models.CharField(_("first name"), max_length=150)
     last_name = models.CharField(_("last names"), max_length=150)
     email = models.EmailField(_("email address"), unique=True)
@@ -94,6 +142,20 @@ class User(AbstractBaseUser, PermissionsMixin):
         ),
     )
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
+
+    diet = models.CharField(max_length=300, choices=DIETS, default=DIET_NONE)
+    other_diet = models.CharField(max_length=600, blank=True, null=True)
+
+    tshirt_size = models.CharField(max_length=5, default=TSHIRT_M, choices=TSHIRT_SIZES)
+
+    gender = models.CharField(max_length=23, choices=GENDERS, default=GENDER_NO_ANSWER)
+    other_gender = models.CharField(max_length=50, blank=True, null=True)
+
+    under_age = models.BooleanField(default=False)
+
+    phone_number = models.CharField(validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$')], blank=True, max_length=20,
+                                    help_text=_("Phone number must be entered in the format: +#########'. "
+                                                "Up to 15 digits allowed."))
 
     objects = UserManager()
 

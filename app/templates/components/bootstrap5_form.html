@@ -1,6 +1,6 @@
 {% load django_bootstrap5 %}
 {% load i18n %}
-{% if form.errors %}
+{% if form.errors and not only_form %}
     {% for field, errors in form.errors.items %}
         {% for error in errors %}
             {% if error %}
@@ -12,123 +12,131 @@
         {% endfor %}
     {% endfor %}
 {% endif %}
-{% for title, zone in form.get_fields.items %}
-    <fieldset class="bootstrap-fieldset">
-          <h3 class="heading-primary">{{ title }}</h3>
-          {% if zone.description %}
-            <p>{{ zone.description|safe }}</p>
-          {% endif %}
+{% if not only_errors %}
+    {% for title, zone in form.get_fields.items %}
+        <fieldset class="bootstrap-fieldset">
+              {% if not form_text_disabled %}
+                  <h3 class="heading-primary">{{ title }}</h3>
+                  {% if zone.description %}
+                      <p>{{ zone.description|safe }}</p>
+                  {% endif %}
+              {% endif %}
 
-        <div class="row">
-        {% for field in zone.fields %}
-            <div class="col-lg-{{ field.space }}">
-                {% bootstrap_field field.field %}
+            <div class="row">
+            {% for field in zone.fields %}
+                {% if field.space and field.space > 0 and field.space < 12 %}
+                    <div class="col-lg-{{ field.space }}">
+                        {% bootstrap_field field.field %}
+                    </div>
+                {% else %}
+                    {% bootstrap_field field.field %}
+                {% endif %}
+                {% if field.api %}
+                    <script>
+                        $(document).ready(() => {
+                            var data = new Bloodhound({
+                                datumTokenizer: Bloodhound.tokenizers.whitespace,
+                                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                // The url points to a json file that contains an array of country names
+                                prefetch: '{{ field.api.url }}'
+                            });
+                            {% if field.api.others %}
+                                data.add(['Others'])
+                            {% endif %}
+
+                            // Initializing the typeahead with remote dataset
+                            $('#{{ field.field.auto_id }}').typeahead({
+                                classNames: {
+                                    menu: 'tt-menu dropdown-menu dropdown-menu-{{ theme }}',
+                                    suggestion: 'tt-suggestion dropdown-item'
+                                }
+                            }, {
+                                name: 'countries',
+                                source: data,
+                                limit: 10 /* Specify maximum number of suggestions to be displayed */
+                            });
+                            {% if field.api.restrict %}
+                                $('form').has('#{{ field.field.auto_id }}').submit((event) => {
+                                    if (data.get($('#{{ field.field.auto_id }}').val()).length === 0) {
+                                        event.preventDefault()
+                                        let field = $('#{{ field.field.auto_id }}')
+                                        field.removeClass('is-valid').addClass('is-invalid')
+                                        let div_field = $('.mb-3').has('#{{ field.field.auto_id }}')
+                                        div_field.find('.valid-feedback, .invalid-feedback').remove()
+                                        field.after('<div class="invalid-feedback">{% translate 'Please select one of the dropdown options or write: Others' %}.</div>')
+                                        $([document.documentElement, document.body]).animate({
+                                            scrollTop: div_field.offset().top
+                                        }, 100)
+                                    }
+                                })
+                            {% endif %}
+                        })
+                    </script>
+                {% endif %}
+            {% endfor %}
             </div>
-            {% if field.api %}
-                <script>
-                    $(document).ready(() => {
-                        var data = new Bloodhound({
-                            datumTokenizer: Bloodhound.tokenizers.whitespace,
-                            queryTokenizer: Bloodhound.tokenizers.whitespace,
-                            // The url points to a json file that contains an array of country names
-                            prefetch: '{{ field.api.url }}'
-                        });
-                        {% if field.api.others %}
-                            data.add(['Others'])
-                        {% endif %}
-
-                        // Initializing the typeahead with remote dataset
-                        $('#{{ field.field.auto_id }}').typeahead({
-                            classNames: {
-                                menu: 'tt-menu dropdown-menu dropdown-menu-{{ theme }}',
-                                suggestion: 'tt-suggestion dropdown-item'
+            <script>
+                function objectifyForm(form) {
+                    let formArray = form.serializeArray()
+                    //serialize data function
+                    let returnArray = {}
+                    for (let i = 0; i < formArray.length; i++){
+                        returnArray[formArray[i]['name']] = formArray[i]['value']
+                    }
+                    return returnArray
+                }
+                $(document).ready(() => {
+                    let form = null
+                    {% for field_id, item in zone.visible.items %}
+                        {% for cond_field_name, values in item.items %}
+                            if (form === null) {
+                                form = $('form').has('[name="{{ cond_field_name }}"]')
                             }
-                        }, {
-                            name: 'countries',
-                            source: data,
-                            limit: 10 /* Specify maximum number of suggestions to be displayed */
-                        });
-                        {% if field.api.restrict %}
-                            $('form').has('#{{ field.field.auto_id }}').submit((event) => {
-                                if (data.get($('#{{ field.field.auto_id }}').val()).length === 0) {
-                                    event.preventDefault()
-                                    let field = $('#{{ field.field.auto_id }}')
-                                    field.removeClass('is-valid').addClass('is-invalid')
-                                    let div_field = $('.mb-3').has('#{{ field.field.auto_id }}')
-                                    div_field.find('.valid-feedback, .invalid-feedback').remove()
-                                    field.after('<div class="invalid-feedback">{% translate 'Please select one of the dropdown options or write: Others' %}.</div>')
-                                    $([document.documentElement, document.body]).animate({
-                                        scrollTop: div_field.offset().top
-                                    }, 100)
+                            form.find('[name="{{ cond_field_name }}"]').change({}, (event) => {
+                                let field = $('.mb-3').has('#{{ field_id }}')
+                                if ({{ values|safe }}.includes($(event.target).val())) {
+                                    field.fadeIn()
+                                } else {
+                                    field.fadeOut()
                                 }
                             })
-                        {% endif %}
-                    })
-                </script>
-            {% endif %}
-        {% endfor %}
-        </div>
-        <script>
-            function objectifyForm(form) {
-                let formArray = form.serializeArray()
-                //serialize data function
-                let returnArray = {}
-                for (let i = 0; i < formArray.length; i++){
-                    returnArray[formArray[i]['name']] = formArray[i]['value']
-                }
-                return returnArray
-            }
-            $(document).ready(() => {
-                let form = null
-                {% for field_id, item in zone.visible.items %}
-                    {% for cond_field_name, values in item.items %}
-                        if (form === null) {
-                            form = $('form').has('[name="{{ cond_field_name }}"]')
-                        }
-                        form.find('[name="{{ cond_field_name }}"]').change({}, (event) => {
-                            let field = $('.mb-3').has('#{{ field_id }}')
-                            if ({{ values|safe }}.includes($(event.target).val())) {
-                                field.fadeIn()
-                            } else {
-                                field.fadeOut()
+                            if (!{{ values|safe }}.includes(objectifyForm(form)['{{ cond_field_name }}'])) {
+                                $('.mb-3').has('#{{ field_id }}').hide()
                             }
-                        })
-                        if (!{{ values|safe }}.includes(objectifyForm(form)['{{ cond_field_name }}'])) {
-                            $('.mb-3').has('#{{ field_id }}').hide()
-                        }
+                        {% endfor %}
                     {% endfor %}
-                {% endfor %}
+                })
+            </script>
+        </fieldset>
+    {% endfor %}
+    <script>
+        $(document).ready(() => {
+            $('.bootstrap-fieldset :input').not('[type="checkbox"]').not('[type="radio"]').each((i, item) => {
+                $(item).addClass('bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}')
             })
-        </script>
-    </fieldset>
-{% endfor %}
-<script>
-    $(document).ready(() => {
-        $('.bootstrap-fieldset :input').not('[type="checkbox"]').not('[type="radio"]').each((i, item) => {
-            $(item).addClass('bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}')
+            $('.inline .form-check').addClass('form-check-inline')
+            $('.mb-3').find('a').attr('target', '_blank')
         })
-        $('.inline .form-check').addClass('form-check-inline')
-        $('.mb-3').find('a').attr('target', '_blank')
-    })
 
-</script>
-<style>
-    .twitter-typeahead {
-        width: 100%;
-    }
-    .tt-hint {
-        display: none;
-    }
-    .tt-menu {
-        width: 100%;
-    }
-    .tt-suggestion {
-        white-space: normal;
-    }
-    .tt-suggestion:hover {
-        cursor: pointer;
-    }
-    .tt-suggestion p {
-        margin: 0;
-    }
-</style>
+    </script>
+    <style>
+        .twitter-typeahead {
+            width: 100%;
+        }
+        .tt-hint {
+            display: none;
+        }
+        .tt-menu {
+            width: 100%;
+        }
+        .tt-suggestion {
+            white-space: normal;
+        }
+        .tt-suggestion:hover {
+            cursor: pointer;
+        }
+        .tt-suggestion p {
+            margin: 0;
+        }
+    </style>
+{% endif %}

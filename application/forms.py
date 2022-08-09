@@ -24,7 +24,7 @@ ENGLISH_LEVELS = [(x, x) for x in ['1', '2', '3', '4', '5']]
 
 
 class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
-    terms_and_conditions = forms.BooleanField(
+    terms_and_conditions = forms.BooleanField(required=True,
         label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
                           'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
                           'Privacy and Cookies Policy</a>.' % (
@@ -32,10 +32,12 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
                           )))
     )
 
-    diet_notice = forms.BooleanField(
+    diet_notice = forms.BooleanField(required=True,
         label=_('I authorize %s to use my food allergies and intolerances information to '
                 'manage the catering service only.') % getattr(settings, 'HACKATHON_ORG')
     )
+
+    exclude_save = ['terms_and_conditions', 'diet_notice']
 
     def save(self, commit=True):
         model_fields = [field.name for field in self.Meta.model._meta.fields]
@@ -73,10 +75,10 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
     def get_bootstrap_field_info(self):
         fields = super().get_bootstrap_field_info()
         instance = getattr(self, 'instance', None)
-        if instance is not None and instance._state.adding:  # instance not in DB
+        if instance is None or instance._state.db is None:  # instance not in DB
             policy_fields = self.get_policy_fields()
             fields.update({
-                'HackUPC Polices': {
+                _('HackUPC Polices'): {
                     'fields': policy_fields,
                     'description': '<p style="color: margin-top: 1em;display: block;'
                                    'margin-bottom: 1em;line-height: 1.25em;">We, Hackers at UPC, '
@@ -113,29 +115,22 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
 class HackerForm(ApplicationForm):
-    bootstrap_field_info = {_('Personal Info'): {'fields': [
-        {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
-        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
-        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
-        {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
-        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
-        {'name': 'graduation_year', 'space': 8},
-        {'name': 'lennyface', 'space': 4}],
-        'description': _('Hey there, before we begin we would like to know a little more about you.')},
-        'Hackathons': {
+    bootstrap_field_info = {
+        '': {
+            'fields': [{'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4},
+                       {'name': 'lennyface', 'space': 4}, {'name': 'graduation_year', 'space': 8}]},
+        _('Hackathons'): {
             'fields': [{'name': 'description', 'space': 6}, {'name': 'projects', 'space': 6},
                        {'name': 'first_timer', 'space': 12}, ]},
-        'Show us what you\'ve built': {
+        _("Show us what you've built"): {
             'fields': [{'name': 'github', 'space': 6}, {'name': 'devpost', 'space': 6},
                        {'name': 'linkedin', 'space': 6}, {'name': 'site', 'space': 6},
                        {'name': 'resume', 'space': 12}, ],
             'description': 'Some of our sponsors may use this information for recruitment purposes, '
                            'so please include as much as you can.'},
-        'Traveling': {
+        _('Traveling'): {
             'fields': [{'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}], }
     }
-
-    exclude_save = ['terms_and_conditions', 'diet_notice']
 
     under_age = forms.TypedChoiceField(
         required=True,
@@ -219,15 +214,12 @@ class HackerForm(ApplicationForm):
 
 
 class VolunteerForm(ApplicationForm):
-    bootstrap_field_info = {_('Personal Info'): {'fields': [
-        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
-        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
-        {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
-        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
-        {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
-        {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}],
-        'description': _('Hey there, before we begin we would like to know a little more about you.')},
-        'Hackathons': {
+    bootstrap_field_info = {
+        '': {
+            'fields': [
+                {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
+                {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}]},
+        _('Hackathons'): {
             'fields': [{'name': 'night_shifts', 'space': 4}, {'name': 'first_time_volunteering', 'space': 4},
                        {'name': 'which_hack', 'space': 4, 'visible': {'first_time_volunteering': True}},
                        {'name': 'attendance', 'space': 4}, {'name': 'english_level', 'space': 4},
@@ -237,8 +229,6 @@ class VolunteerForm(ApplicationForm):
             'description': _('Tell us a bit about your experience and preferences in this type of event.')},
 
     }
-
-    exclude_save = ['terms_and_conditions', 'diet_notice']
 
     university = forms.CharField(max_length=300, label=_('What university do you study at?'),
                                  help_text=_('Current or most recent school you attended.'))
@@ -329,18 +319,12 @@ class VolunteerForm(ApplicationForm):
 
 
 class SponsorForm(ApplicationForm):
-    bootstrap_field_info = {_('Personal Info'): {'fields': [
-        {'name': 'full_name', 'space': 4}, {'name': 'email', 'space': 4}, {'name': 'phone_number', 'space': 4},
-        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
-        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}}, {'name': 'gender', 'space': 4},
-        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}}, ], },
+    bootstrap_field_info = {
         'Sponsor Info': {
             'fields': [{'name': 'company', 'space': 4}, {'name': 'position', 'space': 4},
                        {'name': 'attendance', 'space': 4}]}
 
     }
-
-    exclude_save = ['terms_and_conditions', 'diet_notice']
 
     full_name = forms.CharField(
         label=_('Full name')
@@ -372,26 +356,17 @@ class SponsorForm(ApplicationForm):
 
 
 class MentorForm(ApplicationForm):
-
-    bootstrap_field_info = {_('Personal Info'): {'fields': [
-        # {'name': 'university', 'space': 4}, {'name': 'degree', 'space': 4}, {'name': 'phone_number', 'space': 4},
-        {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
-        {'name': 'other_diet', 'space': 4, 'visible': {'diet': Application.DIET_OTHER}},
-        {'name': 'under_age', 'space': 4}, {'name': 'gender', 'space': 4},
-        {'name': 'other_gender', 'space': 4, 'visible': {'gender': Application.GENDER_OTHER}},
-        {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
-        {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}, {'name': 'study_work', 'space': 6},
-        {'name': 'company', 'space': 6, 'visible': {'study_work': 'True'}}],
-        'description': _('Hey there, before we begin we would like to know a little more about you.')},
+    bootstrap_field_info = {
+        '': {'fields': [
+            {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
+            {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}, {'name': 'study_work', 'space': 6},
+            {'name': 'company', 'space': 6, 'visible': {'study_work': 'True'}}]},
         'Hackathons': {
             'fields': [{'name': 'first_timer', 'space': 4},
                        {'name': 'previous_roles', 'space': 4, 'visible': {'first_timer': 'False'}},
                        {'name': 'more_information', 'space': 12}],
-        'description': _('Tell us a bit about your experience and preferences in this type of event.')},
-
+            'description': _('Tell us a bit about your experience and preferences in this type of event.')},
     }
-
-    exclude_save = ['terms_and_conditions', 'diet_notice']
 
     under_age = forms.TypedChoiceField(
         required=True,

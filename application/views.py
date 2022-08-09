@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 
 from application import forms
 from application.models import Application, ApplicationTypeConfig, ApplicationLog
+from user.forms import UserProfileForm
 from user.mixins import LoginRequiredMixin
 
 
@@ -18,7 +19,7 @@ class ApplicationHome(LoginRequiredMixin, TemplateView):
     template_name = 'application_home.html'
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_organizer():
+        if request.user.is_authenticated and request.user.is_organizer():
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
@@ -53,32 +54,49 @@ class ApplicationApplyTemplate(TemplateView):
                                              name__iexact=self.request.GET.get('type', 'Hacker').lower(),
                                              public=self.public)
         ApplicationForm = self.get_form()
-        context.update({'edit': False, 'form': ApplicationForm(), 'application_type': application_type})
+        initial_data = {key: value for key, value in self.request.GET.dict().items()
+                        if key not in ApplicationForm.exclude_save}
+        if self.public:
+            user_form = UserProfileForm(instance=self.request.user, initial=initial_data)
+        else:
+            user_form = UserProfileForm(initial=initial_data)
+        context.update({'edit': False, 'application_form': ApplicationForm(initial=initial_data),
+                        'application_type': application_type,
+                        'user_form': user_form})
         return context
+
+    def save_application(self, form, app_type, user):
+        try:
+            if not self.public:
+                raise Application.DoesNotExist()
+            Application.objects.get(user=user, type__name__iexact=self.request.GET.get('type', 'Hacker').lower())
+        except Application.DoesNotExist:
+            instance = form.save(commit=False)
+            instance.user = user
+            instance.type_id = app_type.pk
+            with transaction.atomic():
+                instance.save()
+                form.save_files(instance=instance)
+        except Application.MultipleObjectsReturned:
+            pass
+
+    def save_user(self, form):
+        pass
 
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
         ApplicationForm = self.get_form()
-        form = ApplicationForm(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                if not self.public:
-                    raise Application.DoesNotExist()
-                Application.objects.get(user=request.user,
-                                        type__name__iexact=self.request.GET.get('type', 'Hacker').lower())
-            except Application.DoesNotExist:
-                instance = form.save(commit=False)
-                if self.public:
-                    instance.user = request.user
-                instance.type_id = context['application_type'].id
-                with transaction.atomic():
-                    instance.save()
-                    form.save_files(instance=instance)
-            except Application.MultipleObjectsReturned:
-                pass
+        application_form = ApplicationForm(request.POST, request.FILES)
+        if self.public:
+            user_form = UserProfileForm(request.POST, instance=request.user)
+        else:
+            user_form = UserProfileForm(request.POST)
+        if user_form.is_valid() and application_form.is_valid():
+            user = user_form.save()
+            self.save_application(form=application_form, app_type=context['application_type'], user=user)
             messages.success(request, _('Applied successfully!'))
             return redirect('apply_home')
-        context.update({'form': form})
+        context.update({'application_form': application_form, 'user_form': user_form})
         return self.render_to_response(context)
 
 
@@ -116,27 +134,33 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
             raise PermissionDenied()
         return application
 
+    def application_can_edit(self, application, application_type):
+        return self.request.user.is_organizer or application.can_edit() and application_type.active()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         application = self.get_application()
         application_type = application.type
         ApplicationForm = self.get_form(application_type)
-        form = ApplicationForm(instance=application)
-        if not application.can_edit():
-            form.set_read_only()
-        context.update({'edit': True, 'form': form, 'full_name': application.get_full_name(),
-                        'application_type': application_type})
+        application_form = ApplicationForm(instance=application)
+        user_form = UserProfileForm(instance=application.user)
+        if self.application_can_edit(application, application_type):
+            application_form.set_read_only()
+        context.update({'edit': True, 'application_form': application_form, 'full_name': application.get_full_name(),
+                        'application_type': application_type, 'user_form': user_form})
         return context
 
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
         ApplicationForm = self.get_form(context.get('application_type'))
-        form = ApplicationForm(request.POST, request.FILES, instance=context['form'].instance)
-        if form.is_valid():
-            application = form.save(commit=False)
-            log = ApplicationLog.create_log(application=form.instance, user=request.user)
+        user_form = UserProfileForm(request.POST, instance=context['user_form'].instance)
+        application_form = ApplicationForm(request.POST, request.FILES, instance=context['application_form'].instance)
+        if user_form.is_valid() and application_form.is_valid():
+            user_form.save()
+            application = application_form.save(commit=False)
+            log = ApplicationLog.create_log(application=application_form.instance, user=request.user)
             with transaction.atomic():
-                files = form.save_files(instance=application)
+                files = application_form.save_files(instance=application)
                 if len(files) <= 0:
                     application.save()
                 log.set_file_changes(files)
@@ -144,7 +168,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
                     log.save()
             messages.success(request, _('Edited successfully!'))
             return redirect('edit_application', **kwargs)
-        context.update({'form': form})
+        context.update({'application_form': application_form})
         return self.render_to_response(context)
 
 
