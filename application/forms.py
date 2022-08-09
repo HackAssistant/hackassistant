@@ -24,7 +24,7 @@ ENGLISH_LEVELS = [(x, x) for x in ['1', '2', '3', '4', '5']]
 
 
 class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
-    terms_and_conditions = forms.BooleanField(required=True,
+    terms_and_conditions = forms.BooleanField(
         label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
                           'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
                           'Privacy and Cookies Policy</a>.' % (
@@ -32,7 +32,7 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
                           )))
     )
 
-    diet_notice = forms.BooleanField(required=True,
+    diet_notice = forms.BooleanField(
         label=_('I authorize %s to use my food allergies and intolerances information to '
                 'manage the catering service only.') % getattr(settings, 'HACKATHON_ORG')
     )
