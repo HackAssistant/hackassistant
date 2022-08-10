@@ -1,5 +1,6 @@
 import copy
 
+from django import forms
 from django.forms import model_to_dict
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -87,6 +88,8 @@ class BootstrapFormMixin:
             for field in list_fields.get('fields', []):
                 name = field.get('name')
                 field.update({'field': self.fields.get(name).get_bound_field(self, name)})
+                if field.get('space', 0) <= 0:
+                    field['field'].field.widget = forms.HiddenInput()
                 visible[field['field'].auto_id] = {
                     self.fields.get(visible_name).get_bound_field(self, visible_name).html_name:
                         ([str(x) for x in values] if isinstance(values, list) else [str(values)])

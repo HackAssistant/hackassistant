@@ -112,11 +112,71 @@ class UserChangeForm(forms.ModelForm):
 
 
 class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
-    bootstrap_field_info = {'': {'fields': [{'name': 'first_name', 'space': 6}, {'name': 'last_name', 'space': 6}]}}
+    bootstrap_field_info = {_('Personal Info'): {'fields': [
+        {'name': 'first_name', 'space': 6}, {'name': 'last_name', 'space': 6}, {'name': 'email', 'space': 6},
+        {'name': 'phone_number', 'space': 6}, {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
+        {'name': 'other_diet', 'space': 4, 'visible': {'diet': User.DIET_OTHER}}, {'name': 'under_age', 'space': 4},
+        {'name': 'gender', 'space': 4}, {'name': 'other_gender', 'space': 4, 'visible': {'gender': User.GENDER_OTHER}},
+    ],
+        'description': _('Hey there, before we begin we would like to know a little more about you.')}, }
+
+    under_age = forms.TypedChoiceField(
+        required=True,
+        label=_('How old are you?'),
+        initial=False,
+        coerce=lambda x: x == 'True',
+        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
+        widget=forms.RadioSelect
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance', None)
+        if instance is not None and instance._state.db is not None:  # instance in DB
+            email_field = self.fields.get('email')
+            email_field.widget.attrs['readonly'] = True
+            email_field.help_text = _('This field cannot be modified')
+
+    def get_bootstrap_field_info(self):
+        info = super().get_bootstrap_field_info()
+        instance = getattr(self, 'instance', None)
+        if instance is None or instance._state.db is None:  # instance not in DB
+            fields = info[_('Personal Info')]['fields']
+            result = []
+            for field in fields:
+                if field['name'] not in self.Meta.fields_only_public:
+                    if field['space'] == 4:
+                        field['space'] = 6
+                else:
+                    field['space'] = 0
+                result.append(field)
+            info[_('Personal Info')]['fields'] = result
+        return info
+
+    def clean_email(self):
+        instance = getattr(self, 'instance', None)
+        if instance is not None and instance._state.db is not None:  # instance in DB
+            return self.instance.email
+        return self.cleaned_data.get('email')
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name')
+        fields = ['first_name', 'email', 'last_name', 'phone_number', 'diet', 'other_diet', 'gender',
+                  'other_gender', 'under_age', 'tshirt_size']
+        fields_only_public = ['under_age', 'tshirt_size']
+        help_texts = {
+            'gender': _('This is for demographic purposes. You can skip this question if you want.'),
+            'other_diet': _('Please fill here in your dietary requirements. '
+                            'We want to make sure we have food for you!'),
+            'origin': "Please select one of the dropdown options or write 'Others'. If the dropdown doesn't show up,"
+                      " type following this schema: <strong>city, nation, country</strong>"
+        }
+        labels = {
+            'gender': _('What gender do you identify as?'),
+            'other_gender': _('Self-describe'),
+            'tshirt_size': _('What\'s your t-shirt size?'),
+            'diet': _('Dietary requirements'),
+        }
 
 
 class ForgotPasswordForm(BootstrapFormMixin, forms.Form):

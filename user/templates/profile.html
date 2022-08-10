@@ -5,7 +5,7 @@
     <h1 style="text-align: center">{% translate 'Profile' %}</h1>
     <form method="post" id="profile-form">
         {% csrf_token %}
-        {% include 'components/bootstrap5_form.html' %}
+        {% include 'components/bootstrap5_form.html' with form_text_disabled=True %}
         <div class="d-grid gap-4 d-flex justify-content-around">
             <button type="button" data-bs-toggle="modal" data-bs-target="#modal-delete-user" class="btn btn-block btn-danger col-4">{% translate 'Delete user' %}</button>
             <button type="submit" class="btn btn-block btn-primary col-4">{% translate 'Change profile' %}</button>
