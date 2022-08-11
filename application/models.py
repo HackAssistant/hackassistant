@@ -11,8 +11,6 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
-from user.models import User
-
 
 class FileField(dict):
     def __init__(self, data, url) -> None:
@@ -222,11 +220,12 @@ class Application(models.Model):
 
 class ApplicationLog(models.Model):
     id = models.BigAutoField(primary_key=True)
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, db_index=False)
-    user = models.ForeignKey(User, on_delete=models.RESTRICT, db_index=False)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, db_index=False, related_name='logs')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, db_index=False)
     name = models.CharField(max_length=20)
     comment = models.TextField(blank=True)
     data = models.TextField(blank=True)
+    date = models.DateTimeField(default=timezone.now)
 
     class NotFound:
         pass

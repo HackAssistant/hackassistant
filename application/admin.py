@@ -4,3 +4,4 @@ from application import models
 
 admin.site.register(models.Application)
 admin.site.register(models.ApplicationTypeConfig)
+admin.site.register(models.ApplicationLog)

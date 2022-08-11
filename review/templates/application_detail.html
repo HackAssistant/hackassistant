@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load util %}
+{% block subtitle %}{% translate 'Application detail' %}{% endblock %}
+{% block content %}
+    <div class="row justify-content-between mb-3">
+        <div class="col-3 d-grid d-md-block">
+            <div class="">
+                {% if vote %}
+                    <a href="" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
+                {% else %}
+                    <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-3 d-grid d-md-flex justify-content-md-end">
+            <a href="" class="btn btn-secondary col-12">{% translate 'Logs' %}</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-10">
+            <h1 {% if application.user.under_age %}class="text-danger"{% endif %}>{{ application.user.get_full_name }}'s {{ application.type.name|lower }} application</h1>
+        </div>
+        <div class="col-2">
+            {% if application.user.under_age %}
+                <p style="text-align: right" class="text-danger">{% translate 'Under age' %} <i class="bi bi-exclamation-triangle-fill"></i></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-lg-7 border-end border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
+            <div style="position: relative">
+                <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i class="bi bi-pencil-square text-secondary"></i></a>
+            </div>
+            {% for name, data in details.items %}
+                {% if name not in icons.keys and data != '' %}
+                    <div class="row">
+                        <div class="col-3 border-end border-{% if theme == 'dark' %}light{% else %}dark{% endif %} fw-bold pb-3" style="text-align: right">
+                            {{ name }}
+                        </div>
+                        <div class="col-9 pb-3">
+                            {{ data }}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <div class="row justify-content-evenly pt-3 border-top border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
+                {% for name, data in details.items %}
+                    {% if name in icons.keys and data != '' %}
+                        <div class="col-2">
+                            <a href="{{ data }}" class="text-decoration-none">
+                                <p style="text-align: center; display: inline-block; width: 100%; margin-bottom: 0" class="fs-1 fw-bold"><i class="{{ icons|get_item:name }}"></i></p>
+                                <p class="fw-bold" style="text-align: center">{{ name }}</p>
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-5" id="comment-block">
+            <h2>{% translate 'Comments' %}</h2>
+            {% for log in comments %}
+                {% if log.comment %}
+                    <div>
+                        <div id="comment-block-{{ log.id }}">
+                            <p class="fs-5 mb-0" id="comment-text-{{ log.id }}">{{ log.comment }}</p>
+                            <div class="row">
+                                <div class="col-11">
+                                    <p style="color:gray;">by <span title="{{ log.user.get_full_name }}">{% if request.user != log.user %}{{ log.user.email }}{% else %}me{% endif %}</span>
+                                        <small class="pull-right">{{ log.date|timesince }} ago</small>
+                                    </p>
+                                </div>
+                                <div class="col-1" style="text-align: right">
+                                    {% if log.user == request.user and log.form %}
+                                        <i style="cursor: pointer" onclick="edit_comment('{{ log.id }}')" class="bi bi-pencil-square text-secondary"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if log.user == request.user and log.form %}
+                            <div class="row" style="display: none" id="comment-form-{{ log.id }}">
+                                <div class="col-11">
+                                    {% include 'components/comment_form.html' with form=log.form log_id=log.id %}
+                                </div>
+                                <div style="text-align: right" class="col-1"><i style="cursor: pointer" onclick="cancel_comment('{{ log.id }}')" class="bi bi-x-lg text-danger"></i></div>
+                            </div>
+
+                        {% endif %}
+                    </div>
+                    <hr>
+                {% endif %}
+            {% endfor %}
+            {% include 'components/comment_form.html' with form=comment_form %}
+        </div>
+        <div id="comment-template" style="display: none">
+            <div>
+                <div id="comment-block-">
+                    <p class="fs-5 mb-0" id="comment-text-"></p>
+                    <div class="row">
+                        <div class="col-11">
+                            <p style="color:gray;">by <span title="{{ request.user.get_full_name }}">me</span>
+                                <small class="pull-right">now</small>
+                            </p>
+                        </div>
+                        <div class="col-1" style="text-align: right">
+                            <i style="cursor: pointer" id="comment-edit-comment" class="bi bi-pencil-square text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="display: none" id="comment-form-">
+                    <div class="col-11">
+                        {% include 'components/comment_form.html' with form=comment_form log_id=0 %}
+                    </div>
+                    <div style="text-align: right" class="col-1"><i style="cursor: pointer" id="comment-cancel-comment" class="bi bi-x-lg text-danger"></i></div>
+                </div>
+            </div>
+            <hr>
+        </div>
+    </div>
+    <script>
+        function edit_comment(log_id) {
+            $(`#comment-block-${log_id}`).hide()
+            $(`#comment-form-${log_id}`).show()
+        }
+        function cancel_comment(log_id) {
+            $(`#comment-block-${log_id}`).show()
+            $(`#comment-form-${log_id}`).hide()
+        }
+        function new_comment(data) {
+            let template = $('#comment-template').clone()
+            template.attr('id', '')
+            template.find('#comment-block-').attr('id', `comment-block-${data.id}`)
+            template.find('#comment-form-').attr('id', `comment-form-${data.id}`)
+            let text = template.find('#comment-text-')
+            text.attr('id', `comment-text-${data.id}`)
+            text.text(data.comment)
+            template.find('#comment-edit-comment').attr('onclick',`edit_comment(${data.id})`)
+            template.find('#comment-cancel-comment').attr('onclick',`cancel_comment(${data.id})`)
+
+            let form = template.find('form')
+            form.submit((event) => form_comment_submit(event))
+            form.attr('action', `{% url 'new_comment' %}/${data.id}/`)
+            form.find('textarea[name="comment"]').val(data.comment)
+            template.show()
+            $('form[action="{% url 'new_comment' %}"]').before(template)
+        }
+        function form_comment_submit(event) {
+            let form = $(event.target)
+            event.preventDefault()
+            $.post(form.attr('action'), form.serialize()).done((data) => {
+                let text = $(`#comment-text-${data.id}`)
+                if (text.length > 0) {
+                    text.text(data.comment)
+                    cancel_comment(data.id)
+                } else {
+                    new_comment(data)
+                    form.find('textarea[name="comment"]').val('')
+                }
+            })
+        }
+        $(document).ready(() => {
+            let forms = $('#comment-block').find('form')
+            forms.submit((event) => form_comment_submit(event))
+        })
+    </script>
+{% endblock %}

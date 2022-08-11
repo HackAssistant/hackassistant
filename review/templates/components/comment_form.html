@@ -1,0 +1,8 @@
+{% load i18n %}
+<form method="post" action="{% if log_id is None %}{% url 'new_comment' %}{% else %}{% url 'edit_comment' log_id %}{% endif %}">
+    {% csrf_token %}
+    {% include 'components/bootstrap5_form.html' %}
+    <div class="d-grid gap-4 d-flex justify-content-around">
+        <button type="submit" class="btn btn-block btn-primary col-6">{% if log_id is None %}{% translate 'Send' %}{% else %}{% translate 'Save' %}{% endif %}</button>
+    </div>
+</form>

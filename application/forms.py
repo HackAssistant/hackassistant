@@ -132,15 +132,6 @@ class HackerForm(ApplicationForm):
             'fields': [{'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}], }
     }
 
-    under_age = forms.TypedChoiceField(
-        required=True,
-        label=_('How old are you?'),
-        initial=False,
-        coerce=lambda x: x == 'True',
-        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
-        widget=forms.RadioSelect
-    )
-
     phone_number = forms.CharField(validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$')], required=False,
                                    help_text=_("Phone number must be entered in the format: +#########'. "
                                                "Up to 15 digits allowed."),
@@ -211,6 +202,13 @@ class HackerForm(ApplicationForm):
             'university': {'url': static('data/universities.json')},
             'degree': {'url': static('data/degrees.json')},
         }
+        icon_link = {
+            'resume': 'bi bi-file-pdf-fill',
+            'github': 'bi bi-github',
+            'devpost': 'bi bi-collection-fill',
+            'linkedin': 'bi bi-linkedin',
+            'site': 'bi bi-globe',
+        }
 
 
 class VolunteerForm(ApplicationForm):
@@ -258,15 +256,6 @@ class VolunteerForm(ApplicationForm):
         help_text=_('Volunteering during 2am - 5am'),
         coerce=lambda x: x == 'True',
         choices=((False, _('No')), (True, _('Yes'))),
-        widget=forms.RadioSelect
-    )
-
-    under_age = forms.TypedChoiceField(
-        required=True,
-        label=_('How old are you?'),
-        initial=False,
-        coerce=lambda x: x == 'True',
-        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
         widget=forms.RadioSelect
     )
 
@@ -367,15 +356,6 @@ class MentorForm(ApplicationForm):
                        {'name': 'more_information', 'space': 12}],
             'description': _('Tell us a bit about your experience and preferences in this type of event.')},
     }
-
-    under_age = forms.TypedChoiceField(
-        required=True,
-        label=_('How old are you?'),
-        initial=False,
-        coerce=lambda x: x == 'True',
-        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
-        widget=forms.RadioSelect
-    )
 
     university = forms.CharField(max_length=300, label=_('What university do you study at?'),
                                  help_text=_('Current or most recent school you attended.'))

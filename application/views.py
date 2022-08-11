@@ -135,7 +135,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
         return application
 
     def application_can_edit(self, application, application_type):
-        return self.request.user.is_organizer or application.can_edit() and application_type.active()
+        return self.request.user.is_organizer or (application.can_edit() and application_type.active())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -144,7 +144,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
         ApplicationForm = self.get_form(application_type)
         application_form = ApplicationForm(instance=application)
         user_form = UserProfileForm(instance=application.user)
-        if self.application_can_edit(application, application_type):
+        if not self.application_can_edit(application, application_type):
             application_form.set_read_only()
         context.update({'edit': True, 'application_form': application_form, 'full_name': application.get_full_name(),
                         'application_type': application_type, 'user_form': user_form})
