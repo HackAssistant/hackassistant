@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_tables2',
+    'django_filters',
     'django_jwt',
     'django_jwt.server',
     'django_bootstrap5',

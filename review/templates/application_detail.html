@@ -7,14 +7,14 @@
         <div class="col-3 d-grid d-md-block">
             <div class="">
                 {% if vote %}
-                    <a href="" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
+                    <a href="{% url 'application_list' %}?type={{ application.type.name }}" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
                 {% else %}
                     <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
                 {% endif %}
             </div>
         </div>
         <div class="col-3 d-grid d-md-flex justify-content-md-end">
-            <a href="" class="btn btn-secondary col-12">{% translate 'Logs' %}</a>
+            <a target="_self" href="" class="btn btn-secondary col-12">{% translate 'Logs' %}</a>
         </div>
     </div>
     <div class="row">
@@ -45,18 +45,20 @@
                     </div>
                 {% endif %}
             {% endfor %}
-            <div class="row justify-content-evenly pt-3 border-top border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
-                {% for name, data in details.items %}
-                    {% if name in icons.keys and data != '' %}
-                        <div class="col-2">
-                            <a href="{{ data }}" class="text-decoration-none">
-                                <p style="text-align: center; display: inline-block; width: 100%; margin-bottom: 0" class="fs-1 fw-bold"><i class="{{ icons|get_item:name }}"></i></p>
-                                <p class="fw-bold" style="text-align: center">{{ name }}</p>
-                            </a>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
+            {% if icons.keys|length > 0 %}
+                <div class="row justify-content-evenly pt-3 border-top border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
+                    {% for name, data in details.items %}
+                        {% if name in icons.keys and data != '' %}
+                            <div class="col-2">
+                                <a href="{{ data }}" class="text-decoration-none">
+                                    <p style="text-align: center; display: inline-block; width: 100%; margin-bottom: 0" class="fs-1 fw-bold"><i class="{{ icons|get_item:name }}"></i></p>
+                                    <p class="fw-bold" style="text-align: center">{{ name }}</p>
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
         <div class="col-lg-5" id="comment-block">
             <h2>{% translate 'Comments' %}</h2>
