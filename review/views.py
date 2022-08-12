@@ -153,3 +153,13 @@ class CommentSubmit(IsOrganizerMixin, View):
             del log_dict['_state']
             return JsonResponse(log_dict)
         return JsonResponse(dict(comment_form.errors), status=400)
+
+
+class ApplicationLogs(IsOrganizerMixin, TemplateView):
+    template_name = 'application_logs.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        application = get_object_or_404(Application, uuid=self.kwargs.get('uuid'))
+        context.update({'application': application, 'logs': application.logs.order_by('-date')})
+        return context

@@ -5,17 +5,15 @@
 {% block content %}
     <div class="row justify-content-between mb-3">
         <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-4 d-grid d-md-block">
-            <div class="">
-                {% if votes %}
-                    <a href="{% url 'application_list' %}?type={{ application.type.name }}" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
-                {% else %}
-                    <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
-                {% endif %}
-            </div>
+            {% if votes %}
+                <a href="{% url 'application_list' %}?type={{ application.type.name }}" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
+            {% else %}
+                <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
+            {% endif %}
         </div>
         {% if application %}
             <div class="col-6 col-lg-4 d-grid d-md-flex justify-content-md-end">
-                <a href="" class="btn btn-secondary col-12"><i class="bi bi-clipboard-check"></i> {% translate 'Logs' %}</a>
+                <a href="{% url 'application_logs' application.get_uuid %}" class="btn btn-secondary col-12"><i class="bi bi-clipboard-check"></i> {% translate 'Logs' %}</a>
             </div>
         {% endif %}
     </div>
@@ -33,7 +31,7 @@
         <div class="row mt-4">
             <div class="col-lg-7 border-end border-lg border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
                 <div style="position: relative">
-                    <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i class="bi bi-pencil-square text-secondary"></i></a>
+                    <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i  title="{% translate 'Edit application' %}" class="bi bi-pencil-square text-secondary"></i></a>
                 </div>
                 {% for name, data in details.items %}
                     {% if name not in icons.keys and data != '' %}
@@ -68,16 +66,16 @@
                     {% if log.comment %}
                         <div>
                             <div id="comment-block-{{ log.id }}">
-                                <p class="fs-5 mb-0" id="comment-text-{{ log.id }}">{{ log.comment }}</p>
                                 <div class="row">
                                     <div class="col-11">
-                                        <p style="color:gray; margin: 0">by <span title="{{ log.user.get_full_name }}">{% if request.user != log.user %}{{ log.user.email }}{% else %}me{% endif %}</span>
+                                        <p class="fs-5 mb-0" id="comment-text-{{ log.id }}">{{ log.comment }}</p>
+                                        <p style="color:gray; margin: 0">by <span title="{{ log.user.get_full_name }}">{% if request.user != log.user %}{{ log.user.email }}{% else %}{% translate 'me' %}{% endif %}</span>
                                             <small class="pull-right">{{ log.date|timesince }} ago</small>
                                         </p>
                                     </div>
                                     <div class="col-1" style="text-align: right">
                                         {% if log.user == request.user and log.form %}
-                                            <i style="cursor: pointer" onclick="edit_comment('{{ log.id }}')" class="bi bi-pencil-square text-secondary"></i>
+                                            <i style="cursor: pointer" onclick="edit_comment('{{ log.id }}')" title="{% translate 'Edit comment' %}" class="bi bi-pencil-square text-secondary"></i>
                                         {% endif %}
                                     </div>
                                 </div>

@@ -24,13 +24,6 @@ ENGLISH_LEVELS = [(x, x) for x in ['1', '2', '3', '4', '5']]
 
 
 class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
-    terms_and_conditions = forms.BooleanField(
-        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
-                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
-                          'Privacy and Cookies Policy</a>.' % (
-                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
-                          )))
-    )
 
     diet_notice = forms.BooleanField(
         label=_('I authorize %s to use my food allergies and intolerances information to '
@@ -68,13 +61,17 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
             instance.save()
         return files_fields.keys()
 
+    def get_hidden_edit_fields(self):
+        return self.exclude_save
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial.update(self.instance.form_data)
         instance = kwargs.get('instance', None)
+        hidden_fields = self.get_hidden_edit_fields()
         if instance is not None and instance._state.db is not None:  # instance in DB
-            for exclude in self.exclude_save:
-                self.fields.get(exclude).required = False
+            for hidden_field in hidden_fields:
+                self.fields.get(hidden_field).required = False
 
     def get_bootstrap_field_info(self):
         fields = super().get_bootstrap_field_info()
@@ -115,6 +112,13 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
             'tshirt_size': _('What\'s your t-shirt size?'),
             'diet': _('Dietary requirements'),
         }
+    terms_and_conditions = forms.BooleanField(
+        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
+                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
+                          'Privacy and Cookies Policy</a>.' % (
+                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
+                          )))
+    )
 
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
@@ -199,6 +203,11 @@ class HackerForm(ApplicationForm):
         policy_fields = super().get_policy_fields()
         policy_fields.extend([{'name': 'resume_share', 'space': 12}])
         return policy_fields
+
+    def get_hidden_edit_fields(self):
+        hidden_fields = super().get_hidden_edit_fields()
+        hidden_fields.extend(['resume_share'])
+        return hidden_fields
 
     class Meta(ApplicationForm.Meta):
         api_fields = {
