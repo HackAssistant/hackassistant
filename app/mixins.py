@@ -14,9 +14,15 @@ class TabsViewMixin:
         return None
 
     def get_context_data(self, **kwargs):
-        c = super(TabsViewMixin, self).get_context_data(**kwargs)
-        c.update({'tabs': self.get_current_tabs(), 'back': self.get_back_url()})
-        return c
+        context = super(TabsViewMixin, self).get_context_data(**kwargs)
+        tabs = self.get_current_tabs()
+        new_tabs = []
+        for tab in tabs:
+            new_tab = {'title': tab[0], 'url': tab[1], 'needs_action': tab[2] if len(tab) > 2 else None,
+                       'active': tab[3] if len(tab) > 3 else None}
+            new_tabs.append(new_tab)
+        context.update({'tabs': new_tabs, 'back': self.get_back_url()})
+        return context
 
 
 class OverwriteOnlyModelFormMixin(object):

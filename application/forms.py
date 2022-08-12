@@ -71,6 +71,10 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial.update(self.instance.form_data)
+        instance = kwargs.get('instance', None)
+        if instance is not None and instance._state.db is not None:  # instance in DB
+            for exclude in self.exclude_save:
+                self.fields.get(exclude).required = False
 
     def get_bootstrap_field_info(self):
         fields = super().get_bootstrap_field_info()

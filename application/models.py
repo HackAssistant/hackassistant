@@ -32,6 +32,8 @@ class ApplicationTypeConfig(models.Model):
     start_application_date = models.DateTimeField(default=timezone.now, null=True)
     end_application_date = models.DateTimeField(default=timezone.now, null=True)
     group = models.ForeignKey(Group, on_delete=models.DO_NOTHING)
+    review = models.BooleanField(default=True)
+    needs_confirmation = models.BooleanField(default=False)
 
     @property
     def get_token(self):

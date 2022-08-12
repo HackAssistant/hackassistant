@@ -1,7 +1,13 @@
+from datetime import timedelta
+
+from django.conf import settings
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q, Count
 from django.http import Http404, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext_lazy as _
@@ -13,17 +19,30 @@ from application import forms
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig
 from review.filters import ApplicationTableFilter
 from review.forms import CommentForm
+from review.models import Vote
 from review.tables import ApplicationTable
 from user.mixins import IsOrganizerMixin
 
 
 class ReviewApplicationTabsMixin(TabsViewMixin):
+    def get_review_application(self, application_type):
+        max_votes_to_app = getattr(settings, 'MAX_VOTES_TO_APP', 50)
+        return Application.objects.filter(type__name=application_type, status=Application.STATUS_PENDING) \
+            .exclude(Q(vote__user_id=self.request.user.id) | Q(user_id=self.request.user.id)) \
+            .filter(submission_date__lte=timezone.now() - timedelta(hours=2)) \
+            .annotate(count=Count('vote__calculated_vote')) \
+            .filter(count__lte=max_votes_to_app) \
+            .order_by('count', 'submission_date') \
+            .first()
+
     def get_current_tabs(self):
         tabs = []
         active_type = self.request.GET.get('type', 'Hacker')
-        for name in ApplicationTypeConfig.objects.all().values_list('name', flat=True):
-            url = '%s?type=%s' % (reverse('application_list'), name)
-            tabs.append((name, url, False, active_type == name))
+        for app_type in ApplicationTypeConfig.objects.all().order_by('pk'):
+            url = '%s?type=%s' % (self.request.path if app_type.review else reverse('application_list'),
+                                  app_type.name)
+            tabs.append((app_type.name, url, app_type.review and self.get_review_application(app_type.name) is not None,
+                         active_type == app_type.name))
         return tabs
 
 
@@ -62,29 +81,58 @@ class ApplicationDetail(IsOrganizerMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         application = self.get_application()
-        details = {'Status': application.get_status_display()}
-        ApplicationForm = self.get_form(application.type)
-        for name, value in application.form_data.items():
-            if isinstance(value, FileField):
-                value = value.url
-            if isinstance(value, bool):
-                value = _('Yes') if value else _('No')
-            if isinstance(value, list):
-                value = ', '.join(value)
-            details[name.replace('_', ' ').lower().title()] = value
-        icons = {name.replace('_', ' ').lower().title(): value
-                 for name, value in getattr(ApplicationForm.Meta, 'icon_link', {}).items()}
-        comments = application.logs.filter(comment__isnull=False)
-        for comment in comments:
-            if comment.user == self.request.user:
-                comment.form = CommentForm(instance=comment)
-        context.update({'application': application, 'details': details, 'icons': icons,
-                        'comment_form': CommentForm(initial={'application': application.get_uuid}),
-                        'comments': comments})
+        if application is not None:
+            details = {_('Full Name'): application.user.get_full_name(), _('Status'): application.get_status_display()}
+            ApplicationForm = self.get_form(application.type)
+            for name, value in application.form_data.items():
+                if isinstance(value, FileField):
+                    value = value.url
+                if isinstance(value, bool):
+                    value = _('Yes') if value else _('No')
+                if isinstance(value, list):
+                    value = ', '.join(value)
+                details[name.replace('_', ' ').lower().title()] = value
+            icons = {name.replace('_', ' ').lower().title(): value
+                     for name, value in getattr(ApplicationForm.Meta, 'icon_link', {}).items()}
+            comments = application.logs.filter(comment__isnull=False)
+            for comment in comments:
+                if comment.user == self.request.user:
+                    comment.form = CommentForm(instance=comment)
+            context.update({'application': application, 'details': details, 'icons': icons,
+                            'comment_form': CommentForm(initial={'application': application.get_uuid}),
+                            'comments': comments})
         return context
 
     def get_application(self):
         return get_object_or_404(Application, uuid=self.kwargs.get('uuid'))
+
+
+class ApplicationReview(ReviewApplicationTabsMixin, ApplicationDetail):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'votes': dict(Vote.VOTES)})
+        return context
+
+    def get_application(self):
+        application_type = self.request.GET.get('type', 'Hacker')
+        return self.get_review_application(application_type)
+
+    def post(self, request, *args, **kwargs):
+        skip = request.POST.get('skip', None)
+        tech_vote = request.POST.get('tech_vote', None) if skip is None else None
+        pers_vote = request.POST.get('pers_vote', None) if skip is None else None
+        application_id = request.POST.get('application_id', None)
+        try:
+            application = Application.objects.get(pk=application_id)
+            Vote(application=application, user=request.user, tech=tech_vote, personal=pers_vote).save()
+            if skip is None:
+                messages.success(request, _('Application voted successfully! :D'))
+            else:
+                messages.success(request, _('Application skipped! Try to not skip all xD'))
+        except Application.DoesNotExist:
+            messages.error(request, _('Someone just deleted the application! :('))
+        application_type = self.request.GET.get('type', 'Hacker')
+        return redirect('%s?type=%s' % (reverse('application_review'), application_type))
 
 
 class CommentSubmit(IsOrganizerMixin, View):

@@ -174,6 +174,8 @@ JWT_SERVER = {
     'JWT_EXPIRATION_TIME': 14400                # Optional
 }
 
+DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap-responsive.html'
+
 # Toast styles
 MESSAGE_TAGS = {
     message_constants.DEBUG: 'info text-dark',

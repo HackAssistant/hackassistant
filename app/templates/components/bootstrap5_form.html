@@ -122,9 +122,9 @@
                     $(event.target).parents('form').submit()
                 })
                 $('.bootstrap-fieldset').find('input[type="text"]').keypress((event) => {
-                    if (event.which == 13) {
+                    if (event.which === 13) {
                         $(event.target).parents('form').submit()
-                        return false;    //<---- Add this line
+                        return false
                     }
                 })
             {% endif %}

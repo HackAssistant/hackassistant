@@ -3,18 +3,18 @@
 {% block subtitle %}{% translate 'Application list' %}{% endblock %}
 {% block content %}
     <div class="row">
-        <div class="col-10">
-            <h1>Application list{% if application_type %}: {{ application_type.name|title }}{% endif %}</h1>
+        <div class="col-lg-10">
+            <h1>Application list</h1>
             {% if application_type %}
                 <p class="tw-3">{% if application_type.closed %}{% translate 'Applications closed' %}{% elif application_type.active %}{% translate 'Applications open. Closes in' %} {{ application_type.time_left }}{% else %}{% translate 'Applications closed. Opens in' %} {{ application_type.time_left }}{% endif %}</p>
             {% endif %}
         </div>
-        <div class="col-2">
-            <a href="" class="btn btn-secondary col-12"><i class="bi bi-journal-check"></i> {% translate 'Review' %}</a>
+        <div class="col-lg-2">
+            {% if application_type.review %}<a href="{% url 'application_review' %}?type={{ application_type.name }}" class="btn btn-secondary col-12"><i class="bi bi-journal-check"></i> {% translate 'Review' %}</a>{% endif %}
         </div>
     </div>
 
-    <form method="get" id="filter-form">
+    <form method="get" id="filter-form" class="mt-2">
         {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
     </form>
 

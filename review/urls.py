@@ -3,6 +3,7 @@ from django.urls import path
 from review import views
 
 urlpatterns = [
+    path('', views.ApplicationReview.as_view(), name='application_review'),
     path('application/', views.ApplicationList.as_view(), name='application_list'),
     path('application/<str:uuid>/', views.ApplicationDetail.as_view(), name='application_detail'),
     path('application/comment', views.CommentSubmit.as_view(), name='new_comment'),

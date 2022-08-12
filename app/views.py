@@ -7,5 +7,5 @@ from user.mixins import LoginRequiredMixin
 class BaseView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         if request.user.is_organizer():
-            return redirect('apply_home')
+            return redirect('application_review')
         return redirect('apply_home')

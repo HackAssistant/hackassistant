@@ -2,9 +2,9 @@
     <li class="nav-item tab-arrow" style="display: none; cursor: pointer">
         <a onclick="left_arrow_tabs()" class="nav-link bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}"><i class="bi bi-arrow-left"></i></a>
     </li>
-    {% for title, url, needs_action, active in tabs %}
+    {% for tab in tabs %}
         <li class="nav-item">
-            <a class="nav-link {% if not active and request.path != url %}bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}{% else %}bg-primary text-light{% endif %} border-{{ theme }}" href="{{ url }}">{{ title }}{% if needs_action %} <span class="{% if not active and request.path != url %}text-primary{% else %}text-light{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i></span>{% endif %}</a>
+            <a class="nav-link {% if not tab.active and request.path != tab.url %}bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}{% else %}bg-primary text-light{% endif %} border-{{ theme }}" href="{{ tab.url }}">{{ tab.title }}{% if tab.needs_action %} <span class="{% if not tab.active and request.path != tab.url %}text-primary{% else %}text-light{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i></span>{% endif %}</a>
         </li>
     {% endfor %}
     <li class="nav-item tab-arrow" style="display: none; cursor: pointer">

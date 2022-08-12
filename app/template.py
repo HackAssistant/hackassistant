@@ -5,23 +5,17 @@ from app.utils import get_theme
 
 
 def get_main_nav(request):
+    nav = []
     if not request.user.is_authenticated:
-        return []
+        return nav
     if not request.user.is_organizer():
-        nav = []
         if getattr(settings, 'HACKATHON_LANDING', None) is not None:
             nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
         return nav
-    return [
-        ('Hacker', reverse('home')),
-        ('Event', [
-            ('Activities', '/'),
-            ('Meals', '/'),
-            ('HardwareLab', '/'),
-            ('Baggage', '/'),
-            ('CheckIn', '/'), ]
-         )
-    ]
+    if request.user.is_superuser:
+        nav.append(('Admin', reverse('admin:index')))
+    nav.extend([('Review', reverse('application_review')), ])
+    return nav
 
 
 def app_variables(request):

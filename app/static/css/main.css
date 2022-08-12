@@ -79,3 +79,14 @@ footer {
 .orderable.asc > a:after {
 	border-top-color: transparent;
 }
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 992px) { /* Bootstrap lg */
+    .border-lg {
+        border: 0 !important;
+    }
+}

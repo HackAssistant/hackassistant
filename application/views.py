@@ -168,7 +168,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
                     log.save()
             messages.success(request, _('Edited successfully!'))
             return redirect('edit_application', **kwargs)
-        context.update({'application_form': application_form})
+        context.update({'application_form': application_form, 'user_form': user_form})
         return self.render_to_response(context)
 
 

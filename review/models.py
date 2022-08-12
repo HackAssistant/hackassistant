@@ -1,17 +1,15 @@
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Avg, F
 
 
-MAX_VOTES = getattr(settings, 'MAX_VOTES', 5)
-TECH_WEIGHT = 0.2
-PERSONAL_WEIGHT = 0.8
-
-VOTES = [(i, str(i)) for i in range(1, MAX_VOTES + 1)]
-
-
 class Vote(models.Model):
+    MAX_VOTES = getattr(settings, 'MAX_VOTES', 5)
+    TECH_WEIGHT = 0.2
+    PERSONAL_WEIGHT = 0.8
+    VOTES = [(i, str(i)) for i in range(1, MAX_VOTES + 1)]
+
     application = models.ForeignKey('application.Application', on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     tech = models.IntegerField(choices=VOTES, null=True)
@@ -35,6 +33,8 @@ class Vote(models.Model):
         By casassg
         """
         super().save(force_insert, force_update, using, update_fields)
+
+        User = get_user_model()
 
         # only recalculate when values are different than None
         if not self.personal or not self.tech:
@@ -64,9 +64,9 @@ class Vote(models.Model):
         #
         # See this: http://www.dataminingblog.com/standardization-vs-
         # normalization/
-        personal = PERSONAL_WEIGHT * (F('personal') - p_avg) / p_sd
-        tech = TECH_WEIGHT * (F('tech') - t_avg) / t_sd
-        Vote.objects.filter(user=self.user).update(calculated_vote=(personal + tech) * MAX_VOTES / 10)
+        personal = self.PERSONAL_WEIGHT * (F('personal') - p_avg) / p_sd
+        tech = self.TECH_WEIGHT * (F('tech') - t_avg) / t_sd
+        Vote.objects.filter(user=self.user).update(calculated_vote=(personal + tech) * self.MAX_VOTES / 10)
 
     class Meta:
         unique_together = ('application', 'user')
