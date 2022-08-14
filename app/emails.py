@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
@@ -12,10 +12,12 @@ from django.utils.html import strip_tags
 # Author Arnau Casas Saez
 class Email:
 
-    def __init__(self, name, context, list_mails) -> None:
+    def __init__(self, name, context, to, request, **kwargs) -> None:
         super().__init__()
+        self.kwargs = kwargs
         self.name = name
-        self.list_mails = list_mails
+        self.list_mails = [to, ] if isinstance(to, str) else to
+        self.request = request
         self.context = context
         self.__get_subject__()
         self.__get_content__()
@@ -23,12 +25,12 @@ class Email:
     # Private method that renders and save the subject of the mail
     def __get_subject__(self):
         file_template = 'mails/%s.txt' % self.name
-        self.subject = render_to_string(template_name=file_template, context=self.context)
+        self.subject = render_to_string(template_name=file_template, context=self.context, request=self.request)
 
     # Private method that renders and save the HTML content of the mail
     def __get_content__(self):
         file_template = 'mails/%s.html' % self.name
-        self.html_message = render_to_string(template_name=file_template, context=self.context)
+        self.html_message = render_to_string(template_name=file_template, context=self.context, request=self.request)
         self.plain_message = strip_tags(self.html_message)
 
     # Public method that sends the mail to [list_mails] if not debug else saves the file at mails folder
@@ -48,8 +50,8 @@ class Email:
             with open(final_path, "w", encoding='utf-8') as text_file:
                 text_file.write(self.html_message)
         else:
-            send_mail(subject=self.subject,
-                      message=self.plain_message,
-                      from_email=email_from,
-                      recipient_list=self.list_mails,
-                      html_message=self.html_message)
+            msg = EmailMultiAlternatives(subject=self.subject, body=self.plain_message, from_email=email_from,
+                                         to=self.list_mails, **self.kwargs)
+            msg.attach_alternative(self.html_message, "text/html")
+            msg.content_subtype = "html"
+            msg.send()

@@ -1,0 +1,1 @@
+We cannot go through with your {{ application.type.name|lower }} application

@@ -9,6 +9,7 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import urlencode
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext_lazy as _
@@ -20,7 +21,7 @@ from application import forms
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig
 from review.filters import ApplicationTableFilter
-from review.forms import CommentForm
+from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote
 from review.tables import ApplicationTable
 from user.mixins import IsOrganizerMixin
@@ -112,11 +113,23 @@ class ApplicationDetail(IsOrganizerMixin, ApplicationPermissionRequiredMixin, Te
                     comment.form = CommentForm(instance=comment)
             context.update({'application': application, 'details': details, 'icons': icons,
                             'comment_form': CommentForm(initial={'application': application.get_uuid}),
-                            'comments': comments})
+                            'comments': comments, 'dubious_form': DubiousApplicationForm()})
         return context
 
     def get_application(self):
         return get_object_or_404(Application, uuid=self.kwargs.get('uuid'))
+
+    def post(self, request, *args, **kwargs):
+        application = self.get_application()
+        dubious_form = DubiousApplicationForm(request.POST)
+        if dubious_form.is_valid() and application.status in [application.STATUS_DUBIOUS,
+                                                              application.STATUS_NEEDS_CHANGE]:
+            url, query_params = dubious_form.save(application=application, request=request)
+            query_params.update({'next': request.path})
+            return redirect(url + '?' + urlencode(query_params))
+        context = self.get_context_data()
+        context.update({'dubious_form': dubious_form})
+        return self.render_to_response(context)
 
 
 class ApplicationReview(ReviewApplicationTabsMixin, ApplicationDetail):

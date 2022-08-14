@@ -233,6 +233,8 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
                 raise PermissionDenied()
         application.set_status(new_status)
         log = ApplicationLog.create_log(application=application, user=request.user, name=status_dict.get(new_status))
+        if request.user.is_organizer:
+            log.comment = self.request.GET.get('comment', '')
         with transaction.atomic():
             application.save()
             log.save()

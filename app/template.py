@@ -28,6 +28,7 @@ def app_variables(request):
         'app_author': getattr(settings, 'HACKATHON_ORG'),
         'app_name': getattr(settings, 'APP_NAME'),
         'app_socials': getattr(settings, 'HACKATHON_SOCIALS', []),
+        'app_contact': getattr(settings, 'HACKATHON_CONTACT_EMAIL', ''),
         'app_theme': getattr(settings, 'THEME') == 'both',
         'app_landing': getattr(settings, 'HACKATHON_LANDING'),
         'theme': get_theme(request),
