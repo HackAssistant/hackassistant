@@ -1,1 +1,4 @@
-<a class="btn btn-primary btn-sm" href='{% url 'application_detail' record.uuid %}'>Detail</a>
+{% load perms %}
+{% if perms|add_type:record.type.name|has_application_perm:'view_application' %}
+    <a class="btn btn-primary btn-sm" href='{% url 'application_detail' record.uuid %}'>Detail</a>
+{% endif %}

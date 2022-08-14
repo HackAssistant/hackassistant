@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count
 from django.http import Http404, JsonResponse
@@ -16,6 +17,7 @@ from django_tables2 import SingleTableMixin
 
 from app.mixins import TabsViewMixin
 from application import forms
+from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig
 from review.filters import ApplicationTableFilter
 from review.forms import CommentForm
@@ -39,8 +41,11 @@ class ReviewApplicationTabsMixin(TabsViewMixin):
         tabs = []
         active_type = self.request.GET.get('type', 'Hacker')
         for app_type in ApplicationTypeConfig.objects.all().order_by('pk'):
-            url = '%s?type=%s' % (self.request.path if app_type.review else reverse('application_list'),
-                                  app_type.name)
+            page_url = reverse('application_list')
+            if app_type.review and (self.request.user.has_perm('can_review_application') or
+                                    self.request.user.has_perm('can_review_application_%s' % app_type.name.lower())):
+                page_url = self.request.path
+            url = '%s?type=%s' % (page_url, app_type.name)
             tabs.append((app_type.name, url, app_type.review and self.get_review_application(app_type.name) is not None,
                          active_type == app_type.name))
         return tabs
@@ -65,11 +70,18 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
             context.update({'application_type': application_type})
         except ApplicationTypeConfig.DoesNotExist:
             pass
+        dubious = Application.objects.filter(type__name=self.request.GET.get('type', 'Hacker'),
+                                             status=Application.STATUS_DUBIOUS).exists()
+        context.update({'dubious': dubious, 'Application': Application})
         return context
 
 
-class ApplicationDetail(IsOrganizerMixin, TemplateView):
+class ApplicationDetail(IsOrganizerMixin, ApplicationPermissionRequiredMixin, TemplateView):
     template_name = 'application_detail.html'
+    permission_required = 'application.view_application'
+
+    def get_application_type(self):
+        return self.get_application().type.name
 
     def get_form(self, application_type):
         application_type = application_type.name.lower().title()
@@ -108,13 +120,18 @@ class ApplicationDetail(IsOrganizerMixin, TemplateView):
 
 
 class ApplicationReview(ReviewApplicationTabsMixin, ApplicationDetail):
+    permission_required = 'application.can_review_application'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({'votes': dict(Vote.VOTES)})
+        context.update({'votes': dict(Vote.VOTES), 'application_type': self.get_application_type()})
         return context
 
+    def get_application_type(self):
+        return self.request.GET.get('type', 'Hacker')
+
     def get_application(self):
-        application_type = self.request.GET.get('type', 'Hacker')
+        application_type = self.get_application_type()
         return self.get_review_application(application_type)
 
     def post(self, request, *args, **kwargs):
@@ -131,11 +148,19 @@ class ApplicationReview(ReviewApplicationTabsMixin, ApplicationDetail):
                 messages.success(request, _('Application skipped! Try to not skip all xD'))
         except Application.DoesNotExist:
             messages.error(request, _('Someone just deleted the application! :('))
-        application_type = self.request.GET.get('type', 'Hacker')
+        application_type = self.get_application_type()
         return redirect('%s?type=%s' % (reverse('application_review'), application_type))
 
 
-class CommentSubmit(IsOrganizerMixin, View):
+class CommentSubmit(IsOrganizerMixin, PermissionRequiredMixin, View):
+    permission_required = 'application.add_applicationlog'
+
+    def get_permission_required(self):
+        log_id = self.kwargs.get('log_id', None)
+        if log_id is None:
+            return super().get_permission_required()
+        return ['application.change_applicationlog', ]
+
     def post(self, request, *args, **kwargs):
         log_id = kwargs.get('log_id', None)
         if log_id is None:
@@ -155,8 +180,9 @@ class CommentSubmit(IsOrganizerMixin, View):
         return JsonResponse(dict(comment_form.errors), status=400)
 
 
-class ApplicationLogs(IsOrganizerMixin, TemplateView):
+class ApplicationLogs(IsOrganizerMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'application_logs.html'
+    permission_required = 'application.view_applicationlog'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -61,8 +61,7 @@ class ApplicationApplyTemplate(TemplateView):
         else:
             user_form = UserProfileForm(initial=initial_data)
         context.update({'edit': False, 'application_form': ApplicationForm(initial=initial_data),
-                        'application_type': application_type,
-                        'user_form': user_form})
+                        'application_type': application_type, 'user_form': user_form, 'public': self.public})
         return context
 
     def save_application(self, form, app_type, user):
@@ -165,6 +164,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
                     application.save()
                 log.set_file_changes(files)
                 if len(log.changes) > 0:
+                    log.comment = self.request.POST.get('comment_applicationlog', '')
                     log.save()
             messages.success(request, _('Edited successfully!'))
             return redirect('edit_application', **kwargs)

@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load util %}
+{% load perms %}
 {% block subtitle %}{% translate 'Application detail' %}{% endblock %}
 {% block content %}
     <div class="row justify-content-between mb-3">
-        <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-4 d-grid d-md-block">
+        <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-2 d-grid d-md-block">
             {% if votes %}
-                <a href="{% url 'application_list' %}?type={{ application.type.name }}" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
+                <a href="{% url 'application_list' %}?type={{ application.type.name|default:application_type }}" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
             {% else %}
                 <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
             {% endif %}
         </div>
-        {% if application %}
-            <div class="col-6 col-lg-4 d-grid d-md-flex justify-content-md-end">
+        {% if application and perms.application.view_applicationlog %}
+            <div class="col-6 col-lg-2 d-grid d-md-flex justify-content-md-end">
                 <a href="{% url 'application_logs' application.get_uuid %}" class="btn btn-secondary col-12"><i class="bi bi-clipboard-check"></i> {% translate 'Logs' %}</a>
             </div>
         {% endif %}
@@ -30,9 +31,11 @@
     {% if application %}
         <div class="row mt-4">
             <div class="col-lg-7 border-end border-lg border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
-                <div style="position: relative">
-                    <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i  title="{% translate 'Edit application' %}" class="bi bi-pencil-square text-secondary"></i></a>
-                </div>
+                {% if perms|add_type:application.type.name|has_application_perm:'change_application' %}
+                    <div style="position: relative">
+                        <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i  title="{% translate 'Edit application' %}" class="bi bi-pencil-square text-secondary"></i></a>
+                    </div>
+                {% endif %}
                 {% for name, data in details.items %}
                     {% if name not in icons.keys and data != '' %}
                         <div class="row">
@@ -74,13 +77,13 @@
                                         </p>
                                     </div>
                                     <div class="col-1" style="text-align: right">
-                                        {% if log.user == request.user and log.form %}
+                                        {% if log.user == request.user and log.form and perms.application.change_applicationlog %}
                                             <i style="cursor: pointer" onclick="edit_comment('{{ log.id }}')" title="{% translate 'Edit comment' %}" class="bi bi-pencil-square text-secondary"></i>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
-                            {% if log.user == request.user and log.form %}
+                            {% if log.user == request.user and log.form and perms.application.change_applicationlog %}
                                 <div class="row" style="display: none" id="comment-form-{{ log.id }}">
                                     <div class="col-11">
                                         {% include 'components/comment_form.html' with form=log.form log_id=log.id %}
@@ -93,7 +96,9 @@
                         <hr>
                     {% endif %}
                 {% endfor %}
-                {% include 'components/comment_form.html' with form=comment_form %}
+                {% if perms.application.add_applicationlog %}
+                    {% include 'components/comment_form.html' with form=comment_form %}
+                {% endif %}
             </div>
             <div id="comment-template" style="display: none">
                 <div>
@@ -194,6 +199,7 @@
                 <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
                     <button class="btn btn-primary" type="submit">{% translate 'Send vote' %}</button>
                     <button class="btn btn-secondary" name="skip" value="skip" onclick="return confirm('{% translate "This option is placed in order to equality of votes in applications. Are you sure you know this person and want to skip? " %}')">{% translate 'Skip application' %}</button>
+                    <a href="{% url 'change_status_application' application.get_uuid application.STATUS_DUBIOUS %}?next={{ request.path }}" class="btn btn-warning" onclick="return confirm('{% translate "Are you sure there's something wrong with this application?" %}')">{% translate 'Mark as dubious' %}</a>
                 </div>
             </form>
             <script type="text/javascript">

@@ -5,7 +5,9 @@
 {% block content %}
     <div class="row">
         <div class="col-lg-2">
-            <button class="btn btn-secondary" onclick="history.back()"><i class="bi bi-caret-left-fill"></i> {% trans 'Back' %}</button>
+            {% if edit or public %}
+                <a href="{% if request.user.is_organizer and edit %}{% url 'application_detail' application_form.instance.get_uuid %}{% else %}{% url 'apply_home' %}{% endif %}" class="btn btn-secondary" onclick="history.back()"><i class="bi bi-caret-left-fill"></i> {% trans 'Back' %}</a>
+            {% endif %}
         </div>
         <h1 class="col-lg-8" style="text-align: center">{% if edit %}{% blocktrans %}{{ full_name }}'s {{ application_type }} application{% endblocktrans %}{% else %}{% blocktrans %}Applying as {{ application_type }}{% endblocktrans %}{% endif %}</h1>
         {% if edit %}
@@ -33,12 +35,24 @@
                 <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you changed your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-4">{% trans 'Remove' %}</a>
             {% endif %}
             {% if not application_form.is_read_only %}
-                <button type="submit" class="btn btn-primary col-4">{% if edit %}{% trans 'Save' %}{% else %}{% trans 'Apply' %}{% endif %}</button>
+                <button type="submit" {% if edit and request.user.is_organizer %}onclick="return confirm_edit()"{% endif %} class="btn btn-primary col-4">{% if edit %}{% trans 'Save' %}{% else %}{% trans 'Apply' %}{% endif %}</button>
             {% endif %}
             {% if application_form.instance and application_form.instance.invited %}
                 <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CONFIRMED %}" onclick="return confirm('{% blocktrans %}Your {{ application_type }} invitation will be confirmed. This means that all your other applications will be cancelled. Are you sure you want to confirm this one?{% endblocktrans %}')" class="btn btn-primary col-4">{% trans 'Confirm invitation' %}</a>
             {% endif %}
         </div>
-
+        {% if request.user.is_organizer %}
+            <input style="display: none" id="comment_applicationlog_input" name="comment_applicationlog" value="">
+            <script>
+                function confirm_edit() {
+                    let comment = prompt('{% translate 'Add a comment on the reason of your change (optional)' %}')
+                    if (comment === null) return false
+                    $('#comment_applicationlog_input').val(comment)
+                    return true
+                }
+            </script>
+        {% endif %}
     </form>
+
+
 {% endblock %}

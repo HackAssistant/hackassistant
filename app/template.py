@@ -7,12 +7,14 @@ from app.utils import get_theme
 def get_main_nav(request):
     nav = []
     if not request.user.is_authenticated:
+        if getattr(settings, 'HACKATHON_LANDING', None) is not None:
+            nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
         return nav
     if not request.user.is_organizer():
         if getattr(settings, 'HACKATHON_LANDING', None) is not None:
             nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
         return nav
-    if request.user.is_superuser:
+    if request.user.is_staff:
         nav.append(('Admin', reverse('admin:index')))
     nav.extend([('Review', reverse('application_review')), ])
     return nav

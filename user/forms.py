@@ -4,6 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import password_validation
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
@@ -105,6 +106,8 @@ class UserChangeForm(forms.ModelForm):
     disabled password hash display field.
     """
     password = ReadOnlyPasswordHashField()
+    # user_permissions = forms.ModelMultipleChoiceField(queryset=Permission.objects.filter(
+    #     content_type__app_label='application'))
 
     class Meta:
         model = User

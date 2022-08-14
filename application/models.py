@@ -218,6 +218,11 @@ class Application(models.Model):
 
     class Meta:
         unique_together = ('type', 'user')
+        permissions = (
+            ('can_review_application', _('Can review application')),
+            ('can_invite_application', _('Can invite application')),
+            ('can_review_dubious_application', _('Can review dubious application')),
+        )
 
 
 class ApplicationLog(models.Model):
