@@ -4,14 +4,13 @@
 }
 .br-theme-bars-square .br-widget a {
   display: block;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   float: left;
   border: 2px solid;
   margin: 2px;
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 17px;
   line-height: 2;
   text-align: center;
   color: inherit;

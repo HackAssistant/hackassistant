@@ -49,7 +49,7 @@
                     {% endif %}
                 {% endfor %}
                 {% if icons.keys|length > 0 %}
-                    <div class="row justify-content-evenly pt-3 border-top border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
+                    <div class="row justify-content-evenly pt-3">
                         {% for name, data in details.items %}
                             {% if name in icons.keys and data != '' %}
                                 <div class="col-6 col-lg-3 ">
@@ -187,13 +187,13 @@
                         <div class="col-lg-8">
                             <input type="hidden" name="application_id" value="{{ application.pk }}"/>
                             <h2>{% translate 'Score' %}</h2>
-                            <div class="row">
-                                <div class="col-3" style="display: flex; justify-content: end; align-items: center; font-weight: bold">{% translate 'Technical Skills' %}</div>
-                                <div class="col-9 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">{% include 'components/vote_input.html' with name='tech_vote' %}</div>
+                            <div class="row mb-3">
+                                <div class="col-12 col-lg-3" style="display: flex; align-items: center; font-weight: bold"><p class="text-lg-end m-0" style="width: 100%">{% translate 'Technical Skills' %}</p></div>
+                                <div class="col-12 col-lg-9 m-0">{% include 'components/vote_input.html' with name='tech_vote' %}</div>
                             </div>
-                            <dl class="row">
-                                <dt class="col-3" style="display: flex; justify-content: end; align-items: center; font-weight: bold">{% translate 'Personal Skills' %}</dt>
-                                <dd class="col-9">{% include 'components/vote_input.html' with name='pers_vote' %}</dd>
+                            <dl class="row mb-3">
+                                <dt class="col-12 col-lg-3" style="display: flex; align-items: center; font-weight: bold"><p class="text-lg-end m-0" style="width: 100%">{% translate 'Personal Skills' %}</p></dt>
+                                <dd class="col-12 col-lg-9 m-0">{% include 'components/vote_input.html' with name='pers_vote' %}</dd>
                             </dl>
                         </div>
                     </div>

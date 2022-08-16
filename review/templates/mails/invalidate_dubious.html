@@ -2,7 +2,7 @@
 {% block content %}
     <p>Hi there {{ application.user.first_name }},</p>
     <p>We are reviewing your {{ application.type.name|lower }} application and we found some problems.</p>
-    <p>{{ organizer.get_full_name }} found that:</p>
+    <p>{{ organizer.first_name }} found that:</p>
     <ul>
         {% for reason in reasons %}
             <li>{{ reason }}</li>
