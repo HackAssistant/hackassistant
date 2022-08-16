@@ -137,6 +137,7 @@ class Application(models.Model):
     type = models.ForeignKey(ApplicationTypeConfig, on_delete=models.DO_NOTHING)
 
     submission_date = models.DateTimeField(default=timezone.now, editable=False)
+    last_modified = models.DateTimeField(default=timezone.now)
     status_update_date = models.DateTimeField(default=timezone.now)
 
     status = models.CharField(choices=STATUS, default=STATUS_PENDING, max_length=2)
@@ -215,6 +216,10 @@ class Application(models.Model):
 
     def can_edit(self):
         return self.status in [self.STATUS_PENDING, self.STATUS_NEEDS_CHANGE]
+
+    def save(self, *args, **kwargs):
+        self.last_modified = timezone.now()
+        super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ('type', 'user')
