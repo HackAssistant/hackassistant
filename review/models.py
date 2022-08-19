@@ -14,7 +14,10 @@ class Vote(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     tech = models.IntegerField(choices=VOTES, null=True)
     personal = models.IntegerField(choices=VOTES, null=True)
-    calculated_vote = models.FloatField(null=True)
+    calculated_vote = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return '%s voted %s' % (self.user.get_full_name(), self.application.user.get_full_name())
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """

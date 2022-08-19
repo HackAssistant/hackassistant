@@ -19,7 +19,7 @@ class PermissionQuerysetMixin:
         return super().formfield_for_manytomany(db_field, request=request, **kwargs)
 
 
-class UserAdmin(PermissionQuerysetMixin ,BaseUserAdmin):
+class UserAdmin(PermissionQuerysetMixin, BaseUserAdmin):
     permission_field_name = "user_permissions"
 
     # The forms to add and change user instances

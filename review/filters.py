@@ -9,8 +9,8 @@ from application.models import Application
 
 class ApplicationTableFilterForm(BootstrapFormMixin, forms.Form):
     bootstrap_field_info = {'': {
-            'fields': [{'name': 'search', 'space': 10}, {'name': 'user__under_age', 'space': 2},
-                       {'name': 'status', 'space': 12}, {'name': 'type'}]},
+        'fields': [{'name': 'search', 'space': 10}, {'name': 'user__under_age', 'space': 2},
+                   {'name': 'status', 'space': 12}, {'name': 'type'}]},
     }
 
 
