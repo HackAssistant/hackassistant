@@ -1,0 +1,46 @@
+.br-theme-bars-square .br-widget {
+  height: 15px;
+  white-space: nowrap;
+}
+.br-theme-bars-square .br-widget a {
+  display: block;
+  width: 40px;
+  height: 40px;
+  float: left;
+  border: 2px solid;
+  margin: 2px;
+  text-decoration: none;
+  font-size: 17px;
+  line-height: 2;
+  text-align: center;
+  color: inherit;
+  font-weight: 600;
+}
+.br-theme-bars-square .br-widget a.br-active,
+.br-theme-bars-square .br-widget a.br-selected {
+  border: 2px solid;
+}
+.br-theme-bars-square .br-widget .br-current-rating {
+  clear: both;
+  width: 330px;
+  text-align: center;
+  font-weight: 600;
+  display: block;
+  padding: .5em 0;
+}
+.br-theme-bars-square .br-readonly a {
+  cursor: default;
+}
+.br-theme-bars-square .br-readonly a.br-active,
+.br-theme-bars-square .br-readonly a.br-selected {
+  border: 2px solid;
+}
+@media print {
+  .br-theme-bars-square .br-widget a {
+    border: 2px solid;
+  }
+  .br-theme-bars-square .br-widget a.br-active,
+  .br-theme-bars-square .br-widget a.br-selected {
+    border: 2px solid;
+  }
+}

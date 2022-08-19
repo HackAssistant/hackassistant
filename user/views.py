@@ -32,7 +32,7 @@ class Login(TabsViewMixin, TemplateView):
         return super().get(request, *args, **kwargs)
 
     def get_current_tabs(self):
-        return [('Log in', reverse('login'), False), ('Register', reverse('register'), False)]
+        return [('Log in', reverse('login')), ('Register', reverse('register'))]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

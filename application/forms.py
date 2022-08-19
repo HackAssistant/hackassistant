@@ -24,13 +24,6 @@ ENGLISH_LEVELS = [(x, x) for x in ['1', '2', '3', '4', '5']]
 
 
 class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
-    terms_and_conditions = forms.BooleanField(
-        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
-                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
-                          'Privacy and Cookies Policy</a>.' % (
-                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
-                          )))
-    )
 
     diet_notice = forms.BooleanField(
         label=_('I authorize %s to use my food allergies and intolerances information to '
@@ -68,9 +61,17 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
             instance.save()
         return files_fields.keys()
 
+    def get_hidden_edit_fields(self):
+        return self.exclude_save
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial.update(self.instance.form_data)
+        instance = kwargs.get('instance', None)
+        hidden_fields = self.get_hidden_edit_fields()
+        if instance is not None and instance._state.db is not None:  # instance in DB
+            for hidden_field in hidden_fields:
+                self.fields.get(hidden_field).required = False
 
     def get_bootstrap_field_info(self):
         fields = super().get_bootstrap_field_info()
@@ -97,7 +98,8 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
 
     class Meta:
         model = Application
-        exclude = ['user', 'uuid', 'data', 'submission_date', 'status_update_date', 'status', 'contacted_by', 'type']
+        exclude = ['user', 'uuid', 'data', 'submission_date', 'status_update_date', 'status', 'contacted_by', 'type',
+                   'last_modified']
         help_texts = {
             'gender': _('This is for demographic purposes. You can skip this question if you want.'),
             'other_diet': _('Please fill here in your dietary requirements. '
@@ -111,6 +113,13 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
             'tshirt_size': _('What\'s your t-shirt size?'),
             'diet': _('Dietary requirements'),
         }
+    terms_and_conditions = forms.BooleanField(
+        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
+                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
+                          'Privacy and Cookies Policy</a>.' % (
+                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
+                          )))
+    )
 
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
@@ -131,15 +140,6 @@ class HackerForm(ApplicationForm):
         _('Traveling'): {
             'fields': [{'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}], }
     }
-
-    under_age = forms.TypedChoiceField(
-        required=True,
-        label=_('How old are you?'),
-        initial=False,
-        coerce=lambda x: x == 'True',
-        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
-        widget=forms.RadioSelect
-    )
 
     phone_number = forms.CharField(validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$')], required=False,
                                    help_text=_("Phone number must be entered in the format: +#########'. "
@@ -205,11 +205,23 @@ class HackerForm(ApplicationForm):
         policy_fields.extend([{'name': 'resume_share', 'space': 12}])
         return policy_fields
 
+    def get_hidden_edit_fields(self):
+        hidden_fields = super().get_hidden_edit_fields()
+        hidden_fields.extend(['resume_share'])
+        return hidden_fields
+
     class Meta(ApplicationForm.Meta):
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},
             'degree': {'url': static('data/degrees.json')},
+        }
+        icon_link = {
+            'resume': 'bi bi-file-pdf-fill',
+            'github': 'bi bi-github',
+            'devpost': 'bi bi-collection-fill',
+            'linkedin': 'bi bi-linkedin',
+            'site': 'bi bi-globe',
         }
 
 
@@ -258,15 +270,6 @@ class VolunteerForm(ApplicationForm):
         help_text=_('Volunteering during 2am - 5am'),
         coerce=lambda x: x == 'True',
         choices=((False, _('No')), (True, _('Yes'))),
-        widget=forms.RadioSelect
-    )
-
-    under_age = forms.TypedChoiceField(
-        required=True,
-        label=_('How old are you?'),
-        initial=False,
-        coerce=lambda x: x == 'True',
-        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
         widget=forms.RadioSelect
     )
 
@@ -367,15 +370,6 @@ class MentorForm(ApplicationForm):
                        {'name': 'more_information', 'space': 12}],
             'description': _('Tell us a bit about your experience and preferences in this type of event.')},
     }
-
-    under_age = forms.TypedChoiceField(
-        required=True,
-        label=_('How old are you?'),
-        initial=False,
-        coerce=lambda x: x == 'True',
-        choices=((False, _('18 or over')), (True, _('Between 14 (included) and 18'))),
-        widget=forms.RadioSelect
-    )
 
     university = forms.CharField(max_length=300, label=_('What university do you study at?'),
                                  help_text=_('Current or most recent school you attended.'))

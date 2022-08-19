@@ -2,9 +2,13 @@
 {% block preheader %}Verify your email address{% endblock %}
 
 {% block content %}
-    <p> Hey {{ user.get_full_name }},</p>
-    <p>You have 5 days to verify your email address for your account at {{ h_name }}.</p>
+    <p> Hey {{ user.first_name }},</p>
+    <p>You have 5 days to verify your email address for your account at {{ app_name }}.</p>
     {% include 'mails/components/button.html' with text='Verify' url=url %}
 
-    {% include 'mails/components/closing.html' %}
+    <p>Have any other questions? Email us at {{ app_contact|urlize }}.</p>
+
+    <p>We hope to see you at {{ app_hack }}!</p>
+    <p>Best regards, {{ app_hack }} Team.</p>
+
 {% endblock %}

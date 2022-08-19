@@ -9,7 +9,9 @@ Deprecated==1.2.13
 Django==4.0.7
 django-bootstrap5==21.3
 django-cors-headers==3.13.0
+django-filter==22.1
 django-jwt-oidc==0.3.6
+django-tables2==2.4.1
 flake8==4.0.1
 idna==3.3
 jwcrypto==1.3.1

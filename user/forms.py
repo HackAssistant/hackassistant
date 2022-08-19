@@ -105,6 +105,8 @@ class UserChangeForm(forms.ModelForm):
     disabled password hash display field.
     """
     password = ReadOnlyPasswordHashField()
+    # user_permissions = forms.ModelMultipleChoiceField(queryset=Permission.objects.filter(
+    #     content_type__app_label='application'))
 
     class Meta:
         model = User

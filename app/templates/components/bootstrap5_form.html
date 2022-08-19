@@ -16,7 +16,7 @@
     {% for title, zone in form.get_fields.items %}
         <fieldset class="bootstrap-fieldset">
               {% if not form_text_disabled %}
-                  <h3 class="heading-primary">{{ title }}</h3>
+                  {% if title %}<h3 class="heading-primary">{{ title }}</h3>{% endif %}
                   {% if zone.description %}
                       <p>{{ zone.description|safe }}</p>
                   {% endif %}
@@ -115,7 +115,19 @@
                 $(item).addClass('bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}')
             })
             $('.inline .form-check').addClass('form-check-inline')
-            $('.mb-3').find('a').attr('target', '_blank')
+            $('input[type="file"]').parent().find('a').attr('target', '_blank')
+            {% if is_filter %}
+                $('.bootstrap-fieldset').find('.is-valid').removeClass('is-valid')
+                $('.bootstrap-fieldset :input').not('[type="text"]').change((event) => {
+                    $(event.target).parents('form').submit()
+                })
+                $('.bootstrap-fieldset').find('input[type="text"]').keypress((event) => {
+                    if (event.which === 13) {
+                        $(event.target).parents('form').submit()
+                        return false
+                    }
+                })
+            {% endif %}
         })
 
     </script>

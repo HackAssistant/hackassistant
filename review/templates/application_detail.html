@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load util %}
+{% load perms %}
+{% block subtitle %}{% translate 'Application detail' %}{% endblock %}
+{% block content %}
+    <div class="row justify-content-between mb-3">
+        <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-2 d-grid d-md-block">
+            {% if votes %}
+                <a href="{% url 'application_list' %}?type={{ application.type.name|default:application_type }}" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
+            {% else %}
+                <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
+            {% endif %}
+        </div>
+        {% if application and not votes and perms.application.view_applicationlog %}
+            <div class="col-6 col-lg-2 d-grid d-md-flex justify-content-md-end">
+                <a href="{% url 'application_logs' application.get_uuid %}" class="btn btn-secondary col-12"><i class="bi bi-clipboard-check"></i> {% translate 'Logs' %}</a>
+            </div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col-10">
+            <h1 {% if application.user.under_age %}class="text-danger"{% endif %}>{% if votes %}{% translate 'Review application' %}{% else %}{{ application.user.get_full_name }}'s {{ application.type.name|lower }} application{% endif %}</h1>
+        </div>
+        <div class="col-2">
+            {% if application.user.under_age %}
+                <p style="text-align: right" class="text-danger">{% translate 'Under age' %} <i class="bi bi-exclamation-triangle-fill"></i></p>
+            {% endif %}
+        </div>
+    </div>
+    {% if application %}
+        <div class="row mt-4">
+            <div class="col-lg-7 border-end border-lg border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
+                {% if not votes and perms|add_type:application.type.name|has_application_perm:'change_application' %}
+                    <div style="position: relative">
+                        <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i  title="{% translate 'Edit application' %}" class="bi bi-pencil-square text-secondary"></i></a>
+                    </div>
+                {% elif votes and perms|add_type:application.type.name|has_application_perm:'view_application' %}
+                    <div style="position: relative">
+                        <a style="position: absolute; right: 0" href="{% url 'application_detail' application.get_uuid %}"><i  title="{% translate 'View application' %}" class="bi bi-link-45deg text-secondary"></i></a>
+                    </div>
+                {% endif %}
+                {% for name, data in details.items %}
+                    {% if name not in icons.keys and data != '' %}
+                        <div class="row">
+                            <div class="col-lg-3 fw-bold pb-3 text-lg-end">
+                                {{ name }}
+                            </div>
+                            <div class="col-lg-9 pb-3">
+                                {{ data }}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                {% if icons.keys|length > 0 %}
+                    <div class="row justify-content-evenly pt-3">
+                        {% for name, data in details.items %}
+                            {% if name in icons.keys and data != '' %}
+                                <div class="col-6 col-lg-3 ">
+                                    <a target="_blank" href="{{ data }}" class="text-decoration-none">
+                                        <p style="text-align: center; display: inline-block; width: 100%; margin-bottom: 0" class="fs-1 fw-bold"><i class="{{ icons|get_item:name }}"></i></p>
+                                        <p class="fw-bold" style="text-align: center">{{ name }}</p>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-5" id="comment-block">
+                <h2>{% translate 'Comments' %}</h2>
+                {% for log in comments %}
+                    {% if log.comment %}
+                        <div>
+                            <div id="comment-block-{{ log.id }}">
+                                <div class="row">
+                                    <div class="col-11">
+                                        <p class="fs-5 mb-0" id="comment-text-{{ log.id }}">{{ log.comment }}</p>
+                                        <p style="color:gray; margin: 0">by <span title="{{ log.user.get_full_name }}">{% if request.user != log.user %}{{ log.user.email }}{% else %}{% translate 'me' %}{% endif %}</span>
+                                            <small class="pull-right">{{ log.date|timesince }} ago</small>
+                                        </p>
+                                    </div>
+                                    <div class="col-1" style="text-align: right">
+                                        {% if log.user == request.user and log.form and perms.application.change_applicationlog %}
+                                            <i style="cursor: pointer" onclick="edit_comment('{{ log.id }}')" title="{% translate 'Edit comment' %}" class="bi bi-pencil-square text-secondary"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if log.user == request.user and log.form and perms.application.change_applicationlog %}
+                                <div class="row" style="display: none" id="comment-form-{{ log.id }}">
+                                    <div class="col-11">
+                                        {% include 'components/comment_form.html' with form=log.form log_id=log.id %}
+                                    </div>
+                                    <div style="text-align: right" class="col-1"><i style="cursor: pointer" onclick="cancel_comment('{{ log.id }}')" class="bi bi-x-lg text-danger"></i></div>
+                                </div>
+
+                            {% endif %}
+                        </div>
+                        <hr>
+                    {% endif %}
+                {% endfor %}
+                {% if perms.application.add_applicationlog %}
+                    {% include 'components/comment_form.html' with form=comment_form %}
+                {% endif %}
+            </div>
+            <div id="comment-template" style="display: none">
+                <div>
+                    <div id="comment-block-">
+                        <p class="fs-5 mb-0" id="comment-text-"></p>
+                        <div class="row">
+                            <div class="col-11">
+                                <p style="color:gray;">by <span title="{{ request.user.get_full_name }}">me</span>
+                                    <small class="pull-right">now</small>
+                                </p>
+                            </div>
+                            <div class="col-1" style="text-align: right">
+                                <i style="cursor: pointer" id="comment-edit-comment" class="bi bi-pencil-square text-secondary"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="display: none" id="comment-form-">
+                        <div class="col-11">
+                            {% include 'components/comment_form.html' with form=comment_form log_id=0 %}
+                        </div>
+                        <div style="text-align: right" class="col-1"><i style="cursor: pointer" id="comment-cancel-comment" class="bi bi-x-lg text-danger"></i></div>
+                    </div>
+                </div>
+                <hr>
+            </div>
+        </div>
+        <script>
+            function edit_comment(log_id) {
+                let form_block = $(`#comment-form-${log_id}`)
+                $(`#comment-block-${log_id}`).hide()
+                form_block.show()
+                form_block.find('textarea[name="comment"]').focus()
+            }
+            function cancel_comment(log_id) {
+                $(`#comment-block-${log_id}`).show()
+                $(`#comment-form-${log_id}`).hide()
+            }
+            function new_comment(data) {
+                let template = $('#comment-template').clone()
+                template.attr('id', '')
+                template.find('#comment-block-').attr('id', `comment-block-${data.id}`)
+                template.find('#comment-form-').attr('id', `comment-form-${data.id}`)
+                let text = template.find('#comment-text-')
+                text.attr('id', `comment-text-${data.id}`)
+                text.text(data.comment)
+                template.find('#comment-edit-comment').attr('onclick',`edit_comment(${data.id})`)
+                template.find('#comment-cancel-comment').attr('onclick',`cancel_comment(${data.id})`)
+
+                let form = template.find('form')
+                form.submit((event) => form_comment_submit(event))
+                form.attr('action', `{% url 'new_comment' %}/${data.id}/`)
+                form.find('textarea[name="comment"]').val(data.comment)
+                template.show()
+                $('form[action="{% url 'new_comment' %}"]').before(template)
+            }
+            function form_comment_submit(event) {
+                let form = $(event.target)
+                event.preventDefault()
+                $.post(form.attr('action'), form.serialize()).done((data) => {
+                    let text = $(`#comment-text-${data.id}`)
+                    if (text.length > 0) {
+                        text.text(data.comment)
+                        cancel_comment(data.id)
+                    } else {
+                        new_comment(data)
+                        form.find('textarea[name="comment"]').val('')
+                    }
+                })
+            }
+            $(document).ready(() => {
+                let forms = $('#comment-block').find('form')
+                forms.submit((event) => form_comment_submit(event))
+                forms.find('textarea[name="comment"]').keypress((event) => {
+                    if (event.which === 13) {
+                        $(event.target).parents('form').submit()
+                        return false
+                    }
+                })
+            })
+        </script>
+        <div class="mt-2">
+            {% if votes %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <input type="hidden" name="application_id" value="{{ application.pk }}"/>
+                            <h2>{% translate 'Score' %}</h2>
+                            <div class="row mb-3">
+                                <div class="col-12 col-lg-3" style="display: flex; align-items: center; font-weight: bold"><p class="text-lg-end m-0" style="width: 100%">{% translate 'Technical Skills' %}</p></div>
+                                <div class="col-12 col-lg-9 m-0">{% include 'components/vote_input.html' with name='tech_vote' %}</div>
+                            </div>
+                            <dl class="row mb-3">
+                                <dt class="col-12 col-lg-3" style="display: flex; align-items: center; font-weight: bold"><p class="text-lg-end m-0" style="width: 100%">{% translate 'Personal Skills' %}</p></dt>
+                                <dd class="col-12 col-lg-9 m-0">{% include 'components/vote_input.html' with name='pers_vote' %}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
+                        <button class="btn btn-primary" type="submit">{% translate 'Send vote' %}</button>
+                        <button class="btn btn-secondary" name="skip" value="skip" onclick="return confirm('{% translate "This option is placed in order to equality of votes in applications. Are you sure you know this person and want to skip? " %}')">{% translate 'Skip application' %}</button>
+                    </div>
+                </form>
+                <script type="text/javascript">
+                    $(document).ready(() => {
+                        $('.barrating').barrating({
+                            theme: 'bars-square',
+                            showValues: true,
+                            showSelectedRating: false
+                        });
+                    });
+                </script>
+            {% endif %}
+            {% if application.status == application.STATUS_DUBIOUS or application.status ==  application.STATUS_NEEDS_CHANGE %}
+                <form method="post" class="mt-2">
+                    <h3>{% if application.status == application.STATUS_DUBIOUS %}{% translate 'Dubious form' %}{% else %}{% translate 'Correction form' %}{% endif %}</h3>
+                    {% csrf_token %}
+                    {% include 'components/bootstrap5_form.html' with form=dubious_form %}
+                    <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
+                        {% if application.status != application.STATUS_NEEDS_CHANGE %}
+                            <button class="btn btn-primary" name="status" value="{{ application.STATUS_NEEDS_CHANGE }}" onclick="return confirm('{% translate "This reason will be sent to the user. Are you sure?" %}')">{% translate 'Confirm dubious' %}</button>
+                        {% endif %}
+                        <button class="btn btn-secondary" name="status" value="{{ application.STATUS_PENDING }}" onclick="return confirm('{% translate "This reason will be stored as a comment and the application will be pending again. Are you sure?" %}')">{% if application.status == application.STATUS_DUBIOUS %}{% translate 'This is not dubious' %}{% else %}{% translate 'Not dubious anymore' %}{% endif %}</button>
+                        <button class="btn btn-danger" name="status" value="{{ application.STATUS_INVALID }}" onclick="return confirm('{% translate "This reason will be sent to the user. Are you sure?" %}')">{% translate 'Invalid application' %}</button>
+                    </div>
+                </form>
+
+            {% endif %}
+            <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
+                {% if application.status != application.STATUS_DUBIOUS and application.status !=  application.STATUS_NEEDS_CHANGE %}
+                    <button class="btn btn-warning" onclick="mark_dubious()">{% translate 'Mark as dubious' %}</button>
+                    <script>
+                        function mark_dubious() {
+                            let comment = prompt("{% translate "Are you sure there's something wrong with this application? Add the reason" %}")
+                            if (comment === null) return false
+                            window.location.href = "{% url 'change_status_application' application.get_uuid application.STATUS_DUBIOUS %}?next={{ request.path }}&comment=" + encodeURIComponent('Dubious: ' + comment)
+                        }
+                    </script>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <p class="text-center fs-4 mt-3">{% translate 'No applications left to be voted.' %}<br>{% translate 'Good job! Enjoy the sun outside!' %}</p>
+    {% endif %}
+{% endblock %}

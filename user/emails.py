@@ -15,7 +15,7 @@ def send_verification_email(request, user):
         'user': user,
         'url': url,
     }
-    Email(name='verify_email', context=context, list_mails=[user.email]).send()
+    Email(name='verify_email', context=context, to=user.email, request=request).send()
 
 
 def send_password_reset_email(request, user):
@@ -27,4 +27,4 @@ def send_password_reset_email(request, user):
         'user': user,
         'url': url,
     }
-    Email(name='password_reset', context=context, list_mails=[user.email]).send()
+    Email(name='password_reset', context=context, to=user.email, request=request).send()

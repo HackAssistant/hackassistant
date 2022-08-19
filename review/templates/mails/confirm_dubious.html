@@ -1,0 +1,19 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>Hi there {{ application.user.first_name }},</p>
+    <p>We are reviewing your {{ application.type.name|lower }} application and we found some information missing or incorrect.</p>
+    <p>{{ organizer.first_name }} found that:</p>
+    <ul>
+        {% for reason in reasons %}
+            <li>{{ reason }}</li>
+        {% endfor %}
+    </ul>
+
+    <p>In order to evaluate your application properly we need you to change your application on the platform or reply this email with the information required.</p>
+
+    {% include 'mails/components/button.html' with url=url text='Change your application' %}
+
+    <p>If you have any question don't hesitate to reply this email!</p>
+    <p>Best regards,</p>
+    <p>{{ app_hack }} Team.</p>
+{% endblock %}

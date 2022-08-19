@@ -61,8 +61,7 @@ class ApplicationApplyTemplate(TemplateView):
         else:
             user_form = UserProfileForm(initial=initial_data)
         context.update({'edit': False, 'application_form': ApplicationForm(initial=initial_data),
-                        'application_type': application_type,
-                        'user_form': user_form})
+                        'application_type': application_type, 'user_form': user_form, 'public': self.public})
         return context
 
     def save_application(self, form, app_type, user):
@@ -135,7 +134,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
         return application
 
     def application_can_edit(self, application, application_type):
-        return self.request.user.is_organizer or application.can_edit() and application_type.active()
+        return self.request.user.is_organizer or (application.can_edit() and application_type.active())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -144,7 +143,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
         ApplicationForm = self.get_form(application_type)
         application_form = ApplicationForm(instance=application)
         user_form = UserProfileForm(instance=application.user)
-        if self.application_can_edit(application, application_type):
+        if not self.application_can_edit(application, application_type):
             application_form.set_read_only()
         context.update({'edit': True, 'application_form': application_form, 'full_name': application.get_full_name(),
                         'application_type': application_type, 'user_form': user_form})
@@ -165,10 +164,11 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
                     application.save()
                 log.set_file_changes(files)
                 if len(log.changes) > 0:
+                    log.comment = self.request.POST.get('comment_applicationlog', '')
                     log.save()
             messages.success(request, _('Edited successfully!'))
             return redirect('edit_application', **kwargs)
-        context.update({'application_form': application_form})
+        context.update({'application_form': application_form, 'user_form': user_form})
         return self.render_to_response(context)
 
 
@@ -233,6 +233,8 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
                 raise PermissionDenied()
         application.set_status(new_status)
         log = ApplicationLog.create_log(application=application, user=request.user, name=status_dict.get(new_status))
+        if request.user.is_organizer:
+            log.comment = self.request.GET.get('comment', '')
         with transaction.atomic():
             application.save()
             log.save()

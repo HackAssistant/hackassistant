@@ -1,0 +1,11 @@
+<table style="padding-top: 20px" cellpadding="0" cellspacing="0" border="0" align="center" class="apple-link">
+    <tr>
+        {% for name, info in app_socials.items %}
+            {% with url=info.0 icon=info.1 %}
+                <td style="padding: 0px 5px;">
+                    <a role="button" href="{{ url }}" target="_blank" border="0" alt="Medium" style="border-radius: 5px; -webkit-border-radius:5px; -moz-border-radius:5px; -ms-border-radius:5px; -o-border-radius:5px; color: white; display: inline-block; outline: none; text-decoration:none; border: none; font-family: Helvetica, arial, sans-serif;">{{ name }}</a>
+                </td>
+            {% endwith %}
+        {% endfor %}
+    </tr>
+</table>

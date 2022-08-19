@@ -47,12 +47,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_tables2',
+    'django_filters',
     'django_jwt',
     'django_jwt.server',
     'django_bootstrap5',
     'corsheaders',
     'user',
     'application',
+    'review',
 ]
 
 MIDDLEWARE = [
@@ -79,6 +82,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',
                 'app.template.app_variables',
             ],
             'libraries': {
@@ -169,6 +173,8 @@ JWT_SERVER = {
     'JWK_EXPIRATION_TIME': 3600,                # Optional
     'JWT_EXPIRATION_TIME': 14400                # Optional
 }
+
+DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap-responsive.html'
 
 # Toast styles
 MESSAGE_TAGS = {

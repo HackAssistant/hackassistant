@@ -1,0 +1,1 @@
+We found issues with your {{ application.type.name|lower }} application

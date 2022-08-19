@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load util %}
+{% block subtitle %}{% translate 'Application logs' %}{% endblock %}
+{% block content %}
+    <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-4 d-grid d-md-block mb-3">
+        <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
+    </div>
+    <h1>{{ application.user.get_full_name }}'s {{ application.type.name|lower }} application logs</h1>
+    <div class="list-group">
+        {% for log in logs %}
+            <a class="list-group-item list-group-item-action list-group-item-dark" data-bs-toggle="collapse" href="#log-collapse-{{ log.pk }}" role="button" aria-expanded="false" aria-controls="log-collapse-{{ log.pk }}">
+                <div class="d-flex w-100 justify-content-between">
+                    <p class="mb-1 fs-4">{{ log.name }} by {% if request.user != log.user %}{{ log.user.email }}{% else %}{% translate 'me' %}{% endif %}</p>
+                    <div class="rotate fs-4" style="display: table-cell;"><i class="bi bi-chevron-down"></i></div>
+                </div>
+                <div class="collapse" id="log-collapse-{{ log.pk }}">
+                    {% if log.comment %}
+                        <p class="mb-1 fw-bold">{% translate 'Comment' %}: {{ log.comment }}</p>
+                    {% endif %}
+                    {% if log.changes|length != 0 %}
+                        <p class="fs-5 fw-bold mb-1">{% translate 'Changes' %}:</p>
+                        <ul>
+                            {% for name, change in log.changes.items %}
+                                <li><strong>{{ name }}:</strong> {% if change|get_type == 'str' %} {{ change }}{% endif %}
+                                    <ul>
+                                        {% if change.old is not None and change.old != '' %}
+                                            <li>{% translate 'Old' %}: {{ change.old }}</li>
+                                        {% endif %}
+                                        {% if change.new is not None and change.new != '' %}
+                                            <li>{% translate 'New' %}: {{ change.new }}</li>
+                                        {% endif %}
+                                    </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                    {% endif %}
+                </div>
+                <small>{{ log.date|timesince }} ago</small>
+            </a>
+        {% endfor %}
+    </div>
+    <script>
+        function rotate(target, degree) {
+            let icon = $(target).parent().find('.rotate')
+            icon.animate({rotation: degree}, {
+                duration: 350,
+                step: function(now) {
+                    icon.css({'transform' : 'rotate('+ now +'deg)'});
+                }
+            })
+        }
+        $(document).ready(() => {
+            let collapse = $('.collapse')
+            collapse.on('show.bs.collapse', (event) => {
+                rotate(event.target, 180)
+            })
+            collapse.on('hide.bs.collapse', (event) => {
+                rotate(event.target, 0)
+            })
+        })
+    </script>
+{% endblock %}

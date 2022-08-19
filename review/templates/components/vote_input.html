@@ -1,0 +1,7 @@
+<div>
+    <select name="{{ name }}" class="barrating" required>
+      {% for int, str in votes.items %}
+        <option value={{ str }}>{{ int }}</option>
+      {% endfor %}
+    </select>
+</div>

@@ -1,0 +1,25 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>Hi there {{ application.user.first_name }},</p>
+    <p>We are reviewing your {{ application.type.name|lower }} application and we found some problems.</p>
+    <p>{{ organizer.first_name }} found that:</p>
+    <ul>
+        {% for reason in reasons %}
+            <li>{{ reason }}</li>
+        {% endfor %}
+    </ul>
+
+    <p>We have discussed your case with the team, and we are really sorry that we could not go through with your {{ application.type.name|lower }} application.</p>
+    {% if types|length > 0 %}
+        Even though you cannot apply as {{ application.type.name|lower }}, you can participate in the event as other roles:
+        <ul>
+            {% for type in types %}
+                <li>{{ type.name }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p>If you have any question don't hesitate to reply this email!</p>
+    <p>Best regards,</p>
+    <p>{{ app_hack }} Team.</p>
+{% endblock %}

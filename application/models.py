@@ -11,8 +11,6 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
-from user.models import User
-
 
 class FileField(dict):
     def __init__(self, data, url) -> None:
@@ -34,6 +32,8 @@ class ApplicationTypeConfig(models.Model):
     start_application_date = models.DateTimeField(default=timezone.now, null=True)
     end_application_date = models.DateTimeField(default=timezone.now, null=True)
     group = models.ForeignKey(Group, on_delete=models.DO_NOTHING)
+    review = models.BooleanField(default=True)
+    needs_confirmation = models.BooleanField(default=False)
 
     @property
     def get_token(self):
@@ -137,6 +137,7 @@ class Application(models.Model):
     type = models.ForeignKey(ApplicationTypeConfig, on_delete=models.DO_NOTHING)
 
     submission_date = models.DateTimeField(default=timezone.now, editable=False)
+    last_modified = models.DateTimeField(default=timezone.now)
     status_update_date = models.DateTimeField(default=timezone.now)
 
     status = models.CharField(choices=STATUS, default=STATUS_PENDING, max_length=2)
@@ -216,17 +217,27 @@ class Application(models.Model):
     def can_edit(self):
         return self.status in [self.STATUS_PENDING, self.STATUS_NEEDS_CHANGE]
 
+    def save(self, *args, **kwargs):
+        self.last_modified = timezone.now()
+        super().save(*args, **kwargs)
+
     class Meta:
         unique_together = ('type', 'user')
+        permissions = (
+            ('can_review_application', _('Can review application')),
+            ('can_invite_application', _('Can invite application')),
+            ('can_review_dubious_application', _('Can review dubious application')),
+        )
 
 
 class ApplicationLog(models.Model):
     id = models.BigAutoField(primary_key=True)
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, db_index=False)
-    user = models.ForeignKey(User, on_delete=models.RESTRICT, db_index=False)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, db_index=False, related_name='logs')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, db_index=False)
     name = models.CharField(max_length=20)
     comment = models.TextField(blank=True)
     data = models.TextField(blank=True)
+    date = models.DateTimeField(default=timezone.now)
 
     class NotFound:
         pass

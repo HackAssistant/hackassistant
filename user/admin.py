@@ -1,11 +1,27 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.models import Group
 
 from user.forms import UserChangeForm, UserCreationForm
 from user.models import User
 
 
-class UserAdmin(BaseUserAdmin):
+class PermissionQuerysetMixin:
+    permission_field_name = ''
+
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+        if db_field.name == self.permission_field_name:
+            qs = kwargs.get("queryset", db_field.remote_field.model.objects)
+            # Avoid a major performance hit resolving permission names which
+            # triggers a content_type load:
+            kwargs["queryset"] = qs.filter(content_type__app_label='application',
+                                           content_type__model__in=['application', 'applicationlog'])
+        return super().formfield_for_manytomany(db_field, request=request, **kwargs)
+
+
+class UserAdmin(PermissionQuerysetMixin, BaseUserAdmin):
+    permission_field_name = "user_permissions"
+
     # The forms to add and change user instances
     form = UserChangeForm
     add_form = UserCreationForm
@@ -17,8 +33,9 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_staff', 'is_superuser')
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name')}),
-        ('Permissions', {'fields': ('is_staff', 'is_superuser')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'phone_number', 'diet', 'other_diet', 'gender',
+                                      'other_gender', 'under_age', 'tshirt_size')}),
+        ('Permissions', {'fields': ('is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
     # overrides get_fieldsets to use this attribute when creating a user.
@@ -33,5 +50,11 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
 
+class GroupAdmin(PermissionQuerysetMixin, BaseGroupAdmin):
+    permission_field_name = 'permissions'
+
+
 # Now register the new UserAdmin...
 admin.site.register(User, UserAdmin)
+admin.site.unregister(Group)
+admin.site.register(Group, GroupAdmin)

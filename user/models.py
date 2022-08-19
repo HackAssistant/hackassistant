@@ -74,7 +74,6 @@ class UserManager(BaseUserManager):
         return self.none()
 
 
-# User default from Django without username field
 class User(AbstractBaseUser, PermissionsMixin):
     GENDER_NO_ANSWER = 'NA'
     GENDER_MALE = 'M'

@@ -41,6 +41,52 @@ body.light {
 .content {
     font-size: 15px;
 }
+
 footer {
     margin-top: auto;
+}
+
+.orderable > a {
+    text-decoration: none;
+}
+
+.orderable {
+    position: relative;
+}
+
+.orderable > a:before,
+.orderable > a:after {
+	border: 4px solid transparent;
+	content: "";
+	display: block;
+	height: 0;
+	right: 10px;
+	top: 50%;
+	position: absolute;
+	width: 0;
+}
+.orderable > a:before {
+	margin-top: -9px;
+    border-bottom-color: currentColor;
+}
+.orderable > a:after {
+	margin-top: 1px;
+    border-top-color: currentColor;
+}
+.orderable.desc > a:before {
+	border-bottom-color: transparent;
+}
+.orderable.asc > a:after {
+	border-top-color: transparent;
+}
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 992px) { /* Bootstrap lg */
+    .border-lg {
+        border: 0 !important;
+    }
 }
