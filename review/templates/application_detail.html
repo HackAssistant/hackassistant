@@ -12,7 +12,7 @@
                 <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
             {% endif %}
         </div>
-        {% if application and perms.application.view_applicationlog %}
+        {% if application and not votes and perms.application.view_applicationlog %}
             <div class="col-6 col-lg-2 d-grid d-md-flex justify-content-md-end">
                 <a href="{% url 'application_logs' application.get_uuid %}" class="btn btn-secondary col-12"><i class="bi bi-clipboard-check"></i> {% translate 'Logs' %}</a>
             </div>
@@ -31,9 +31,13 @@
     {% if application %}
         <div class="row mt-4">
             <div class="col-lg-7 border-end border-lg border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
-                {% if perms|add_type:application.type.name|has_application_perm:'change_application' %}
+                {% if not votes and perms|add_type:application.type.name|has_application_perm:'change_application' %}
                     <div style="position: relative">
                         <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i  title="{% translate 'Edit application' %}" class="bi bi-pencil-square text-secondary"></i></a>
+                    </div>
+                {% elif votes and perms|add_type:application.type.name|has_application_perm:'view_application' %}
+                    <div style="position: relative">
+                        <a style="position: absolute; right: 0" href="{% url 'application_detail' application.get_uuid %}"><i  title="{% translate 'View application' %}" class="bi bi-link-45deg text-secondary"></i></a>
                     </div>
                 {% endif %}
                 {% for name, data in details.items %}

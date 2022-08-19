@@ -16,7 +16,9 @@ class ApplicationPermissionRequiredMixin(PermissionRequiredMixin):
         return permissions
 
     def get_application_type(self):
-        return None
+        if not hasattr(super(), 'get_application_type'):
+            return None
+        return super().get_application_type()
 
     def get_type_permissions(self, permissions, application_type):
         result = []

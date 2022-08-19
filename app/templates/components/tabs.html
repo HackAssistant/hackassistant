@@ -4,7 +4,7 @@
     </li>
     {% for tab in tabs %}
         <li class="nav-item">
-            <a class="nav-link {% if not tab.active and request.path != tab.url %}bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}{% else %}bg-primary text-light{% endif %} border-{{ theme }}" href="{{ tab.url }}">{{ tab.title }}{% if tab.needs_action %} <span class="{% if not tab.active and request.path != tab.url %}text-primary{% else %}text-light{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i></span>{% endif %}</a>
+            <a class="nav-link {% if not tab.active and request.path != tab.url %}bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}{% else %}bg-primary text-light{% endif %} border-{{ theme }}" href="{{ tab.url }}">{{ tab.title }}{% if tab.needs_action %} <span class="{% if not tab.active and request.path != tab.url %}text-primary{% else %}text-light{% endif %}"><i class="bi bi-patch-exclamation-fill"></i></span>{% endif %}</a>
         </li>
     {% endfor %}
     <li class="nav-item tab-arrow" style="display: none; cursor: pointer">

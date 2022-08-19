@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db import Error
 from django.db.models import Q, Count
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -23,7 +24,7 @@ from application.models import Application, FileField, ApplicationLog, Applicati
 from review.filters import ApplicationTableFilter
 from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote
-from review.tables import ApplicationTable
+from review.tables import ApplicationTable, ApplicationInviteTable
 from user.mixins import IsOrganizerMixin
 
 
@@ -59,19 +60,25 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
     queryset = Application.objects.all()
     filterset_class = ApplicationTableFilter
 
+    def get_application_type(self):
+        return self.request.GET.get('type', 'Hacker')
+
     def get_filterset(self, filterset_class):
         filterset = super().get_filterset(filterset_class)
-        filterset.form.initial = {'type': self.request.GET.get('type', 'Hacker')}
+        filterset.form.initial = {'type': self.get_application_type()}
         return filterset
+
+    def get_queryset(self):
+        return self.table_class.get_queryset(super().get_queryset())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
-            application_type = ApplicationTypeConfig.objects.get(name=self.request.GET.get('type', 'Hacker'))
+            application_type = ApplicationTypeConfig.objects.get(name=self.get_application_type())
             context.update({'application_type': application_type})
         except ApplicationTypeConfig.DoesNotExist:
             pass
-        dubious = Application.objects.filter(type__name=self.request.GET.get('type', 'Hacker'),
+        dubious = Application.objects.filter(type__name=self.get_application_type(),
                                              status=Application.STATUS_DUBIOUS).exists()
         context.update({'dubious': dubious, 'Application': Application})
         return context
@@ -202,3 +209,35 @@ class ApplicationLogs(IsOrganizerMixin, PermissionRequiredMixin, TemplateView):
         application = get_object_or_404(Application, uuid=self.kwargs.get('uuid'))
         context.update({'application': application, 'logs': application.logs.order_by('-date')})
         return context
+
+
+class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList):
+    table_class = ApplicationInviteTable
+    permission_required = 'application.can_invite_application'
+
+    def get_current_tabs(self):
+        return []
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'invite': True})
+        return context
+
+    def post(self, request, *args, **kwargs):
+        selection = request.POST.getlist('select')
+        error = 0
+        for application in Application.objects.filter(uuid__in=selection):
+            log = ApplicationLog(application=application, user=request.user, name='Invited')
+            log.changes = {'status': {'old': application.status, 'new': Application.STATUS_INVITED}}
+            application.set_status(Application.STATUS_INVITED)
+            try:
+                application.save()
+                log.save()
+            except Error:
+                error += 1
+        if error > 0:
+            messages.error(request, _('Invited %s, Error: %s') % (len(selection) - error, error))
+        else:
+            messages.success(request, _('Invited: %s' % len(selection)))
+        return redirect(reverse('application_list') + '?type=%s&status=%s' % (self.get_application_type(),
+                                                                              Application.STATUS_INVITED))
