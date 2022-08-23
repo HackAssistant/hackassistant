@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
@@ -241,4 +242,7 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
         with transaction.atomic():
             application.save()
             log.save()
+            if new_status == Application.STATUS_ATTENDED:
+                group = Group.objects.get_or_create(application.type.name)
+                group.user_set.add(application.user)
         return redirect(next_page)

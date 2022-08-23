@@ -193,6 +193,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         number = self.__class__.objects.filter(email__endswith='@unknown.com').count()
         self.email = 'user' + str(number) + '@unknown.com'
 
+    def get_groups(self):
+        return list(self.groups.all().values_list('name', flat=True))
+
 
 class LoginRequest(models.Model):
     ip = models.CharField(max_length=30)
