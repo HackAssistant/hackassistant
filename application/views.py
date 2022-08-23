@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
@@ -6,14 +7,17 @@ from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
 
 from application import forms
+from application.emails import send_email_to_blocked_admins
 from application.models import Application, ApplicationTypeConfig, ApplicationLog
 from user.forms import UserProfileForm
 from user.mixins import LoginRequiredMixin
+from user.models import BlockedUser
 
 
 class ApplicationHome(LoginRequiredMixin, TemplateView):
@@ -65,15 +69,31 @@ class ApplicationApplyTemplate(TemplateView):
                         'application_type': application_type, 'user_form': user_form, 'public': self.public})
         return context
 
+    def block_application(self, user, application):
+        blocked_user = BlockedUser.get_blocked(full_name=user.get_full_name(), email=user.email)
+        application.status = Application.STATUS_BLOCKED
+        User = get_user_model()
+        perms = ['can_review_blocked_application', 'can_review_blocked_application_%s' %
+                 application.type.name.lower()]
+        users_emails = User.get_users_with_permissions(perms).values_list('email', flat=True)
+        send_email_to_blocked_admins(self.request, users_emails, application=application, blocked_user=blocked_user)
+
     def save_application(self, form, app_type, user):
         try:
             if not self.public:
                 raise Application.DoesNotExist()
-            Application.objects.get(user=user, type__name__iexact=self.request.GET.get('type', 'Hacker').lower())
+            Application.objects.get(user=user, type_id=app_type.pk)
         except Application.DoesNotExist:
             instance = form.save(commit=False)
             instance.user = user
             instance.type_id = app_type.pk
+            if app_type.auto_confirm:
+                instance.status = Application.STATUS_CONFIRMED
+            if app_type.blocklist:
+                try:
+                    self.block_application(user, application=instance)
+                except BlockedUser.DoesNotExist:
+                    pass
             with transaction.atomic():
                 instance.save()
                 form.save_files(instance=instance)
@@ -245,4 +265,8 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
             if new_status == Application.STATUS_ATTENDED:
                 group = Group.objects.get_or_create(application.type.name)
                 group.user_set.add(application.user)
+            if new_status == application.STATUS_CONFIRMED:
+                Application.objects.exclude(uuid=application.get_uuid)\
+                    .filter(user=application.user, type__compatible_with_others=False)\
+                    .update(status=Application.STATUS_CANCELLED, status_update_date=timezone.now())
         return redirect(next_page)

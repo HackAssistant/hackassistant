@@ -1,0 +1,24 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>Hi there,</p>
+    <p>I have found that one of the applications may be from one of the users on the Blocked List.</p>
+    <br>
+    <p><strong>{{ application.type.name }} application user:</strong></p>
+    <ul>
+        <li><strong>Name:</strong> {{ application.user.get_full_name }}</li>
+        <li><strong>Email:</strong> {{ application.user.email }}</li>
+    </ul>
+    <br>
+    <p><strong>Blocked list user:</strong></p>
+    <ul>
+        <li><strong>Name:</strong> {{ blocked_user.full_name }}</li>
+        <li><strong>Email:</strong> {{ blocked_user.email }}</li>
+    </ul>
+    <br>
+    <p>If this is an error you can change it to Under Review status by clicking Clear status.</p>
+
+    {% include 'mails/components/button.html' with url=url text='Clear status' %}
+
+    <p>Best regards,</p>
+    <p>{{ app_name }}.</p>
+{% endblock %}
