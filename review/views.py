@@ -46,11 +46,12 @@ class ReviewApplicationTabsMixin(TabsViewMixin):
         for app_type in ApplicationTypeConfig.objects.all().order_by('pk'):
             page_url = reverse('application_list')
             if app_type.vote_enabled() and (self.request.user.has_perm('can_review_application') or
-                                  self.request.user.has_perm('can_review_application_%s' % app_type.name.lower())):
+                                            self.request.user.has_perm('can_review_application_%s' %
+                                                                       app_type.name.lower())):
                 page_url = self.request.path
             url = '%s?type=%s' % (page_url, app_type.name)
-            tabs.append((app_type.name, url, app_type.vote_enabled() and self.get_review_application(app_type.name) is not None,
-                         active_type == app_type.name))
+            tabs.append((app_type.name, url, app_type.vote_enabled() and
+                         self.get_review_application(app_type.name) is not None, active_type == app_type.name))
         return tabs
 
 
