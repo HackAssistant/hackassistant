@@ -6,11 +6,7 @@
 {% block content %}
     <div class="row justify-content-between mb-3">
         <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-2 d-grid d-md-block">
-            {% if votes %}
-                <a href="{% url 'application_list' %}?type={{ application.type.name|default:application_type }}" class="btn btn-secondary col-12"><i class="bi bi-list-ul"></i> {% translate 'Applications' %}</a>
-            {% else %}
-                <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
-            {% endif %}
+            <a href="{% url 'application_list' %}?type={{ application.type.name|default:application_type }}" class="btn btn-secondary col-12">{% if votes %}<i class="bi bi-list-ul"></i> {% translate 'Applications' %}{% else %}<i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}{% endif %}</a>
         </div>
         {% if application and not votes and perms.application.view_applicationlog %}
             <div class="col-6 col-lg-2 d-grid d-md-flex justify-content-md-end">
@@ -31,7 +27,7 @@
     {% if application %}
         <div class="row mt-4">
             <div class="col-lg-7 border-end border-lg border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}">
-                {% if not votes and perms|add_type:application.type.name|has_application_perm:'change_application' %}
+                {% if not votes and perms|add_type:application.type.name|has_application_perm:'change_application' or application.status == application.STATUS_NEEDS_CHANGE and perms|add_type:application.type.name|has_application_perm:'can_review_dubious_application' %}
                     <div style="position: relative">
                         <a style="position: absolute; right: 0" href="{% url 'edit_application' application.get_uuid %}"><i  title="{% translate 'Edit application' %}" class="bi bi-pencil-square text-secondary"></i></a>
                     </div>
@@ -81,13 +77,13 @@
                                         </p>
                                     </div>
                                     <div class="col-1" style="text-align: right">
-                                        {% if log.user == request.user and log.form and perms.application.change_applicationlog %}
+                                        {% if log.form and log.user == request.user or perms.application.change_applicationlog %}
                                             <i style="cursor: pointer" onclick="edit_comment('{{ log.id }}')" title="{% translate 'Edit comment' %}" class="bi bi-pencil-square text-secondary"></i>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
-                            {% if log.user == request.user and log.form and perms.application.change_applicationlog %}
+                            {% if log.form and log.user == request.user or perms.application.change_applicationlog %}
                                 <div class="row" style="display: none" id="comment-form-{{ log.id }}">
                                     <div class="col-11">
                                         {% include 'components/comment_form.html' with form=log.form log_id=log.id %}
@@ -215,8 +211,7 @@
                         });
                     });
                 </script>
-            {% endif %}
-            {% if application.status == application.STATUS_DUBIOUS or application.status ==  application.STATUS_NEEDS_CHANGE %}
+            {% elif perms|add_type:application.type.name|has_application_perm:'can_review_dubious_application' and application.status == application.STATUS_DUBIOUS or application.status ==  application.STATUS_NEEDS_CHANGE %}
                 <form method="post" class="mt-2">
                     <h3>{% if application.status == application.STATUS_DUBIOUS %}{% translate 'Dubious form' %}{% else %}{% translate 'Correction form' %}{% endif %}</h3>
                     {% csrf_token %}
@@ -229,7 +224,6 @@
                         <button class="btn btn-danger" name="status" value="{{ application.STATUS_INVALID }}" onclick="return confirm('{% translate "This reason will be sent to the user. Are you sure?" %}')">{% translate 'Invalid application' %}</button>
                     </div>
                 </form>
-
             {% endif %}
             <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
                 {% if application.status != application.STATUS_DUBIOUS and application.status !=  application.STATUS_NEEDS_CHANGE %}

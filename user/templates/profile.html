@@ -2,13 +2,17 @@
 {% load i18n %}
 {% block subtitle %}{% translate 'Profile' %}{% endblock %}
 {% block content %}
-    <h1 style="text-align: center">{% translate 'Profile' %}</h1>
+    <h1 class="text-center">{% translate 'Profile' %}</h1>
     <form method="post" id="profile-form">
         {% csrf_token %}
         {% include 'components/bootstrap5_form.html' with form_text_disabled=True %}
-        <div class="d-grid gap-4 d-flex justify-content-around">
-            <button type="button" data-bs-toggle="modal" data-bs-target="#modal-delete-user" class="btn btn-block btn-danger col-4">{% translate 'Delete user' %}</button>
-            <button type="submit" class="btn btn-block btn-primary col-4">{% translate 'Change profile' %}</button>
+        <div class="row justify-content-between">
+            <div class="col-12 col-lg-6 d-grid d-md-block">
+                <button type="button" data-bs-toggle="modal" data-bs-target="#modal-delete-user" class="btn btn-block btn-danger col-12">{% translate 'Delete user' %}</button>
+            </div>
+            <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+                <button type="submit" class="btn btn-block btn-primary col-12">{% translate 'Change profile' %}</button>
+            </div>
         </div>
         <div class="modal" tabindex="-1" id="modal-delete-user">
             <div class="modal-dialog modal-dialog-centered">

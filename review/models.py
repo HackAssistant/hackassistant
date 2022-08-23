@@ -23,7 +23,7 @@ class Vote(models.Model):
         """
         We are overriding this in order to standarize each review vote with the
         new vote.
-        Also we store a calculated vote for each vote so that we don't need to
+        Also, we store a calculated vote for each vote so that we don't need to
         do it later.
 
         Thanks to Django awesomeness we do all the calculations with only 3

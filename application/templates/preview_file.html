@@ -10,9 +10,13 @@
         <h1>{{ application.get_full_name }} {{ field_name }}</h1>
 
         <div id="pdf-div" style="width: 100%; text-align:center; margin-top: 10px"></div>
-        <div class="d-grid gap-4 d-flex justify-content-around">
-            <a class="btn btn-primary col-4" href="{{ download }}">{% trans 'Download' %}</a>
-            <a class="btn btn-danger col-4" onclick="close_tab();">{% trans 'Close tab' %}</a>
+        <div class="row justify-content-between">
+            <div class="col-12 col-lg-6 d-grid d-md-block">
+                <a class="btn btn-secondary col-12" href="{{ download }}">{% trans 'Download' %}</a>
+            </div>
+            <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+                <a class="btn btn-primary col-12" onclick="close_tab();">{% trans 'Close tab' %}</a>
+            </div>
         </div>
     </div>
 

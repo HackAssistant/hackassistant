@@ -51,7 +51,7 @@
                         {% include 'components/tabs.html' %}
                     {% endif %}
                     <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
-                        <div style="padding: 20px">
+                        <div class="p-4">
                             {% block content %}
                             {% endblock %}
                         </div>

@@ -116,11 +116,11 @@ class ApplicationDetail(IsOrganizerMixin, ApplicationPermissionRequiredMixin, Te
                      for name, value in getattr(ApplicationForm.Meta, 'icon_link', {}).items()}
             comments = application.logs.filter(comment__isnull=False)
             for comment in comments:
-                if comment.user == self.request.user:
-                    comment.form = CommentForm(instance=comment)
+                comment.form = CommentForm(instance=comment)
             context.update({'application': application, 'details': details, 'icons': icons,
                             'comment_form': CommentForm(initial={'application': application.get_uuid}),
-                            'comments': comments, 'dubious_form': DubiousApplicationForm()})
+                            'comments': comments, 'dubious_form': DubiousApplicationForm(),
+                            'application_type': application.type.name})
         return context
 
     def get_application(self):

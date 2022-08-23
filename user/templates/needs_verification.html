@@ -4,15 +4,19 @@
     <div class="row justify-content-md-center" style="margin: 0">
         <div class="col-lg-4" style="margin: 40px 10px;">
             <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
-                <div class="content" style="padding: 20px">
+                <div class="content p-4">
                     <h1 style="text-align: center">{% translate 'Email not verified' %}</h1>
                     <p>
                         {% translate 'Your account is not verified. Check your email to verify it.' %}
                         <strong>{% translate 'Be aware that the email could be on your SPAM folder.' %}</strong>
                     </p>
-                    <form method="post" class="d-grid col-6 mx-auto">
+                    <form method="post">
                         {% csrf_token %}
-                        <button class="btn btn-primary" type="submit">{% translate 'Send another verification email' %}</button>
+                        <div class="row justify-content-around">
+                            <div class="col-12 col-lg-6 d-grid d-md-block">
+                                <button class="btn btn-primary col-12" type="submit">{% translate 'Resend verification email' %}</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
