@@ -129,7 +129,10 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
 
     def get_application(self):
         application = get_object_or_404(Application, uuid=self.kwargs.get('uuid'))
-        if not self.request.user.is_organizer() and self.request.user != application.user:
+        if self.request.user != application.user and not (self.request.user.is_organizer() and
+                                                          (self.request.user.has_perm('change_application') or
+                                                           self.request.user.has_perm('change_application_%s' %
+                                                                                      application.type.name.lower()))):
             raise PermissionDenied()
         return application
 
