@@ -166,7 +166,7 @@ JWT_CLIENT = {
     'CLIENT_ID': os.environ.get('OPENID_CLIENT_ID', 'client_id'),                       # Required
     'TYPE': 'fake' if DEBUG else 'local',                                               # Required
     'RESPONSE_TYPE': 'id_token',                                                        # Required
-    'RENAME_ATTRIBUTES': {'sub': 'email'},                                              # Optional
+    'RENAME_ATTRIBUTES': {'sub': 'email', 'groups': 'get_groups'},                      # Optional
 
 }
 JWT_SERVER = {

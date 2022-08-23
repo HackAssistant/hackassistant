@@ -1,26 +1,27 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
+{% load perms %}
 {% block subtitle %}{% if edit %}{% blocktrans %}{{ full_name }}'s {{ application_type }} application{% endblocktrans %}{% else %}{% blocktrans %}Applying as {{ application_type }}{% endblocktrans %}{% endif %}{% endblock %}
 {% block content %}
-    <div class="row">
-        <div class="col-lg-2">
-            {% if edit or public %}
-                <a href="{% if request.user.is_organizer and edit %}{% url 'application_detail' application_form.instance.get_uuid %}{% else %}{% url 'apply_home' %}{% endif %}" class="btn btn-secondary" onclick="history.back()"><i class="bi bi-caret-left-fill"></i> {% trans 'Back' %}</a>
-            {% endif %}
-        </div>
-        <h1 class="col-lg-8" style="text-align: center">{% if edit %}{% blocktrans %}{{ full_name }}'s {{ application_type }} application{% endblocktrans %}{% else %}{% blocktrans %}Applying as {{ application_type }}{% endblocktrans %}{% endif %}</h1>
-        {% if edit %}
-            <div class="list-group rounded-3" style="margin-bottom: 10px; padding: calc(var(--bs-gutter-x) * .5);">
-                <div class="list-group-item list-group-item-{% if request.user.is_organizer %}{{ application_form.instance.get_status_color|default:theme }}{% else %}{{ application_form.instance.get_public_status_color|default:theme }}{% endif %}" style="text-align: center">
-                    <h3 class="mb-1">{% translate 'Status' %} {% if request.user.is_organizer %}{{ application_form.instance.get_status_display }}{% else %}{{ application_form.instance.get_public_status_display }}{% endif %}</h3>
-                    <p>
-                        {{ application_form.instance.get_public_status_description }}
-                    </p>
-                </div>
+    {% if edit or public %}
+        <div class="row justify-content-between mb-3">
+            <div class="col-12 col-lg-2 d-grid d-md-block">
+                <a href="{% if request.user.is_organizer and edit %}{% url 'application_detail' application_form.instance.get_uuid %}{% else %}{% url 'apply_home' %}{% endif %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% trans 'Back' %}</a>
             </div>
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
+    <h1 style="text-align: center">{% if edit %}{% blocktrans %}{{ full_name }}'s {{ application_type }} application{% endblocktrans %}{% else %}{% blocktrans %}Applying as {{ application_type }}{% endblocktrans %}{% endif %}</h1>
+    {% if edit %}
+        <div class="list-group rounded-3" style="margin-bottom: 10px; padding: calc(var(--bs-gutter-x) * .5);">
+            <div class="list-group-item list-group-item-{% if request.user.is_organizer %}{{ application_form.instance.get_status_color|default:theme }}{% else %}{{ application_form.instance.get_public_status_color|default:theme }}{% endif %}" style="text-align: center">
+                <h3 class="mb-1">{% translate 'Status' %} {% if request.user.is_organizer %}{{ application_form.instance.get_status_display }}{% else %}{{ application_form.instance.get_public_status_display }}{% endif %}</h3>
+                <p>
+                    {{ application_form.instance.get_public_status_description }}
+                </p>
+            </div>
+        </div>
+    {% endif %}
 
 
     <form method="post" enctype="multipart/form-data" class="mt-4">
@@ -30,15 +31,21 @@
         {% include 'components/bootstrap5_form.html' with form=user_form only_form=True %}
         {% include 'components/bootstrap5_form.html' with form=application_form only_form=True %}
 
-        <div class="d-grid gap-4 d-flex justify-content-around">
-            {% if edit %}
-                <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you changed your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-4">{% trans 'Remove' %}</a>
+        <div class="row justify-content-around">
+            {% if edit and not request.user.is_organizer %}
+                <div class="col-12 col-lg-6 d-grid d-md-block">
+                    <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you changed your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-12">{% trans 'Cancel my application' %}</a>
+                </div>
             {% endif %}
             {% if not application_form.is_read_only %}
-                <button type="submit" {% if edit and request.user.is_organizer %}onclick="return confirm_edit()"{% endif %} class="btn btn-primary col-4">{% if edit %}{% trans 'Save' %}{% else %}{% trans 'Apply' %}{% endif %}</button>
+                <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+                    <button type="submit" {% if edit and request.user.is_organizer %}onclick="return confirm_edit()"{% endif %} class="btn btn-primary col-12">{% if edit %}{% trans 'Save' %}{% else %}{% trans 'Apply' %}{% endif %}</button>
+                </div>
             {% endif %}
-            {% if application_form.instance and application_form.instance.invited %}
-                <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CONFIRMED %}" onclick="return confirm('{% blocktrans %}Your {{ application_type }} invitation will be confirmed. This means that all your other applications will be cancelled. Are you sure you want to confirm this one?{% endblocktrans %}')" class="btn btn-primary col-4">{% trans 'Confirm invitation' %}</a>
+            {% if application_form.instance and application_form.instance.invited and not request.user.is_organizer %}
+                <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+                    <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CONFIRMED %}" onclick="return confirm('{% blocktrans %}Your {{ application_type }} invitation will be confirmed. This means that all your other applications will be cancelled. Are you sure you want to confirm this one?{% endblocktrans %}')" class="btn btn-success col-12">{% trans 'Confirm invitation' %}</a>
+                </div>
             {% endif %}
         </div>
         {% if request.user.is_organizer %}

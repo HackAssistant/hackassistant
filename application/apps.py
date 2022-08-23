@@ -19,6 +19,7 @@ class ApplicationConfig(AppConfig):
         for name, obj in inspect.getmembers(sys.modules['application.forms']):
             if inspect.isclass(obj) and issubclass(obj, ApplicationForm) and obj != ApplicationForm:
                 type_name = name.split('Form')[0]
+                Group.objects.get_or_create(name=type_name)
                 ApplicationTypeConfig.objects.get_or_create(name=type_name, defaults={
                     'group_id': organizer_group.pk,
                     'end_application_date': timezone.now() + timezone.timedelta(days=300)})

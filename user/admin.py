@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, GroupAdmin as 
 from django.contrib.auth.models import Group
 
 from user.forms import UserChangeForm, UserCreationForm
-from user.models import User
+from user.models import User, BlockedUser, LoginRequest
 
 
 class PermissionQuerysetMixin:
@@ -35,7 +35,7 @@ class UserAdmin(PermissionQuerysetMixin, BaseUserAdmin):
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'phone_number', 'diet', 'other_diet', 'gender',
                                       'other_gender', 'under_age', 'tshirt_size')}),
-        ('Permissions', {'fields': ('is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Permissions', {'fields': ('email_verified', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
     # overrides get_fieldsets to use this attribute when creating a user.
@@ -58,3 +58,5 @@ class GroupAdmin(PermissionQuerysetMixin, BaseGroupAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.unregister(Group)
 admin.site.register(Group, GroupAdmin)
+admin.site.register(LoginRequest)
+admin.site.register(BlockedUser)

@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import PermissionsMixin, Group
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -193,20 +194,42 @@ class User(AbstractBaseUser, PermissionsMixin):
         number = self.__class__.objects.filter(email__endswith='@unknown.com').count()
         self.email = 'user' + str(number) + '@unknown.com'
 
+    def get_groups(self):
+        return list(self.groups.all().values_list('name', flat=True))
+
+    @classmethod
+    def get_users_with_permissions(cls, perms):
+        if isinstance(perms, str):
+            perms = [perms, ]
+        return cls.objects.filter(Q(groups__permissions__name__in=perms) | Q(user_permissions__name__in=perms) |
+                                  Q(is_superuser=True)).distinct()
+
 
 class LoginRequest(models.Model):
     ip = models.CharField(max_length=30)
     latest_request = models.DateTimeField()
     login_tries = models.IntegerField(default=1)
 
-    def get_latest_request(self):
-        return self.latest_request
-
-    def set_latest_request(self, latest_request):
-        self.latest_request = latest_request
+    def __str__(self):
+        return self.ip
 
     def reset_tries(self):
         self.login_tries = 1
 
-    def increment_tries(self):
-        self.login_tries += 1
+
+class BlockedUser(models.Model):
+    full_name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
+
+    def __str__(self):
+        return '%s - %s' % (self.full_name, self.email)
+
+    @classmethod
+    def get_blocked(cls, full_name, email):
+        email_name = email.split('@')[0]
+        queryset_filter = Q(full_name__icontains=full_name.lower()) | Q(
+            email__icontains=email.lower()) | Q(email__icontains=email_name.lower())
+        try:
+            return cls.objects.get(queryset_filter)
+        except cls.MultipleObjectsReturned:
+            return cls.objects.filter(queryset_filter).first()

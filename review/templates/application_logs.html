@@ -3,8 +3,10 @@
 {% load util %}
 {% block subtitle %}{% translate 'Application logs' %}{% endblock %}
 {% block content %}
-    <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-4 d-grid d-md-block mb-3">
-        <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
+    <div class="row justify-content-between mb-3">
+        <div class="col-6 col-lg-2 d-grid d-md-block">
+            <button onclick="history.back()" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</button>
+        </div>
     </div>
     <h1>{{ application.user.get_full_name }}'s {{ application.type.name|lower }} application logs</h1>
     <div class="list-group">

@@ -5,20 +5,27 @@
 {% block content %}
     {% if not invite %}
         <div class="row justify-content-between gy-2">
-            <div class="{% if application_type.review and perms|add_type:application_type.name|has_application_perm:'can_review_dubious_application' %}col-6{% else %}col-12{% endif %} col-lg-2">
-                {% if application_type.review and perms|add_type:application_type.name|has_application_perm:'can_review_application' %}<a href="{% url 'application_review' %}?type={{ application_type.name }}" class="btn btn-secondary col-12"><i class="bi bi-journal-check"></i> {% translate 'Review' %}</a>{% endif %}
-            </div>
-            <div class="col-6 col-lg-2">
-                {% if application_type.review and perms|add_type:application_type.name|has_application_perm:'can_review_dubious_application' %}<a href="{% url 'application_list' %}?type={{ application_type.name }}&status={{ Application.STATUS_DUBIOUS }}&status={{ Application.STATUS_NEEDS_CHANGE }}" class="btn btn-warning col-12">{% translate 'Dubious' %} {% if dubious %}<i class="bi bi-patch-exclamation-fill"></i>{% endif %}</a>{% endif %}
-            </div>
+            {% if application_type.vote_enabled and perms|add_type:application_type.name|has_application_perm:'can_review_application' %}
+                <div class="col-12 col-lg-2 d-grid d-md-block">
+                    <a href="{% url 'application_review' %}?type={{ application_type.name }}" class="btn btn-secondary col-12"><i class="bi bi-journal-check"></i> {% translate 'Review' %}</a>
+                </div>
+            {% endif %}
+            {% if application_type.blocklist and perms|add_type:application_type.name|has_application_perm:'can_review_blocked_application' %}
+                <div class="col-6 col-lg-2 d-grid d-md-block">
+                    <a href="{% url 'application_list' %}?type={{ application_type.name }}&status={{ Application.STATUS_BLOCKED }}" class="btn btn-danger col-12">{% translate 'Blocked' %} {% if blocked %}<i class="bi bi-patch-exclamation-fill"></i>{% endif %}</a>
+                </div>
+            {% endif %}
+            {% if application_type.dubious_enabled and perms|add_type:application_type.name|has_application_perm:'can_review_dubious_application' %}
+                <div class="col-6 col-lg-2 d-grid d-md-block">
+                    <a href="{% url 'application_list' %}?type={{ application_type.name }}&status={{ Application.STATUS_DUBIOUS }}&status={{ Application.STATUS_NEEDS_CHANGE }}" class="btn btn-warning col-12">{% translate 'Dubious' %} {% if dubious %}<i class="bi bi-patch-exclamation-fill"></i>{% endif %}</a>
+                </div>
+            {% endif %}
         </div>
         <h1 class="mt-3">{% translate 'Application list' %}</h1>
     {% else %}
         <div class="row justify-content-between gy-2">
-            <div class="col-12 col-lg-2">
+            <div class="col-12 col-lg-2 d-grid d-md-block">
                 <a href="{% url 'application_list' %}?type={{ application_type.name }}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
-            </div>
-            <div class="col-6 col-lg-2">
             </div>
         </div>
         <h1 class="mt-3">{% translate 'Invite applications' %}</h1>
@@ -34,9 +41,11 @@
 
     {% if not invite %}
         {% include 'components/table.html' %}
-        <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
-            <a href="{% url 'application_invite' %}?type={{ application_type.name }}&status={{ Application.STATUS_PENDING }}" class="btn btn-primary">{% translate 'Invite' %}</a>
-        </div>
+        {% if not application_type.auto_confirm and perms|add_type:application_type.name|has_application_perm:'can_invite_application' %}
+            <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
+                <a href="{% url 'application_invite' %}?type={{ application_type.name }}&status={{ Application.STATUS_PENDING }}" class="btn btn-primary">{% translate 'Invite' %}</a>
+            </div>
+        {% endif %}
     {% else %}
         <form method="post" id="invite-form">
             {% csrf_token %}
@@ -45,14 +54,14 @@
                 <button class="btn btn-primary" onclick="return confirm_invite()">{% translate 'Confirm invite' %}</button>
             </div>
         </form>
+        <script>
+            function select_all(source) {
+                $('input[name="select"]').prop('checked', source.checked);
+            }
+            function confirm_invite() {
+                let number_checked = $('input[name="select"]:checkbox:checked').length
+                return confirm(number_checked + ' {% translate 'applications will be invited. Are you sure?' %}')
+            }
+        </script>
     {% endif %}
-    <script>
-        function select_all(source) {
-            $('input[name="select"]').prop('checked', source.checked);
-        }
-        function confirm_invite() {
-            let number_checked = $('input[name="select"]:checkbox:checked').length
-            return confirm(number_checked + ' {% translate 'applications will be invited. Are you sure?' %}')
-        }
-    </script>
 {% endblock %}

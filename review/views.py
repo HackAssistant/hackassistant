@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import Error
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -26,6 +26,7 @@ from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote
 from review.tables import ApplicationTable, ApplicationInviteTable
 from user.mixins import IsOrganizerMixin
+from user.models import BlockedUser
 
 
 class ReviewApplicationTabsMixin(TabsViewMixin):
@@ -44,12 +45,13 @@ class ReviewApplicationTabsMixin(TabsViewMixin):
         active_type = self.request.GET.get('type', 'Hacker')
         for app_type in ApplicationTypeConfig.objects.all().order_by('pk'):
             page_url = reverse('application_list')
-            if app_type.review and (self.request.user.has_perm('can_review_application') or
-                                    self.request.user.has_perm('can_review_application_%s' % app_type.name.lower())):
+            if app_type.vote_enabled() and (self.request.user.has_perm('can_review_application') or
+                                            self.request.user.has_perm('can_review_application_%s' %
+                                                                       app_type.name.lower())):
                 page_url = self.request.path
             url = '%s?type=%s' % (page_url, app_type.name)
-            tabs.append((app_type.name, url, app_type.review and self.get_review_application(app_type.name) is not None,
-                         active_type == app_type.name))
+            tabs.append((app_type.name, url, app_type.vote_enabled() and
+                         self.get_review_application(app_type.name) is not None, active_type == app_type.name))
         return tabs
 
 
@@ -78,9 +80,13 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
             context.update({'application_type': application_type})
         except ApplicationTypeConfig.DoesNotExist:
             pass
-        dubious = Application.objects.filter(type__name=self.get_application_type(),
-                                             status=Application.STATUS_DUBIOUS).exists()
-        context.update({'dubious': dubious, 'Application': Application})
+        dubious = Application.objects.filter(type__name=self.get_application_type())\
+            .filter(Q(status=Application.STATUS_DUBIOUS) | Q(status=Application.STATUS_NEEDS_CHANGE,
+                                                             status_update_date__lt=F('last_modified'))).exists()
+        blocked = Application.objects.filter(type__name=self.get_application_type(), status=Application.STATUS_BLOCKED,
+                                             status_update_date__gt=timezone.now() - timezone.timedelta(days=3))\
+            .exists()
+        context.update({'dubious': dubious, 'Application': Application, 'blocked': blocked})
         return context
 
 
@@ -116,11 +122,18 @@ class ApplicationDetail(IsOrganizerMixin, ApplicationPermissionRequiredMixin, Te
                      for name, value in getattr(ApplicationForm.Meta, 'icon_link', {}).items()}
             comments = application.logs.filter(comment__isnull=False)
             for comment in comments:
-                if comment.user == self.request.user:
-                    comment.form = CommentForm(instance=comment)
+                comment.form = CommentForm(instance=comment)
             context.update({'application': application, 'details': details, 'icons': icons,
                             'comment_form': CommentForm(initial={'application': application.get_uuid}),
-                            'comments': comments, 'dubious_form': DubiousApplicationForm()})
+                            'comments': comments, 'dubious_form': DubiousApplicationForm(),
+                            'application_type': application.type.name})
+            if application.status == application.STATUS_BLOCKED:
+                try:
+                    blocked_user = BlockedUser.get_blocked(full_name=application.user.get_full_name(),
+                                                           email=application.user.email)
+                    context.update({'blocked_user': blocked_user})
+                except BlockedUser.DoesNotExist:
+                    pass
         return context
 
     def get_application(self):
@@ -128,6 +141,8 @@ class ApplicationDetail(IsOrganizerMixin, ApplicationPermissionRequiredMixin, Te
 
     def post(self, request, *args, **kwargs):
         application = self.get_application()
+        if not application.type.dubious_enabled():
+            raise PermissionDenied()
         dubious_form = DubiousApplicationForm(request.POST)
         if dubious_form.is_valid() and application.status in [application.STATUS_DUBIOUS,
                                                               application.STATUS_NEEDS_CHANGE]:
@@ -161,6 +176,8 @@ class ApplicationReview(ReviewApplicationTabsMixin, ApplicationDetail):
         application_id = request.POST.get('application_id', None)
         try:
             application = Application.objects.get(pk=application_id)
+            if not application.type.vote_enabled():
+                raise PermissionDenied()
             Vote(application=application, user=request.user, tech=tech_vote, personal=pers_vote).save()
             if skip is None:
                 messages.success(request, _('Application voted successfully! :D'))
@@ -217,6 +234,12 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
 
     def get_current_tabs(self):
         return []
+
+    def dispatch(self, request, *args, **kwargs):
+        application_type = get_object_or_404(ApplicationTypeConfig, name=self.request.GET.get('type', 'Hacker'))
+        if application_type.auto_confirm:
+            raise PermissionDenied()
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
