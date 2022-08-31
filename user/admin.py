@@ -34,7 +34,7 @@ class UserAdmin(PermissionQuerysetMixin, BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'phone_number', 'diet', 'other_diet', 'gender',
-                                      'other_gender', 'under_age', 'tshirt_size')}),
+                                      'other_gender', 'under_age', 'tshirt_size', 'qr_code')}),
         ('Permissions', {'fields': ('email_verified', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin

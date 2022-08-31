@@ -16,7 +16,7 @@ def get_main_nav(request):
         return nav
     if request.user.is_staff:
         nav.append(('Admin', reverse('admin:index')))
-    nav.extend([('Review', reverse('application_review')), ])
+    nav.extend([('Review', reverse('application_review')), ('Checkin', reverse('checkin_list'))])
     return nav
 
 

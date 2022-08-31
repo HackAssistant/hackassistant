@@ -1,8 +1,6 @@
 from django.contrib import auth, messages
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
@@ -132,7 +130,7 @@ class NeedsVerification(EmailNotVerifiedMixin, TemplateView):
 class VerifyEmail(EmailNotVerifiedMixin, View):
     def get(self, request, **kwargs):
         try:
-            uid = force_str(urlsafe_base64_decode(kwargs.get('uid')))
+            uid = User.decode_encoded_pk(kwargs.get('uid'))
             user = User.objects.get(pk=uid)
             if request.user.is_authenticated and request.user != user:
                 messages.warning(request, _("Trying to verify wrong user. Log out please!"))
@@ -181,7 +179,7 @@ class ChangePassword(TemplateView):
         context = super().get_context_data(**kwargs)
         form = SetPasswordForm()
         try:
-            uid = force_str(urlsafe_base64_decode(self.kwargs.get('uid')))
+            uid = User.decode_encoded_pk(self.kwargs.get('uid'))
             user = User.objects.get(pk=uid)
             context.update({'user': user})
         except User.DoesNotExist:

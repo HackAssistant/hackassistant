@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-*9+h@8wtz_f0i#0i@*8(d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'true').lower() != 'false'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 HOST = os.environ.get('HOST')
 
 if DEBUG:
@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'user',
     'application',
     'review',
+    'event',
 ]
 
 MIDDLEWARE = [
