@@ -1,6 +1,7 @@
 import copy
 
 from django import forms
+from django.contrib.auth.mixins import PermissionRequiredMixin as OverridePermissionRequiredMixin
 from django.forms import model_to_dict
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -112,3 +113,13 @@ class BootstrapFormMixin:
                     del visible[field['field'].auto_id]
             list_fields['visible'] = visible
         return result
+
+
+class PermissionRequiredMixin(OverridePermissionRequiredMixin):
+    def get_permission_required(self):
+        permissions = super().get_permission_required()
+        if isinstance(permissions, dict):
+            permissions = permissions.get(self.request.method, [])
+            if isinstance(permissions, str):
+                permissions = [permissions, ]
+        return permissions

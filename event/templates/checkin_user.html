@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+{% block subtitle %}{% translate 'Check-in user' %}{% endblock %}
+{% block head %}
+    <script type="text/javascript" src="{% static 'lib/qr-scanner.umd.min.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'js/scanner.js' %}"></script>
+{% endblock %}
+{% block container %}
+    <div class="row justify-content-md-center" style="margin: 0">
+        <div class="col-lg-4" style="margin: 40px 0;">
+            <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+                <div class="p-2">
+                    <div class="row justify-content-between mb-3">
+                        <div class="col-12 col-lg-3 d-grid d-md-block">
+                            <a href="{% url 'checkin_list' %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+                        </div>
+                    </div>
+                    {% if app_user %}
+                        <div class="row m-0">
+                            <div class="col-3 fw-bold pb-3 text-end">{% translate 'Name' %}</div>
+                            <div class="col-9 pb-3">{{ app_user.get_full_name }}</div>
+                        </div>
+                        {% if types|length > 0 %}
+                            <div class="row m-0">
+                                <div class="col-3 fw-bold pb-3 text-end">{% translate 'Types' %}</div>
+                                <div class="col-9 pb-3">{{ types|join:', ' }}</div>
+                            </div>
+                            {% if has_permission %}
+                                <div class="row m-0">
+                                    <div class="col-3 fw-bold pb-3 text-end">{% translate 'T-shirt' %}</div>
+                                    <div class="col-9 pb-3">{{ app_user.get_tshirt_size_display }}</div>
+                                </div>
+                                <div class="row m-0">
+                                    <div class="col-3 fw-bold pb-3 text-end" style="border: hidden"><p class="border-2" style="border: solid; border-color: transparent">{% translate 'Diet' %}</p></div>
+                                    <div class="col-9 pb-3"><p style="width: fit-content; border-radius: 5px; border: solid" class="bg-diet-{{ app_user.diet|lower }} border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %} m-0">&nbsp;{{ app_user.get_diet_display_public }}&nbsp;</p></div>
+                                </div>
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="mb-3 ms-3 me-3">
+                                        <video id="qr-video" style="width: 100%; height: auto; display: none"></video>
+                                        <div style="position: relative">
+                                            <input type="text" name="qr_code" required class="form-control bg-{{ theme }} text-white" placeholder="{% translate 'QR code' %}" id="id_qr_code">
+                                            <i id="button-rescan" class="bi bi-arrow-repeat fs-4" style="display: none; position: absolute; z-index: 1; right: 3%; top: 7%; cursor: pointer"></i>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-around">
+                                        <div class="col-12 col-lg-6 d-grid d-md-block">
+                                            <button type="submit" class="btn btn-primary col-12">{% translate 'Check-in' %}</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <h2 class="text-danger">{% translate 'You have no permission to check-in some of those types' %}</h2>
+                            {% endif %}
+                        {% else %}
+                            <h2 class="text-danger text-center">{% translate 'This user is not invited' %}</h2>
+                        {% endif %}
+                    {% else %}
+                        <h1 class="text-center">{% translate 'No user found' %}</h1>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(() => {
+            let scanner = new Scanner('qr-video', (content) => {
+                if (content.data) {
+                    $('input[name="qr_code"]').val(content.data)
+                    scanner.hide()
+                    $('#button-rescan').show()
+                }
+            })
+            scanner.show()
+            $('#button-rescan').on('click', (e) => {
+                $(e.target).hide()
+                $('input[name="qr_code"]').val('')
+                scanner.show()
+            })
+        })
+    </script>
+{% endblock %}

@@ -20,6 +20,7 @@
         switch_elements('table')
         switch_elements('text', 'white', 'black')
         switch_elements('list-group-item')
+        switch_elements('btn')
         $('body').toggleClass('light dark')
         $(`img[src*=${theme}]`).attr('src', $(`img[src*=${theme}]`).attr('src').replace(theme, trans_switch_theme[theme]))
         theme = trans_switch_theme[theme]
