@@ -52,13 +52,19 @@
                                     </div>
                                 </form>
                             {% else %}
-                                <h2 class="text-danger">{% translate 'You have no permission to check-in some of those types' %}</h2>
+                                <div class="alert alert-danger text-center" role="alert">
+                                    {% translate 'You have no permission to check-in some of those types' %}
+                                </div>
                             {% endif %}
                         {% else %}
-                            <h2 class="text-danger text-center">{% translate 'This user is not invited' %}</h2>
+                            <div class="alert alert-danger text-center" role="alert">
+                                {% translate 'This user is not invited' %}
+                            </div>
                         {% endif %}
                     {% else %}
-                        <h1 class="text-center">{% translate 'No user found' %}</h1>
+                        <div class="alert alert-danger text-center" role="alert">
+                            {% translate 'No user found' %}
+                        </div>
                     {% endif %}
                 </div>
             </div>

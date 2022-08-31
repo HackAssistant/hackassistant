@@ -6,20 +6,7 @@ from user.forms import UserChangeForm, UserCreationForm
 from user.models import User, BlockedUser, LoginRequest
 
 
-class PermissionQuerysetMixin:
-    permission_field_name = ''
-
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-        if db_field.name == self.permission_field_name:
-            qs = kwargs.get("queryset", db_field.remote_field.model.objects)
-            # Avoid a major performance hit resolving permission names which
-            # triggers a content_type load:
-            kwargs["queryset"] = qs.filter(content_type__app_label='application',
-                                           content_type__model__in=['application', 'applicationlog'])
-        return super().formfield_for_manytomany(db_field, request=request, **kwargs)
-
-
-class UserAdmin(PermissionQuerysetMixin, BaseUserAdmin):
+class UserAdmin(BaseUserAdmin):
     permission_field_name = "user_permissions"
 
     # The forms to add and change user instances
@@ -50,7 +37,7 @@ class UserAdmin(PermissionQuerysetMixin, BaseUserAdmin):
     filter_horizontal = ()
 
 
-class GroupAdmin(PermissionQuerysetMixin, BaseGroupAdmin):
+class GroupAdmin(BaseGroupAdmin):
     permission_field_name = 'permissions'
 
 
