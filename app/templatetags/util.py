@@ -16,5 +16,7 @@ def get_item(dict_item, value):
 @register.filter
 def nav_active(text, starts):
     if isinstance(text, str) and isinstance(starts, str):
+        if text.startswith('/event/' + starts.lower()):
+            return True
         return text.startswith('/' + starts.lower())
     return False

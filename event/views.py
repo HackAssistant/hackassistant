@@ -16,7 +16,7 @@ from event.tables import CheckinTable
 
 
 class CheckinList(AnyApplicationPermissionRequiredMixin, SingleTableMixin, FilterView):
-    permission_required = 'can_checkin_application'
+    permission_required = 'event.can_checkin'
     template_name = 'checkin_list.html'
     table_class = CheckinTable
     filterset_class = CheckinTableFilter
@@ -27,7 +27,7 @@ class CheckinUser(TemplateView):
     template_name = 'checkin_user.html'
 
     def has_permission(self, types):
-        permission = 'can_checkin_application'
+        permission = 'event.can_checkin'
         if self.request.user.has_perm(permission):
             return True
         for application_type in types:

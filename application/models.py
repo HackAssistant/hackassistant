@@ -241,7 +241,6 @@ class Application(models.Model):
             ('can_invite_application', _('Can invite application')),
             ('can_review_dubious_application', _('Can review dubious application')),
             ('can_review_blocked_application', _('Can review blocked application')),
-            ('can_checkin_application', _('Can checkin application')),
         )
 
 
