@@ -14,7 +14,7 @@ from django.utils.translation import gettext as _
 
 from application import forms
 from application.emails import send_email_to_blocked_admins
-from application.models import Application, ApplicationTypeConfig, ApplicationLog
+from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition
 from user.forms import UserProfileForm
 from user.mixins import LoginRequiredMixin
 from user.models import BlockedUser
@@ -30,7 +30,7 @@ class ApplicationHome(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_applications = {app.type_id: app for app in Application.objects.filter(user=self.request.user)}
+        user_applications = {app.type_id: app for app in Application.objects.actual().filter(user=self.request.user)}
         application_types = ApplicationTypeConfig.objects.filter(public=True)
         accepted_application = None
         for application_type in application_types:
@@ -63,6 +63,15 @@ class ApplicationApplyTemplate(TemplateView):
                         if key not in ApplicationForm.exclude_save}
         if self.public:
             user_form = UserProfileForm(instance=self.request.user, initial=initial_data)
+            last_edition = Edition.get_last_edition()
+            if last_edition is not None:
+                try:
+                    last_edition_app = Application.objects.get(edition_id=last_edition, type=application_type,
+                                                               user=self.request.user)
+                    initial_data.update({key: value for key, value in last_edition_app.form_data.items()
+                                         if isinstance(value, str)})
+                except Application.DoesNotExist:
+                    pass
         else:
             user_form = UserProfileForm(initial=initial_data)
         context.update({'edit': False, 'application_form': ApplicationForm(initial=initial_data),
@@ -82,7 +91,7 @@ class ApplicationApplyTemplate(TemplateView):
         try:
             if not self.public:
                 raise Application.DoesNotExist()
-            Application.objects.get(user=user, type_id=app_type.pk)
+            Application.objects.get(user=user, type_id=app_type.pk, edition=Edition.get_default_edition())
         except Application.DoesNotExist:
             instance = form.save(commit=False)
             instance.user = user
@@ -266,7 +275,7 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
                 group = Group.objects.get_or_create(application.type.name)
                 group.user_set.add(application.user)
             if new_status == application.STATUS_CONFIRMED:
-                Application.objects.exclude(uuid=application.get_uuid)\
+                Application.objects.actual().exclude(uuid=application.get_uuid)\
                     .filter(user=application.user, type__compatible_with_others=False)\
                     .update(status=Application.STATUS_CANCELLED, status_update_date=timezone.now())
         return redirect(next_page)

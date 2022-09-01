@@ -32,7 +32,7 @@ from user.models import BlockedUser
 class ReviewApplicationTabsMixin(TabsViewMixin):
     def get_review_application(self, application_type):
         max_votes_to_app = getattr(settings, 'MAX_VOTES_TO_APP', 50)
-        return Application.objects.filter(type__name=application_type, status=Application.STATUS_PENDING) \
+        return Application.objects.actual().filter(type__name=application_type, status=Application.STATUS_PENDING) \
             .exclude(Q(vote__user_id=self.request.user.id) | Q(user_id=self.request.user.id)) \
             .filter(submission_date__lte=timezone.now() - timedelta(hours=2)) \
             .annotate(count=Count('vote__calculated_vote')) \
@@ -59,7 +59,7 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
     template_name = 'application_list.html'
     table_class = ApplicationTable
     table_pagination = {'per_page': 100}
-    queryset = Application.objects.all()
+    queryset = Application.objects.actual()
     filterset_class = ApplicationTableFilter
 
     def get_application_type(self):
@@ -80,12 +80,13 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
             context.update({'application_type': application_type})
         except ApplicationTypeConfig.DoesNotExist:
             pass
-        dubious = Application.objects.filter(type__name=self.get_application_type())\
+        dubious = Application.objects.actual().filter(type__name=self.get_application_type())\
             .filter(Q(status=Application.STATUS_DUBIOUS) | Q(status=Application.STATUS_NEEDS_CHANGE,
                                                              status_update_date__lt=F('last_modified'))).exists()
-        blocked = Application.objects.filter(type__name=self.get_application_type(), status=Application.STATUS_BLOCKED,
-                                             status_update_date__gt=timezone.now() - timezone.timedelta(days=3))\
-            .exists()
+        blocked = Application.objects.actual().filter(type__name=self.get_application_type(),
+                                                      status=Application.STATUS_BLOCKED,
+                                                      status_update_date__gt=(timezone.now() -
+                                                                              timezone.timedelta(days=3))).exists()
         context.update({'dubious': dubious, 'Application': Application, 'blocked': blocked})
         return context
 
@@ -249,7 +250,7 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
     def post(self, request, *args, **kwargs):
         selection = request.POST.getlist('select')
         error = 0
-        for application in Application.objects.filter(uuid__in=selection):
+        for application in Application.objects.actual().filter(uuid__in=selection):
             log = ApplicationLog(application=application, user=request.user, name='Invited')
             log.changes = {'status': {'old': application.status, 'new': Application.STATUS_INVITED}}
             application.set_status(Application.STATUS_INVITED)

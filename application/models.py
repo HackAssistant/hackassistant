@@ -26,6 +26,30 @@ class FileField(dict):
         return fs.size(self.get('path'))
 
 
+def get_new_order():
+    max_edition = Edition.objects.order_by('-order').first()
+    return max_edition.order + 1 if max_edition is not None else 0
+
+
+class Edition(models.Model):
+    name = models.CharField(max_length=100)
+    order = models.IntegerField(unique=True, default=get_new_order)
+
+    def __str__(self):
+        return '%s - %s' % (self.order, self.name)
+
+    @classmethod
+    def get_default_edition(cls):
+        return Edition.objects.order_by('-order').first().pk
+
+    @classmethod
+    def get_last_edition(cls):
+        try:
+            return Edition.objects.order_by('-order')[1].pk
+        except IndexError:
+            return None
+
+
 class ApplicationTypeConfig(models.Model):
     name = models.CharField(max_length=100, unique=True)
     public = models.BooleanField(default=True)
@@ -81,6 +105,11 @@ class ApplicationTypeConfig(models.Model):
         if minutes > 0:
             result += ' %s %s,' % (minutes, _('minutes') if minutes > 1 else _('minute'))
         return result[:-1]
+
+
+class ApplicationManager(models.Manager):
+    def actual(self):
+        return self.filter(edition_id=Edition.get_default_edition())
 
 
 class Application(models.Model):
@@ -144,6 +173,7 @@ class Application(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
     type = models.ForeignKey(ApplicationTypeConfig, on_delete=models.DO_NOTHING)
+    edition = models.ForeignKey(Edition, on_delete=models.RESTRICT, default=Edition.get_default_edition)
 
     submission_date = models.DateTimeField(default=timezone.now, editable=False)
     last_modified = models.DateTimeField(default=timezone.now)
@@ -154,6 +184,8 @@ class Application(models.Model):
     data = models.TextField(blank=True)
 
     qr_code = models.CharField(max_length=20, blank=True)
+
+    objects = ApplicationManager()
 
     @property
     def form_data(self):
@@ -179,7 +211,7 @@ class Application(models.Model):
         self.data = json.dumps(data)
 
     def __str__(self):
-        return '%s: %s' % (self.type.name, self.user.email)
+        return '%s - %s: %s' % (self.edition.name, self.type.name, self.user.email)
 
     @property
     def get_uuid(self):
@@ -235,7 +267,7 @@ class Application(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        unique_together = ('type', 'user')
+        unique_together = ('type', 'user', 'edition')
         permissions = (
             ('can_review_application', _('Can review application')),
             ('can_invite_application', _('Can invite application')),

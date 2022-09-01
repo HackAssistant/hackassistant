@@ -99,7 +99,7 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Application
         exclude = ['user', 'uuid', 'data', 'submission_date', 'status_update_date', 'status', 'contacted_by', 'type',
-                   'last_modified']
+                   'last_modified', 'edition']
         help_texts = {
             'gender': _('This is for demographic purposes. You can skip this question if you want.'),
             'other_diet': _('Please fill here in your dietary requirements. '
