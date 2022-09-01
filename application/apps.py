@@ -44,5 +44,6 @@ class ApplicationConfig(AppConfig):
         try:
             self.auto_create_application_types()
             self.create_permissions()
+            from . import signals
         except:
             pass

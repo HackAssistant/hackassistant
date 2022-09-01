@@ -10,7 +10,7 @@ from django_tables2 import SingleTableMixin
 from django.utils.translation import gettext_lazy as _
 
 from application.mixins import AnyApplicationPermissionRequiredMixin
-from application.models import Application, ApplicationLog
+from application.models import Application, ApplicationLog, Edition
 from event.filters import CheckinTableFilter
 from event.tables import CheckinTable
 
@@ -20,7 +20,10 @@ class CheckinList(AnyApplicationPermissionRequiredMixin, SingleTableMixin, Filte
     template_name = 'checkin_list.html'
     table_class = CheckinTable
     filterset_class = CheckinTableFilter
-    queryset = get_user_model().objects.filter(application__status=Application.STATUS_CONFIRMED).distinct()
+
+    def get_queryset(self):
+        return get_user_model().objects.filter(application__status=Application.STATUS_CONFIRMED,
+                                               application__edition=Edition.get_default_edition()).distinct()
 
 
 class CheckinUser(TemplateView):
@@ -41,7 +44,7 @@ class CheckinUser(TemplateView):
         try:
             uid = User.decode_encoded_pk(kwargs.get('uid'))
             user = User.objects.get(pk=uid)
-            application_types = user.application_set.filter(status=Application.STATUS_CONFIRMED)\
+            application_types = user.application_set.actual().filter(status=Application.STATUS_CONFIRMED)\
                 .values_list('type__name', flat=True)
             context.update({'app_user': user, 'types': application_types,
                             'has_permission': self.has_permission(types=application_types)})
@@ -55,7 +58,8 @@ class CheckinUser(TemplateView):
         if context['has_permission'] and len(context['types']) > 0 and qr_code != '':
             user = context['app_user']
             user.qr_code = qr_code
-            applications = user.application_set.filter(status=Application.STATUS_CONFIRMED).select_related('type')
+            applications = user.application_set.actual().filter(status=Application.STATUS_CONFIRMED)\
+                .select_related('type')
             groups = Group.objects.filter(name__in=context['types'])
             with transaction.atomic():
                 user.save()
