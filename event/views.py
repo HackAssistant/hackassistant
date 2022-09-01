@@ -20,7 +20,9 @@ class CheckinList(AnyApplicationPermissionRequiredMixin, SingleTableMixin, Filte
     template_name = 'checkin_list.html'
     table_class = CheckinTable
     filterset_class = CheckinTableFilter
-    queryset = get_user_model().objects.filter(application__status=Application.STATUS_CONFIRMED,
+
+    def get_queryset(self):
+        return get_user_model().objects.filter(application__status=Application.STATUS_CONFIRMED,
                                                application__edition=Edition.get_default_edition()).distinct()
 
 

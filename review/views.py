@@ -59,7 +59,6 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
     template_name = 'application_list.html'
     table_class = ApplicationTable
     table_pagination = {'per_page': 100}
-    queryset = Application.objects.actual()
     filterset_class = ApplicationTableFilter
 
     def get_application_type(self):
@@ -71,7 +70,7 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
         return filterset
 
     def get_queryset(self):
-        return self.table_class.get_queryset(super().get_queryset())
+        return self.table_class.get_queryset(Application.objects.actual())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
