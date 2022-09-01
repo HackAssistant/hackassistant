@@ -11,3 +11,5 @@ def clear_groups(sender, instance, created, **kwargs):
         for application_type in ApplicationTypeConfig.objects.all().values_list('name', flat=True):
             group = Group.objects.get(name=application_type)
             group.user_set.clear()
+            sender.get_default_edition(force_update=True)
+            sender.get_last_edition(force_update=True)

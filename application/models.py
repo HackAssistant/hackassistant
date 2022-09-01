@@ -11,6 +11,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
+from app.utils import full_cache
+
 
 class FileField(dict):
     def __init__(self, data, url) -> None:
@@ -39,10 +41,12 @@ class Edition(models.Model):
         return '%s - %s' % (self.order, self.name)
 
     @classmethod
+    @full_cache
     def get_default_edition(cls):
         return Edition.objects.order_by('-order').first().pk
 
     @classmethod
+    @full_cache
     def get_last_edition(cls):
         try:
             return Edition.objects.order_by('-order')[1].pk
@@ -182,8 +186,6 @@ class Application(models.Model):
     status = models.CharField(choices=STATUS, default=STATUS_PENDING, max_length=2)
 
     data = models.TextField(blank=True)
-
-    qr_code = models.CharField(max_length=20, blank=True)
 
     objects = ApplicationManager()
 
