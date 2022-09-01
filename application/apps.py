@@ -2,7 +2,6 @@ import inspect
 import sys
 
 from django.apps import AppConfig
-from django.core.signals import request_finished
 from django.utils import timezone
 
 
@@ -45,6 +44,6 @@ class ApplicationConfig(AppConfig):
         try:
             self.auto_create_application_types()
             self.create_permissions()
+            from . import signals
         except:
             pass
-        from . import signals
