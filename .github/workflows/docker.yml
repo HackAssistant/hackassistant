@@ -1,13 +1,15 @@
 name: DockerHub CI
 
 on:
-  push:
-    branches:
-      - 'master'
+  workflow_run:
+    workflows: [ "Django CI" ]
+    branches: [ master ]
+    types: [completed]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_ACCESS_TOKEN != '' && secrets.DOCKER_HUB_REPO != '' }}
     steps:
       -
         name: Checkout

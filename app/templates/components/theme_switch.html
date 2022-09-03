@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load static %}
 <li class="nav-item" style="cursor: pointer">
     <a class="nav-link" onclick="switch_theme(this)"><i class="bi bi-brightness-high"></i> {% translate 'Switch mode' %}</a>
 </li>
@@ -6,6 +7,7 @@
     let theme = '{{ theme }}'
     const trans_text_theme = {dark: 'white', light: 'black'}
     const trans_switch_theme = {dark: 'light', light: 'dark'}
+    const trans_switch_theme_logo = {dark: "{% static 'img/logo-light.png' %}", light: "{% static 'img/logo-dark.png' %}"}
     function switch_elements(text, dark_text='dark', light_text='light') {
         let dark = $(`.${text}-${dark_text}`)
         let light = $(`.${text}-${light_text}`)
@@ -22,7 +24,7 @@
         switch_elements('list-group-item')
         switch_elements('btn')
         $('body').toggleClass('light dark')
-        $(`img[src*=${theme}]`).attr('src', $(`img[src*=${theme}]`).attr('src').replace(theme, trans_switch_theme[theme]))
+        $(`img[src*=${theme}]`).attr('src', trans_switch_theme_logo[theme])
         theme = trans_switch_theme[theme]
         setCookie('theme', theme, 1000)
     }
