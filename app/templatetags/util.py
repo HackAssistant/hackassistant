@@ -20,3 +20,8 @@ def nav_active(text, starts):
             return True
         return text.startswith('/' + starts.lower())
     return False
+
+
+@register.simple_tag
+def crispy(*args, **kwargs):
+    return None

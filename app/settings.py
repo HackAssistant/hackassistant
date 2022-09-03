@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-*9+h@8wtz_f0i#0i@*8(d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'true').lower() != 'false'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 HOST = os.environ.get('HOST')
 
 if DEBUG:
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django_jwt',
     'django_jwt.server',
     'django_bootstrap5',
+    'compressor',
     'corsheaders',
     'user',
     'application',
@@ -88,6 +89,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'util': 'app.templatetags.util',
+                'crispy_forms_tags': 'app.templatetags.util',
             },
         },
     },
@@ -138,7 +140,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static files (CSS, JavaScript, Images) & compressor
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
@@ -146,6 +148,17 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'app' / 'static',
 ]
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder'
+]
+COMPRESS_PRECOMPILERS = (
+    ('text/x-scss', 'django_libsass.SassCompiler'),
+)
+COMPRESS_OFFLINE = True
+LIBSASS_OUTPUT_STYLE = 'compressed'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 MEDIA_ROOT = 'files'
 

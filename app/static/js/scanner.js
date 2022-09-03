@@ -4,16 +4,14 @@ function Scanner(videoId, scanFunction=null, extraOpts={}) {
     this.popup = extraOpts.popup ?? false
     let opts = {
         maxScansPerSecond: 4,
-        highlightScanRegion: true,
-        highlightCodeOutline: false,
+        highlightScanRegion: scanFunction !== null,
         ...extraOpts,
     }
     let video = $(`#${videoId}`)
     if (this.popup) {
         video.wrap('<div id="video-scan-all" style="display: none; position: relative; overflow: hidden; border-radius: 5px" class="mt-4 bg-primary">')
     } else {
-        video.wrap('<div id="video-scan-all" style="display: none; position: relative; overflow: hidden; border-radius: 5px; width: 100%" class="mt-4 bg-primary">')
-
+        video.wrap('<div id="video-scan-all" style="display: none; position: relative; overflow: hidden; border-radius: 5px; width: 100%" class="mt-2 bg-primary">')
     }
     video.after('<i id="toggle-flash" class="bi bi-lightning fs-1" style="display: none; position: absolute; z-index: 1252; right: 3%; top: 3%; cursor: pointer"></i>')
     video.after('<i id="toggle-cam" class="bi bi-arrow-repeat fs-1" style="display: none; position: absolute; z-index: 1252; right: 3%; bottom: 3%; cursor: pointer"></i>')
@@ -43,15 +41,10 @@ function Scanner(videoId, scanFunction=null, extraOpts={}) {
         $('#popup-scan-container').on('click', (e) => e.stopPropagation())
     }
     this.scanner = new QrScanner(video.get(0), scanFunction, opts)
-    this.scanner.hasFlash().then((response) => {
-        let flash = $('#toggle-flash')
-        if (response) {
-            flash.show()
-            flash.on('click', () => {
-                flash.toggleClass('bi-lightning bi-lightning-fill')
-                self.scanner.toggleFlash()
-            })
-        }
+    let flash = $('#toggle-flash')
+    flash.on('click', () => {
+        flash.toggleClass('bi-lightning bi-lightning-fill')
+        self.scanner.toggleFlash()
     })
     QrScanner.listCameras(true).then(function (cameras) {
         if (cameras.length > 0) {
@@ -81,6 +74,12 @@ function Scanner(videoId, scanFunction=null, extraOpts={}) {
 }
 
 Scanner.prototype.start = function () {
+    console.log(this)
+    this.scanner.hasFlash().then((response) => {
+        let flash = $('#toggle-flash')
+        if (response) flash.show()
+        else flash.hide()
+    })
     this.scanner.start()
 }
 
@@ -102,15 +101,31 @@ Scanner.prototype.hide = function () {
     this.stop()
 }
 
-Scanner.prototype.addPhotoToForm = function (formId, inputId) {
+Scanner.prototype.addPhotoToForm = function (triggerId, inputId, reloadId=null) {
     const self = this
-    $(`#${formId}`).on("submit", (ev)=>{
-        var video = document.getElementById(self.videoId);
-	    var canvas = document.createElement("canvas");
-        document.body.appendChild(canvas);
-	    canvas.width  = video.videoWidth;
-        canvas.height = video.videoHeight;
-	    canvas.getContext('2d').drawImage(video, 0, 0);
-        document.getElementById(inputId).value = canvas.toDataURL("image/png");
-    })
+    function save_image(ev, pause) {
+        let video = document.getElementById(self.videoId);
+	    self.canvas = document.createElement("canvas");
+        self.canvas.style.display = "none"
+        document.body.appendChild(self.canvas);
+	    self.canvas.width  = video.videoWidth;
+        self.canvas.height = video.videoHeight;
+	    self.canvas.getContext('2d').drawImage(video, 0, 0);
+        document.getElementById(inputId).value = self.canvas.toDataURL("image/png");
+        self.scanner.stop()
+        if (pause) {
+            $(video).css("background-image", "url(" + self.canvas.toDataURL("image/png") + ")").css('background-size', 'cover')
+        }
+    }
+    let trigger = $(`#${triggerId}`)
+    if (trigger.is('form')) {
+        trigger.on('submit', (ev) => {save_image(ev, false)})
+    } else {
+        trigger.on('click', (ev) => {save_image(ev, true)})
+        if (reloadId !== null) {
+            $(`#${reloadId}`).on('click', () => {
+                self.scanner.start()
+            })
+        }
+    }
 }

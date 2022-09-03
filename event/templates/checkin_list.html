@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
-{% block subtitle %}{% translate 'Checkin users' %}{% endblock %}
-{% block head %}
-    <script type="text/javascript" src="{% static 'lib/qr-scanner.umd.min.js' %}"></script>
 
-    <script type="text/javascript" src="{% static 'js/scanner.js' %}"></script>
+{% block subtitle %}{% translate 'Checkin users' %}{% endblock %}
+
+{% block head %}
+    {% include 'components/import_qr_scanner.html' %}
 {% endblock %}
 
 {% block content %}

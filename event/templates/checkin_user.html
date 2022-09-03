@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
-{% block subtitle %}{% translate 'Check-in user' %}{% endblock %}
-{% block head %}
-    <script type="text/javascript" src="{% static 'lib/qr-scanner.umd.min.js' %}"></script>
 
-    <script type="text/javascript" src="{% static 'js/scanner.js' %}"></script>
+{% block subtitle %}{% translate 'Check-in user' %}{% endblock %}
+
+{% block head %}
+    {% include 'components/import_qr_scanner.html' %}
 {% endblock %}
+
 {% block container %}
     <div class="row justify-content-md-center" style="margin: 0">
         <div class="col-lg-4" style="margin: 40px 0;">
