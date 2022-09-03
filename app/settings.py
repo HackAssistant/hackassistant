@@ -212,3 +212,8 @@ CRONJOBS = [
     ('0   4 * * *', 'django.core.management.call_command', ['clearsessions']),
     ('0 0 1 */6 *', 'django.core.management.call_command', ['compress', '--force']),
 ]
+
+# Deployment configurations for proxy pass and csrf
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
