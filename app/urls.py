@@ -17,11 +17,15 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 
-from app.views import BaseView
+from app import views
 
 urlpatterns = [
+    path('', views.BaseView.as_view(), name='home'),
+    path('legal_notice/', views.LegalNotice.as_view(), name='legal_notice'),
+    path('terms_and_conditions/', views.TermsConditions.as_view(), name='terms_and_conditions'),
+    path('privacy_and_cookies/', views.PrivacyCookies.as_view(), name='privacy_and_cookies'),
+
     path('admin/', admin.site.urls),
-    path('', BaseView.as_view(), name='home'),
     path('auth/', include('user.urls')),
     path('application/', include('application.urls')),
     path('review/', include('review.urls')),

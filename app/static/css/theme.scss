@@ -1,0 +1,54 @@
+// 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
+@import "./bootstrap/functions";
+
+// 2. Include any default variable overrides here
+
+// Picked colors from here: https://color.adobe.com/es/create/color-wheel
+
+$primary:       #5760d1;
+$secondary:     darken(#92939C, 20%);
+$success:       #4CE081;
+$info:          #5BD3EB;
+$warning:       #E0BA2F;
+$danger:        #E05159;
+$light:         white;
+$dark:          black;
+
+// 3. Include remainder of required Bootstrap stylesheets
+@import "./bootstrap/variables";
+
+// 4. Include any default map overrides here
+
+$table-variants: (
+  "primary":    shift-color($primary, $table-bg-scale),
+  "secondary":  shift-color($secondary, $table-bg-scale),
+  "success":    shift-color($success, $table-bg-scale),
+  "info":       shift-color($info, $table-bg-scale),
+  "warning":    shift-color($warning, $table-bg-scale),
+  "danger":     shift-color($danger, $table-bg-scale),
+  "light":      darken($light, 5%),
+  "dark":       lighten($dark, 5%),
+);
+
+
+@import './bootstrap/bootstrap';
+
+body.light {
+  background-image: linear-gradient(darken($primary, 15%), $primary);
+}
+body.dark {
+  background-image: linear-gradient(lighten($primary, 5%), darken($primary, 10%));
+}
+@media (max-width: map-get($grid-breakpoints, "lg")) {
+    .border-lg {
+        border: 0 !important;
+    }
+    #popup-scan > div {
+        height: 100%;
+    }
+}
+@media (max-width: map-get($grid-breakpoints, "xl")) {
+    .border-xl {
+        border: 0 !important;
+    }
+}

@@ -1,5 +1,5 @@
 HACKATHON_NAME = 'HackUPC'
-HACKATHON_DESCRIPTION = 'Join us for BarcelonaTech\'s hackathon. 36h. 29th April - 1st May.'
+HACKATHON_DESCRIPTION = 'Join us for BarcelonaTech\'s hackathon. 36h.'
 HACKATHON_ORG = 'Hackers@UPC'
 
 HACKATHON_CONTACT_EMAIL = 'contact@hackupc.com'

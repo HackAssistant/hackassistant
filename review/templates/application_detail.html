@@ -2,7 +2,13 @@
 {% load i18n %}
 {% load util %}
 {% load perms %}
+
 {% block subtitle %}{% translate 'Application detail' %}{% endblock %}
+
+{% block head %}
+    {% include 'components/import_barrating.html' %}
+{% endblock %}
+
 {% block content %}
     <div class="row justify-content-between mb-3">
         <div class="{% if application %}col-6{% else %}col-12{% endif %} col-lg-2 d-grid d-md-block">
