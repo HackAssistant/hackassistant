@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ..
+    working_dir: /code
+    env_file: .env
+    volumes:
+      - ./files:/code/files
+      - ./staticfiles:/code/staticfiles
+      - ./db:/code/db
+    ports:
+      - "8000:8000"
