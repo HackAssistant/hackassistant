@@ -216,3 +216,45 @@ CRONJOBS = [
 # Deployment configurations for proxy pass and csrf
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Logging config to send logs to email automatically
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'admin_email': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'app.log.HackathonDevEmailHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'level': 'ERROR',
+            'handlers': ['admin_email'],
+        },
+    },
+}
+
+# Sendgrid API key
+SENDGRID_API_KEY = os.environ.get('SENDGRID_KEY', None)
+
+# SMTP
+EMAIL_HOST = os.environ.get('EMAIL_HOST', None)
+EMAIL_PORT = os.environ.get('EMAIL_PORT', None)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
+
+# Load filebased email backend if no Sendgrid credentials and debug mode
+if not SENDGRID_API_KEY and not EMAIL_HOST and DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = 'tmp/email-messages/'
+else:
+    if SENDGRID_API_KEY:
+        EMAIL_BACKEND = "sgbackend.SendGridBackend"
+    else:
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
