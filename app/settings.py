@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'compressor',
     'corsheaders',
+    'django_crontab',
     'user',
     'application',
     'review',
@@ -104,7 +105,7 @@ WSGI_APPLICATION = 'app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db' / 'db.sqlite3',
     }
 }
 
@@ -205,3 +206,9 @@ GOOGLE_RECAPTCHA_SITE_KEY = os.environ.get('GOOGLE_RECAPTCHA_SITE_KEY', '')
 
 # Login tries
 LOGIN_TRIES = 1000 if DEBUG else 4
+
+# Cron from Django-crontab
+CRONJOBS = [
+    ('0   4 * * *', 'django.core.management.call_command', ['clearsessions']),
+    ('0 0 1 */6 *', 'django.core.management.call_command', ['compress', '--force']),
+]

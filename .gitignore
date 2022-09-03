@@ -10,3 +10,6 @@ staticfiles/
 
 /files/*
 !files/.keep
+
+/db/*
+!db/.keep
