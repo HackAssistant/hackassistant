@@ -10,4 +10,5 @@ urlpatterns = [
     path('application/<str:uuid>/logs/', views.ApplicationLogs.as_view(), name='application_logs'),
     path('application/comment', views.CommentSubmit.as_view(), name='new_comment'),
     path('application/comment/<int:log_id>/', views.CommentSubmit.as_view(), name='edit_comment'),
+    path('file/', views.FileReviewView.as_view(), name='file_review'),
 ]

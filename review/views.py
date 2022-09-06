@@ -1,12 +1,15 @@
+import os
 from datetime import timedelta
+from io import BytesIO
+from zipfile import ZipFile
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.core.exceptions import PermissionDenied
-from django.db import Error
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.db import Error, IntegrityError
 from django.db.models import Q, Count, F
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -23,7 +26,7 @@ from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig
 from review.filters import ApplicationTableFilter
 from review.forms import CommentForm, DubiousApplicationForm
-from review.models import Vote
+from review.models import Vote, FileReview
 from review.tables import ApplicationTable, ApplicationInviteTable
 from user.mixins import IsOrganizerMixin
 from user.models import BlockedUser
@@ -40,7 +43,7 @@ class ReviewApplicationTabsMixin(TabsViewMixin):
             .order_by('count', 'submission_date') \
             .first()
 
-    def get_current_tabs(self):
+    def get_current_tabs(self, **kwargs):
         tabs = []
         active_type = self.request.GET.get('type', 'Hacker')
         for app_type in ApplicationTypeConfig.objects.all().order_by('pk'):
@@ -79,7 +82,7 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
             context.update({'application_type': application_type})
         except ApplicationTypeConfig.DoesNotExist:
             pass
-        dubious = Application.objects.actual().filter(type__name=self.get_application_type())\
+        dubious = Application.objects.actual().filter(type__name=self.get_application_type()) \
             .filter(Q(status=Application.STATUS_DUBIOUS) | Q(status=Application.STATUS_NEEDS_CHANGE,
                                                              status_update_date__lt=F('last_modified'))).exists()
         blocked = Application.objects.actual().filter(type__name=self.get_application_type(),
@@ -232,7 +235,7 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
     table_class = ApplicationInviteTable
     permission_required = 'application.can_invite_application'
 
-    def get_current_tabs(self):
+    def get_current_tabs(self, **kwargs):
         return []
 
     def dispatch(self, request, *args, **kwargs):
@@ -264,3 +267,84 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
             messages.success(request, _('Invited: %s' % len(selection)))
         return redirect(reverse('application_list') + '?type=%s&status=%s' % (self.get_application_type(),
                                                                               Application.STATUS_INVITED))
+
+
+class FileReviewView(ApplicationPermissionRequiredMixin, TabsViewMixin, TemplateView):
+    template_name = 'file_review.html'
+    permission_required = 'application.can_review_files'
+
+    def get_current_tabs(self, **kwargs):
+        tabs = []
+        active_type = self.get_application_type()
+        active_field = self.request.GET.get('field', None)
+        for application_type in ApplicationTypeConfig.objects.filter(file_review_fields__isnull=False):
+            if self.has_permission(application_type=application_type.name):
+                for index, file_field in enumerate(application_type.get_file_review_fields()):
+                    active = active_type == application_type.name and (file_field == active_field or
+                                                                       (active_field is None and index == 0))
+                    url = reverse('file_review') + '?type=%s&file=%s' % (application_type.name, file_field)
+                    tabs.append(('%s: %s' % (application_type.name, file_field), url, None, active))
+        return tabs
+
+    def get_application_type(self):
+        return self.request.GET.get('type', 'Hacker')
+
+    def get_file_field(self, application_type):
+        return self.request.GET.get('field', application_type.get_file_review_fields()[0])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        application_type = get_object_or_404(ApplicationTypeConfig, name=self.get_application_type(),
+                                             file_review_fields__isnull=False)
+        file_field = self.get_file_field(application_type)
+        exclude_kwargs = {file_field + '_share': False}
+        application_uuid = FileReview.objects.filter(application__type__name=application_type, field_name=file_field) \
+            .values_list('application_id', flat=True)
+        application = Application.objects.actual().filter(type_id=application_type.pk) \
+            .exclude(uuid__in=application_uuid).distinct().exclude(**exclude_kwargs).first()
+        if application is not None:
+            context.update({'application': application, 'field': file_field,
+                            'download': reverse('application_file', kwargs={'field': file_field,
+                                                                            'uuid': application.get_uuid})})
+        else:
+            context.update({'download': reverse('file_review') + '?type=%s&file=%s&download_all=True' % (
+                application_type.name, file_field)})
+        return context
+
+    def post(self, request, *args, **kwargs):
+        application = get_object_or_404(Application, uuid=request.POST.get('application'))
+        field_name = request.POST.get('field')
+        accept = request.POST.get('accepted').lower() == 'true'
+        try:
+            FileReview(application=application, field_name=field_name, accept=accept, user=request.user).save()
+        except IntegrityError:
+            pass
+        if accept:
+            messages.success(request, _('File accepted for download!'))
+        else:
+            messages.success(request, _('File denied for download!'))
+        return redirect(reverse('file_review') + '?type=%s&file=%s' % (application.type.name, field_name))
+
+    def get(self, request, *args, **kwargs):
+        file = request.GET.get('download_all', False)
+        if file:
+            application_type = get_object_or_404(ApplicationTypeConfig, name=self.get_application_type(),
+                                                 file_review_fields__isnull=False)
+            file_field = self.get_file_field(application_type)
+            applications = Application.objects.actual().filter(type_id=application_type.pk,
+                                                               filereview__field_name=file_field,
+                                                               filereview__accept=True)
+            s = BytesIO()
+            with ZipFile(s, "w") as zip_file:
+                for application in applications:
+                    try:
+                        file_path = settings.MEDIA_ROOT + '/' + application.form_data[file_field]['path']
+                    except KeyError:
+                        raise SuspiciousOperation('This field does not exist')
+                    _, fname = os.path.split(file_path)
+                    zip_path = os.path.join("resumes", fname)
+                    zip_file.write(file_path, zip_path)
+            resp = HttpResponse(s.getvalue(), content_type="application/x-zip-compressed")
+            resp['Content-Disposition'] = 'attachment; filename=%s_%ss.zip' % (application_type.name, file_field)
+            return resp
+        return super().get(request, *args, **kwargs)

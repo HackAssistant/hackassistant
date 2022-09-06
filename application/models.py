@@ -1,8 +1,8 @@
+import ast
 import json
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.urls import reverse
@@ -59,12 +59,18 @@ class ApplicationTypeConfig(models.Model):
     public = models.BooleanField(default=True)
     start_application_date = models.DateTimeField(default=timezone.now, null=True)
     end_application_date = models.DateTimeField(default=timezone.now, null=True)
-    group = models.ForeignKey(Group, on_delete=models.DO_NOTHING)
+    file_review_fields = models.CharField(blank=True, max_length=200)
     vote = models.BooleanField(default=True, help_text=_('Activate voting system'))
     dubious = models.BooleanField(default=True, help_text=_('Dubious reviewing system'))
     blocklist = models.BooleanField(default=True, help_text=_('Applications pass test of blocklist table on apply'))
     auto_confirm = models.BooleanField(default=False, help_text=_('Applications set on status confirmed by default'))
     compatible_with_others = models.BooleanField(default=False, help_text=_('User can confirm in more than one type'))
+
+    def get_file_review_fields(self):
+        try:
+            return ast.literal_eval(self.file_review_fields)
+        except SyntaxError:
+            return []
 
     def vote_enabled(self):
         return self.vote and not self.auto_confirm
@@ -110,10 +116,38 @@ class ApplicationTypeConfig(models.Model):
             result += ' %s %s,' % (minutes, _('minutes') if minutes > 1 else _('minute'))
         return result[:-1]
 
+    @classmethod
+    @full_cache
+    def get_type_files(cls):
+        return list(ApplicationTypeConfig.objects.exclude(file_review_fields__isnull=True)
+                    .values_list('name', flat=True))
 
-class ApplicationManager(models.Manager):
+
+class ApplicationQueryset(models.QuerySet):
     def actual(self):
         return self.filter(edition_id=Edition.get_default_edition())
+
+    def convert_kwargs(self, kwargs):
+        attributes = [item.attname.replace('_id', '') for item in self.model._meta.fields]
+        attributes.extend(self.model._meta.fields_map.keys())
+        attributes.append('pk')
+        new_kwargs = {}
+        for key, value in kwargs.items():
+            if key.split('__')[0] in attributes or key[:-3] in attributes:
+                new_kwargs[key] = value
+            else:
+                value = json.dumps(value)
+                # __ not supported on data attributes
+                new_kwargs['data__icontains'] = '"%s": %s' % (key.split('__')[0], value)
+        return new_kwargs
+
+    def filter(self, *args, **kwargs):
+        kwargs = self.convert_kwargs(kwargs)
+        return super().filter(*args, **kwargs)
+
+    def exclude(self, *args, **kwargs):
+        kwargs = self.convert_kwargs(kwargs)
+        return super().exclude(*args, **kwargs)
 
 
 class Application(models.Model):
@@ -187,7 +221,7 @@ class Application(models.Model):
 
     data = models.TextField(blank=True)
 
-    objects = ApplicationManager()
+    objects = ApplicationQueryset.as_manager()
 
     @property
     def form_data(self):
@@ -275,6 +309,7 @@ class Application(models.Model):
             ('can_invite_application', _('Can invite application')),
             ('can_review_dubious_application', _('Can review dubious application')),
             ('can_review_blocked_application', _('Can review blocked application')),
+            ('can_review_files', _('Can review files')),
         )
 
 

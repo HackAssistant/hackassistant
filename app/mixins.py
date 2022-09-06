@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class TabsViewMixin:
-    def get_current_tabs(self):
+    def get_current_tabs(self, **kwargs):
         return []
 
     def get_back_url(self):
@@ -16,7 +16,7 @@ class TabsViewMixin:
 
     def get_context_data(self, **kwargs):
         context = super(TabsViewMixin, self).get_context_data(**kwargs)
-        tabs = self.get_current_tabs()
+        tabs = self.get_current_tabs(**kwargs)
         new_tabs = []
         for tab in tabs:
             new_tab = {'title': tab[0], 'url': tab[1], 'needs_action': tab[2] if len(tab) > 2 else None,

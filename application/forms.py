@@ -49,8 +49,9 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
         files_fields = getattr(self, 'files', {})
         fs = FileSystemStorage()
         for field_name, file in files_fields.items():
-            file_path = '%s/%s/%s_%s.%s' % (instance.type.name, field_name, instance.get_full_name().replace(' ', '-'),
-                                            instance.get_uuid, file.name.split('.')[-1])
+            file_path = '%s/%s/%s/%s_%s.%s' % (instance.edition.name, instance.type.name, field_name,
+                                               instance.get_full_name().replace(' ', '-'), instance.get_uuid,
+                                               file.name.split('.')[-1])
             if fs.exists(file_path):
                 fs.delete(file_path)
             fs.save(name=file_path, content=file)
@@ -62,7 +63,7 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
         return files_fields.keys()
 
     def get_hidden_edit_fields(self):
-        return self.exclude_save
+        return self.exclude_save.copy()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

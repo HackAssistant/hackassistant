@@ -9,54 +9,8 @@
 
         <h1>{{ application.get_full_name }} {{ field_name }}</h1>
 
-        <div id="pdf-div" style="width: 100%; text-align:center; margin-top: 10px"></div>
-        <div class="row justify-content-between">
-            <div class="col-12 col-lg-6 d-grid d-md-block">
-                <a class="btn btn-secondary col-12" href="{{ download }}">{% trans 'Download' %}</a>
-            </div>
-            <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
-                <a class="btn btn-primary col-12" onclick="close_tab();">{% trans 'Close tab' %}</a>
-            </div>
-        </div>
+        {% include 'components/pdf_preview.html' with pdf_link=download pdf_close=True %}
+
     </div>
 
-{% endblock %}
-{% block scripts %}
-    <script>
-        pdfjsLib.getDocument('{{ download }}').promise.then(doc => {
-            let pdf_div = $('#pdf-div');
-            let size = pdf_div.width();
-
-            for (let i = 0; i < doc._pdfInfo.numPages; i++) {
-                doc.getPage(i + 1).then(function(page) {
-                    pdf_div.append('<canvas id="page-' + i + '" style="display: inline; width: 90%"></canvas>');
-                    var canvas = document.getElementById('page-' + i);
-                    var scale = page.getViewport({ scale: 1.0, }).width;
-                    var viewport = page.getViewport({ scale: size / scale, });
-                    var outputScale = window.devicePixelRatio || 1;
-
-                    var context = canvas.getContext('2d');
-                    canvas.width = Math.floor(viewport.width * outputScale);
-                    canvas.height = Math.floor(viewport.height * outputScale);
-                    canvas.style.width = Math.floor(viewport.width) + "px";
-                    canvas.style.height =  Math.floor(viewport.height) + "px";
-
-                    var transform = outputScale !== 1
-                      ? [outputScale, 0, 0, outputScale, 0, 0]
-                      : null;
-
-                    var renderContext = {
-                      canvasContext: context,
-                      transform: transform,
-                      viewport: viewport
-                    };
-                    page.render(renderContext);
-                });
-
-            }
-        });
-        function close_tab() {
-          window.close();
-        }
-    </script>
 {% endblock %}

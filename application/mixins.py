@@ -3,9 +3,9 @@ from application.models import ApplicationTypeConfig
 
 
 class ApplicationPermissionRequiredMixin(PermissionRequiredMixin):
-    def has_permission(self):
+    def has_permission(self, application_type=None):
         perms = self.get_permission_required()
-        application_type = self.get_application_type()
+        application_type = application_type or self.get_application_type()
         type_perms = self.get_type_permissions(perms, application_type)
         return self.request.user.has_perms(perms) or (application_type is not None and
                                                       self.request.user.has_perms(type_perms))

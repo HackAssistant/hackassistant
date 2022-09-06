@@ -29,7 +29,7 @@ class Login(TabsViewMixin, TemplateView):
             return self.redirect_successful()
         return super().get(request, *args, **kwargs)
 
-    def get_current_tabs(self):
+    def get_current_tabs(self, **kwargs):
         return [('Log in', reverse('login')), ('Register', reverse('register'))]
 
     def get_context_data(self, **kwargs):
