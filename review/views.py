@@ -111,7 +111,8 @@ class ApplicationDetail(IsOrganizerMixin, ApplicationPermissionRequiredMixin, Te
         context = super().get_context_data(**kwargs)
         application = self.get_application()
         if application is not None:
-            details = {_('Full Name'): application.user.get_full_name(), _('Status'): application.get_status_display()}
+            details = {_('Full Name'): application.user.get_full_name(), _('Status'): application.get_status_display(),
+                       _('Promotion'): application.promotional_code.name}
             ApplicationForm = self.get_form(application.type)
             for name, value in application.form_data.items():
                 if isinstance(value, FileField):

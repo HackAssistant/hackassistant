@@ -11,6 +11,8 @@ class ApplicationTable(tables.Table):
     last_modified = tables.TemplateColumn(template_code='{{ record.last_modified|timesince }}',
                                           order_by='last_modified')
     votes = tables.Column(accessor='vote_count', verbose_name='Votes')
+    promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
+    status = tables.TemplateColumn(template_name='tables/status.html')
 
     @staticmethod
     def get_queryset(queryset):
@@ -23,7 +25,7 @@ class ApplicationTable(tables.Table):
     class Meta:
         model = Application
         attrs = {'class': 'table table-striped'}
-        fields = ('full_name', 'user.email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
+        fields = ('full_name', 'user.email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified', 'detail')
         empty_text = 'No applications available'
         order_by = 'vote_avg'
 

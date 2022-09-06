@@ -2,9 +2,11 @@ import ast
 import json
 import uuid
 
+from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import models
+from django.db.models import Count, Q, F
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
@@ -123,6 +125,18 @@ class ApplicationTypeConfig(models.Model):
                     .exclude(file_review_fields__isnull=True).values_list('name', flat=True))
 
 
+class PromotionalCode(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True,
+                            help_text=_('Use this code to the apply url as ?promotional_code=[uuid]'))
+    name = models.CharField(max_length=100)
+    usages = models.IntegerField()
+    background_color = ColorField(default='#FFFFFF')
+    color = ColorField(default='#000000')
+
+    def __str__(self):
+        return self.name
+
+
 class ApplicationQueryset(models.QuerySet):
     def actual(self):
         return self.filter(edition_id=Edition.get_default_edition())
@@ -212,6 +226,8 @@ class Application(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
     type = models.ForeignKey(ApplicationTypeConfig, on_delete=models.DO_NOTHING)
     edition = models.ForeignKey(Edition, on_delete=models.RESTRICT, default=Edition.get_default_edition)
+
+    promotional_code = models.ForeignKey(PromotionalCode, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     submission_date = models.DateTimeField(default=timezone.now, editable=False)
     last_modified = models.DateTimeField(default=timezone.now)
