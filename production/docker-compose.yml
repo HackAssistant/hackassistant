@@ -9,5 +9,6 @@ services:
       - ./files:/code/files
       - ./staticfiles:/code/staticfiles
       - ./db:/code/db
+      - ./cache:/var/tmp/django_cache
     ports:
       - "8000:8000"

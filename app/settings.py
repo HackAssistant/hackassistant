@@ -258,3 +258,11 @@ else:
         EMAIL_BACKEND = "sgbackend.SendGridBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Cache system
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}
