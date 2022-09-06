@@ -119,8 +119,8 @@ class ApplicationTypeConfig(models.Model):
     @classmethod
     @full_cache
     def get_type_files(cls):
-        return list(ApplicationTypeConfig.objects.exclude(file_review_fields__isnull=True)
-                    .values_list('name', flat=True))
+        return list(ApplicationTypeConfig.objects.exclude(file_review_fields="")
+                    .exclude(file_review_fields__isnull=True).values_list('name', flat=True))
 
 
 class ApplicationQueryset(models.QuerySet):
