@@ -25,7 +25,8 @@ class ApplicationTable(tables.Table):
     class Meta:
         model = Application
         attrs = {'class': 'table table-striped'}
-        fields = ('full_name', 'user.email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified', 'detail')
+        fields = ('full_name', 'user.email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified',
+                  'detail')
         empty_text = 'No applications available'
         order_by = 'vote_avg'
 

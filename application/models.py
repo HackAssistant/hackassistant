@@ -6,7 +6,6 @@ from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import models
-from django.db.models import Count, Q, F
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str

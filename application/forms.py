@@ -5,13 +5,12 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import RegexValidator
-from django.db.models import Count, F
 from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from app.mixins import BootstrapFormMixin
-from application.models import Application, PromotionalCode
+from application.models import Application
 from application.validators import validate_file_extension
 
 YEARS = [(year, str(year)) for year in range(datetime.now().year - 1, datetime.now().year + 6)]
