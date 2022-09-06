@@ -1,4 +1,5 @@
 from django import template
+from django.urls import reverse
 
 register = template.Library()
 
@@ -16,6 +17,8 @@ def get_item(dict_item, value):
 @register.filter
 def nav_active(text, starts):
     if isinstance(text, str) and isinstance(starts, str):
+        if text == reverse('file_review'):
+            return starts.lower() == 'files'
         if text.startswith('/event/' + starts.lower()):
             return True
         return text.startswith('/' + starts.lower())

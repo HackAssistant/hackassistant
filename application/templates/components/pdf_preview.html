@@ -1,0 +1,45 @@
+<div id="pdf-div" style="min-height: 50px;width: 100%; text-align:center; margin-top: 10px; position: relative">
+    <a href="{{ pdf_link }}" style="position: absolute; z-index: 1252; right: 1%; top: 0.5%; mix-blend-mode: difference; color: white"><i class="bi bi-download fs-4"></i></a>
+    {% if pdf_close %}
+        <i onclick="close_tab()" class="bi bi-x-lg fs-4" style="position: absolute; z-index: 1252; left: 1%; top: 0.5%; cursor: pointer; mix-blend-mode: difference; color: white"></i>
+    {% endif %}
+</div>
+<script>
+    pdfjsLib.getDocument('{{ pdf_link }}').promise.then(doc => {
+        let pdf_div = $('#pdf-div');
+        let size = pdf_div.width();
+
+        for (let i = 0; i < doc._pdfInfo.numPages; i++) {
+            doc.getPage(i + 1).then(function(page) {
+                pdf_div.append('<canvas id="page-' + i + '" style="display: inline; width: 90%"></canvas>');
+                var canvas = document.getElementById('page-' + i);
+                var scale = page.getViewport({ scale: 1.0, }).width;
+                var viewport = page.getViewport({ scale: size / scale, });
+                var outputScale = window.devicePixelRatio || 1;
+
+                var context = canvas.getContext('2d');
+                canvas.width = Math.floor(viewport.width * outputScale);
+                canvas.height = Math.floor(viewport.height * outputScale);
+                canvas.style.width = Math.floor(viewport.width) + "px";
+                canvas.style.height =  Math.floor(viewport.height) + "px";
+
+                var transform = outputScale !== 1
+                  ? [outputScale, 0, 0, outputScale, 0, 0]
+                  : null;
+
+                var renderContext = {
+                  canvasContext: context,
+                  transform: transform,
+                  viewport: viewport
+                };
+                page.render(renderContext);
+            });
+
+        }
+    });
+    {% if pdf_close %}
+        function close_tab() {
+          window.close();
+        }
+    {% endif %}
+</script>

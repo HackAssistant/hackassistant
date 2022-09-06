@@ -13,3 +13,8 @@ def clear_groups(sender, instance, created, **kwargs):
             group.user_set.clear()
             sender.get_default_edition(force_update=True)
             sender.get_last_edition(force_update=True)
+
+
+@receiver(post_save, sender=ApplicationTypeConfig)
+def clear_file_fields(sender, instance, created, **kwargs):
+    sender.get_type_files(force_update=True)

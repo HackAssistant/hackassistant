@@ -46,8 +46,9 @@ class ApplicationApplyTemplate(TemplateView):
     template_name = 'application_form.html'
     public = True
 
-    def get_form(self):
-        application_type = self.request.GET.get('type', 'Hacker').lower().title()
+    @classmethod
+    def get_form(cls, type_name):
+        application_type = type_name.lower().title()
         ApplicationForm = getattr(forms, application_type + 'Form', None)
         if ApplicationForm is None:
             raise Http404()
@@ -58,7 +59,7 @@ class ApplicationApplyTemplate(TemplateView):
         application_type = get_object_or_404(ApplicationTypeConfig,
                                              name__iexact=self.request.GET.get('type', 'Hacker').lower(),
                                              public=self.public)
-        ApplicationForm = self.get_form()
+        ApplicationForm = self.get_form(type_name=self.request.GET.get('type', 'Hacker'))
         initial_data = {key: value for key, value in self.request.GET.dict().items()
                         if key not in ApplicationForm.exclude_save}
         if self.public:
@@ -114,7 +115,7 @@ class ApplicationApplyTemplate(TemplateView):
 
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
-        ApplicationForm = self.get_form()
+        ApplicationForm = self.get_form(type_name=self.request.GET.get('type', 'Hacker'))
         application_form = ApplicationForm(request.POST, request.FILES)
         if self.public:
             user_form = UserProfileForm(request.POST, instance=request.user)
@@ -167,7 +168,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
         return application
 
     def application_can_edit(self, application, application_type):
-        return self.request.user.is_organizer or (application.can_edit() and application_type.active())
+        return self.request.user.is_organizer() or (application.can_edit() and application_type.active())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -178,6 +179,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
         user_form = UserProfileForm(instance=application.user)
         if not self.application_can_edit(application, application_type):
             application_form.set_read_only()
+            user_form.set_read_only()
         context.update({'edit': True, 'application_form': application_form, 'full_name': application.get_full_name(),
                         'application_type': application_type, 'user_form': user_form})
         return context
