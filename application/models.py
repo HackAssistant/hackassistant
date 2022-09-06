@@ -135,6 +135,11 @@ class PromotionalCode(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    @full_cache
+    def active(cls):
+        return PromotionalCode.objects.count() > 0
+
 
 class ApplicationQueryset(models.QuerySet):
     def actual(self):
@@ -226,7 +231,7 @@ class Application(models.Model):
     type = models.ForeignKey(ApplicationTypeConfig, on_delete=models.DO_NOTHING)
     edition = models.ForeignKey(Edition, on_delete=models.RESTRICT, default=Edition.get_default_edition)
 
-    promotional_code = models.ForeignKey(PromotionalCode, on_delete=models.DO_NOTHING, blank=True, null=True)
+    promotional_code = models.ForeignKey(PromotionalCode, on_delete=models.SET_NULL, blank=True, null=True)
 
     submission_date = models.DateTimeField(default=timezone.now, editable=False)
     last_modified = models.DateTimeField(default=timezone.now)
