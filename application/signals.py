@@ -25,5 +25,5 @@ def clear_file_fields(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=PromotionalCode)
 @receiver(post_save, sender=PromotionalCode)
-def clear_file_fields(sender, instance, **kwargs):
+def reload_active(sender, instance, **kwargs):
     sender.active(force_update=True)
