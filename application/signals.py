@@ -1,13 +1,15 @@
 from django.contrib.auth.models import Group
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from application.models import Edition, ApplicationTypeConfig
+from application.models import Edition, ApplicationTypeConfig, PromotionalCode
 
 
+@receiver(post_delete, sender=Edition)
 @receiver(post_save, sender=Edition)
-def clear_groups(sender, instance, created, **kwargs):
-    if created:
+def clear_groups(sender, instance, **kwargs):
+    created = kwargs.get('created', None)
+    if created is None or created:
         for application_type in ApplicationTypeConfig.objects.all().values_list('name', flat=True):
             group = Group.objects.get(name=application_type)
             group.user_set.clear()
@@ -15,6 +17,13 @@ def clear_groups(sender, instance, created, **kwargs):
             sender.get_last_edition(force_update=True)
 
 
+@receiver(post_delete, sender=ApplicationTypeConfig)
 @receiver(post_save, sender=ApplicationTypeConfig)
-def clear_file_fields(sender, instance, created, **kwargs):
+def clear_file_fields(sender, instance, **kwargs):
     sender.get_type_files(force_update=True)
+
+
+@receiver(post_delete, sender=PromotionalCode)
+@receiver(post_save, sender=PromotionalCode)
+def clear_file_fields(sender, instance, **kwargs):
+    sender.active(force_update=True)

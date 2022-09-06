@@ -23,11 +23,11 @@ from django_tables2 import SingleTableMixin
 from app.mixins import TabsViewMixin
 from application import forms
 from application.mixins import ApplicationPermissionRequiredMixin
-from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig
-from review.filters import ApplicationTableFilter
+from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig, PromotionalCode
+from review.filters import ApplicationTableFilter, ApplicationTableFilterWithPromotion
 from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote, FileReview
-from review.tables import ApplicationTable, ApplicationInviteTable
+from review.tables import ApplicationTable, ApplicationInviteTable, ApplicationTableWithPromotion
 from user.mixins import IsOrganizerMixin
 from user.models import BlockedUser
 
@@ -63,6 +63,16 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
     table_class = ApplicationTable
     table_pagination = {'per_page': 100}
     filterset_class = ApplicationTableFilter
+
+    def get_table_class(self):
+        if PromotionalCode.active():
+            return ApplicationTableWithPromotion
+        return super().get_table_class()
+
+    def get_filterset_class(self):
+        if PromotionalCode.active():
+            return ApplicationTableFilterWithPromotion
+        return super().get_filterset_class()
 
     def get_application_type(self):
         return self.request.GET.get('type', 'Hacker')
