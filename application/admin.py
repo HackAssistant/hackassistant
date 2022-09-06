@@ -31,7 +31,12 @@ class ApplicationTypeConfigAdmin(admin.ModelAdmin):
     form = ApplicationTypeConfigAdminForm
 
 
+class PromotionalCodeAdmin(admin.ModelAdmin):
+    readonly_fields = ('uuid', )
+
+
 admin.site.register(models.Application, ApplicationAdmin)
 admin.site.register(models.ApplicationTypeConfig, ApplicationTypeConfigAdmin)
 admin.site.register(models.ApplicationLog)
 admin.site.register(models.Edition)
+admin.site.register(models.PromotionalCode, PromotionalCodeAdmin)

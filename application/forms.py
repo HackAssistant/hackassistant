@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import RegexValidator
 from django.templatetags.static import static
@@ -28,6 +29,14 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
     diet_notice = forms.BooleanField(
         label=_('I authorize %s to use my food allergies and intolerances information to '
                 'manage the catering service only.') % getattr(settings, 'HACKATHON_ORG')
+    )
+
+    terms_and_conditions = forms.BooleanField(
+        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
+                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
+                          'Privacy and Cookies Policy</a>.' % (
+                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
+                          )))
     )
 
     exclude_save = ['terms_and_conditions', 'diet_notice']
@@ -92,10 +101,18 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
                                    'rectification, suppression, limitation, portability and opposition '
                                    'please visit our Privacy and Cookies Policy.</p>'
                 }})
+        fields[next(iter(fields))]['fields'].append({'name': 'promotional_code'})
         return fields
 
     def get_policy_fields(self):
         return [{'name': 'terms_and_conditions', 'space': 12}, {'name': 'diet_notice', 'space': 12}]
+
+    def clean_promotional_code(self):
+        promotional_code = self.cleaned_data.get('promotional_code', None)
+        if promotional_code is not None:
+            if promotional_code.usages != -1 and promotional_code.application_set.count() >= promotional_code.usages:
+                raise ValidationError('This code is out of usages or not for this type')
+        return promotional_code
 
     class Meta:
         model = Application
@@ -114,13 +131,9 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
             'tshirt_size': _('What\'s your t-shirt size?'),
             'diet': _('Dietary requirements'),
         }
-    terms_and_conditions = forms.BooleanField(
-        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
-                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
-                          'Privacy and Cookies Policy</a>.' % (
-                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
-                          )))
-    )
+        widgets = {
+            'promotional_code': forms.HiddenInput
+        }
 
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'

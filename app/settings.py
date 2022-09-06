@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django_jwt.server',
     'django_bootstrap5',
     'compressor',
+    'colorfield',
     'corsheaders',
     'django_crontab',
     'user',
