@@ -139,3 +139,11 @@ footer {
     background-color: #f7f8f9;
     color: black;
 }
+
+.bg-dark .bg-contrast {
+    background-color: rgba(255, 255, 255, 0.075);
+}
+
+.bg-light .bg-contrast {
+    background-color: rgba(0, 0, 0, 0.075);
+}

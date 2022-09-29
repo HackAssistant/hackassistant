@@ -33,6 +33,38 @@ $table-variants: (
 
 @import './bootstrap/bootstrap';
 
+.bg-primary {
+    color: $dark;
+}
+
+.bg-secondary {
+    color: $white;
+}
+
+.bg-info {
+    color: $black;
+}
+
+.bg-danger {
+    color: $black;
+}
+
+.bg-warning {
+    color: $black;
+}
+
+.bg-success {
+    color: $black;
+}
+
+.bg-light {
+    color: $black;
+}
+
+.bg-dark {
+    color: $white;
+}
+
 body.light {
   background-image: linear-gradient(darken($primary, 15%), $primary);
 }

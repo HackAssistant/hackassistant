@@ -1,0 +1,87 @@
+{% load i18n %}
+{% load util %}
+{% for app in user_applications_grouped|get_item:'default' %}
+    <div class="mt-2 rounded-3 p-3 bg-contrast">
+        <div class="row">
+            <div class="col-12 col-lg-10"><h2>{{ app.type.name }} {% translate 'application' %}</h2></div>
+            <div class="col-12 col-lg-2 text-end"><p class="h5 bg-{{ app.get_public_status_color }} p-1 m-0" style="margin-left: auto !important; width: fit-content; border-radius: 5px; margin-right: 0">&nbsp{{ app.get_public_status_display }}&nbsp</p></div>
+        </div>
+        <p>{{ app.get_public_status_description }}</p>
+        {% if app.get_public_status == app.STATUS_PENDING or app.get_public_status == app.STATUS_NEEDS_CHANGE %}
+            <div class="row justify-content-around mt-3 mb-3">
+                <div class="col-6 d-grid d-md-block">
+                    <a href="{% url 'edit_application' app.get_uuid %}" class="btn btn-primary col-12">{% if app.can_edit %}{% translate 'Edit application' %}{% else %}{% translate 'View application' %}{% endif %}</a>
+                </div>
+            </div>
+        {% elif app.get_public_status == app.STATUS_INVITED or app.get_public_status == app.STATUS_LAST_REMINDER %}
+            <div class="row justify-content-around mt-3 mb-3">
+                <div class="col-12 col-lg-6 d-grid d-md-block">
+                    <a href="{% url 'change_status_application' app.get_uuid app.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you changed your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-12">{% trans 'Cancel my application' %}</a>
+                </div>
+                <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+                    <a href="{% url 'change_status_application' app.get_uuid app.STATUS_CONFIRMED %}" onclick="return confirm('{% blocktrans %}Your {{ app.type.name }} invitation will be confirmed. This means that all your other applications will be cancelled. Are you sure you want to confirm this one?{% endblocktrans %}')" class="btn btn-success col-12">{% trans 'Confirm invitation' %}</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endfor %}
+{% with applications_confirmed=user_applications_grouped|get_item:'C' %}
+    {% if applications_confirmed %}
+        <div class="mt-2 rounded-3 p-3 bg-contrast">
+            <div class="row">
+                <div class="col-12 col-lg-8">
+                    <h2>{% translate 'Confirmed applications:' %} {{ applications_confirmed|get_type_list|join:', ' }}</h2>
+                    <p>{{ applications_confirmed.0.get_public_status_description }}</p>
+                    <p>{% translate 'Show this QR to the event to speedup the check-in process' %}</p>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="d-flex justify-content-center justify-content-lg-end">
+                        <div class="p-3 rounded-3" id="qrcode" style="background-color: #ffffff; width: fit-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(document).ready(() => {
+                let qrcode = new QRCode("qrcode", {
+                    text: "{{ request.user.get_encoded_pk }}",
+                    width: 200,
+                    height: 200,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            })
+        </script>
+    {% endif %}
+{% endwith %}
+{% with applications_attended=user_applications_grouped|get_item:'A' %}
+    {% if applications_attended %}
+        <div class="mt-2 rounded-3 p-3 bg-contrast">
+            <div class="row">
+                <div class="col-12 col-lg-8">
+                    <h2>Welcome to {{ app_hack }}</h2>
+                    <p>{{ applications_attended.0.get_public_status_description }}</p>
+                    <p>{% translate 'Checked in as' %} {{ applications_attended|get_type_list|join:', ' }}. {% translate 'You have your QR with you, but if you lose it, you can use this one as well' %}</p>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="d-flex justify-content-center justify-content-lg-end">
+                        <div class="p-3 rounded-3" id="qrcode" style="background-color: #ffffff; width: fit-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(document).ready(() => {
+                let qrcode = new QRCode("qrcode", {
+                    text: "{{ request.user.qr_code }}",
+                    width: 200,
+                    height: 200,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            })
+        </script>
+    {% endif %}
+{% endwith %}

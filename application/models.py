@@ -67,6 +67,16 @@ class ApplicationTypeConfig(models.Model):
     auto_confirm = models.BooleanField(default=False, help_text=_('Applications set on status confirmed by default'))
     compatible_with_others = models.BooleanField(default=False, help_text=_('User can confirm in more than one type'))
 
+    def get_description(self):
+        from application import forms
+        aux = forms
+        lookup = ['%sForm' % self.name.title(), 'Meta', 'description']
+        for item in lookup:
+            aux = getattr(aux, item, None)
+            if aux is None:
+                return ''
+        return aux
+
     def get_file_review_fields(self):
         try:
             return ast.literal_eval(self.file_review_fields)
@@ -211,14 +221,15 @@ class Application(models.Model):
     }
     STATUS_DESCRIPTION = {
         STATUS_NEEDS_CHANGE: _('Your application might have some misleading information. '
-                               'Please edit what the organizing team told you to'),
+                               'Please edit what the organizing team told you to.'),
         STATUS_LAST_REMINDER: _('You have been invited but not accepted yet. '
                                 'In less than 24h you will lose your invitation'),
         STATUS_PENDING: _('The organizing team is reviewing your application. Please be patient.'),
         STATUS_CONFIRMED: _('You have confirmed your application. Can\'t wait seeing you in the hack!'),
         STATUS_INVITED: _('Congratulations! You have been invited, accept your invitation.'),
         STATUS_CANCELLED: _('You have cancelled your application, we hope to see you next year.'),
-        STATUS_EXPIRED: _('Your application have been expired. Please contact us quick if you want to come.'),
+        STATUS_EXPIRED: _('Your application invitation have been expired. '
+                          'Please contact us quick if you want to come.'),
         STATUS_INVALID: _('Your application have been invalidated. It seems you cannot join us with this role.'),
         STATUS_REJECTED: _('We are so sorry, but our hack is full...'),
         STATUS_BLOCKED: _('User was blocked by your organization.'),

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -15,6 +16,8 @@ def clear_groups(sender, instance, **kwargs):
             group.user_set.clear()
             sender.get_default_edition(force_update=True)
             sender.get_last_edition(force_update=True)
+            user_model = get_user_model()
+            user_model.objects.update(qr_code='')
 
 
 @receiver(post_delete, sender=ApplicationTypeConfig)

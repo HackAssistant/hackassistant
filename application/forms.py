@@ -116,6 +116,7 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
 
     class Meta:
         model = Application
+        description = ''
         exclude = ['user', 'uuid', 'data', 'submission_date', 'status_update_date', 'status', 'contacted_by', 'type',
                    'last_modified', 'edition']
         help_texts = {
@@ -225,6 +226,8 @@ class HackerForm(ApplicationForm):
         return hidden_fields
 
     class Meta(ApplicationForm.Meta):
+        description = _('You will join a team with which you will do a project in a weekend. '
+                        'You will meet new people and learn a lot, don\'t think about it and apply!')
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},
@@ -328,6 +331,9 @@ class VolunteerForm(ApplicationForm):
                                     label=_('How did you discover %s?' % getattr(settings, 'HACKATHON_NAME')))
 
     class Meta(ApplicationForm.Meta):
+        description = _('Volunteers make the event possible by assisting the hackers and preparing the physical '
+                        'spaces of the event. By joining our team of volunteers, you will get to know how this '
+                        'amazing event works from the inside and meet amazing people and live a great experience!')
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},
@@ -429,6 +435,9 @@ class MentorForm(ApplicationForm):
     )
 
     class Meta(ApplicationForm.Meta):
+        description = _('Help and motivate hackers with your knowledge. Either because you are passionate about it'
+                        ', or if you\'ve graduated more than a year ago and can\'t participate as a hacker, '
+                        'apply now as a mentor!')
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},
