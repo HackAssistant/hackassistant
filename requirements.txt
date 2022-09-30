@@ -8,12 +8,14 @@ cryptography==37.0.2
 Deprecated==1.2.13
 Django==4.0.7
 django-appconf==1.0.5
+django-axes==5.39.0
 django-bootstrap5==21.3
 django-colorfield==0.7.2
 django-compressor==4.1
 django-cors-headers==3.13.0
 django-crontab==0.7.1
 django-filter==22.1
+django-ipware==4.0.2
 django-jwt-oidc==0.3.9
 django-libsass==0.9
 django-tables2==2.4.1
