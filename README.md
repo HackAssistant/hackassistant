@@ -11,6 +11,7 @@
 - Email sign up ✉️
 - Email verification 📨
 - Forgot password 🤔
+- Ip block on failed login tries & ip blocklist ✋ (Optional)
 - Dark mode 🌚 🌝 Light mode (Optional)
 
 ## Development
