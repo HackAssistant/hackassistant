@@ -8,7 +8,7 @@ from django.utils.translation import gettext as _
 from app.mixins import TabsViewMixin
 from user import emails
 from user.forms import LoginForm, UserProfileForm, ForgotPasswordForm, SetPasswordForm, \
-    RegistrationForm
+    RegistrationForm, RecaptchaForm
 from user.mixins import LoginRequiredMixin, EmailNotVerifiedMixin
 from user.models import User
 from user.tokens import AccountActivationTokenGenerator
@@ -62,20 +62,21 @@ class Login(TabsViewMixin, TemplateView):
 class Register(Login):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({'form': RegistrationForm(), 'auth': 'register'})
+        context.update({'form': RegistrationForm(), 'auth': 'register',
+                        'recaptcha_form': RecaptchaForm(request=self.request)})
         return context
 
-    @check_recaptcha
     def post(self, request, **kwargs):
         form = RegistrationForm(request.POST)
-        if form.is_valid() and request.recaptcha_is_valid:
+        recaptcha = RecaptchaForm(request.POST, request=request)
+        if form.is_valid() and recaptcha.is_valid():
             user = form.save()
             auth.login(request, user)
             emails.send_verification_email(request=request, user=user)
             messages.success(request, _('Successfully registered!'))
             return self.redirect_successful()
         context = self.get_context_data(**kwargs)
-        context.update({'form': form})
+        context.update({'form': form, 'recaptcha_form': recaptcha})
         return self.render_to_response(context)
 
 

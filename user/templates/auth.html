@@ -11,15 +11,16 @@
                 <form method="post">
                     {% csrf_token %}
                     <div class="content p-4">
+                        {% include 'components/bootstrap5_form.html' with form=recaptcha_form only_errors=True %}
                         {% include 'components/bootstrap5_form.html' %}
-                        {% if auth == 'register' %}
-                            {% if captcha_site_key %}
-                                <script src='https://www.google.com/recaptcha/api.js'></script>
-                                <div class="g-recaptcha" data-sitekey="{{ captcha_site_key }}"></div>
-                            {% endif %}
-                        {% else %}
+                        {% if auth != 'register' %}
                             <p><a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" style="text-decoration: none" href="{% url 'forgot_password' %}">{% translate 'Forgot your password?' %}</a></p>
                         {% endif %}
+                        {% for field in recaptcha_form %}
+                            <div class="text-center mb-1">
+                                {{ field }}
+                            </div>
+                        {% endfor %}
                         <div class="row justify-content-around">
                             <div class="col-12 col-lg-6 d-grid d-md-block">
                                 <button type="submit" class="btn btn-primary col-12">{{ auth|title }}</button>

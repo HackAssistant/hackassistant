@@ -139,3 +139,7 @@ footer {
     background-color: #f7f8f9;
     color: black;
 }
+
+.g-recaptcha {
+    display: inline-block;
+}

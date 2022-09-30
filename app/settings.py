@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'captcha',
     'django_tables2',
     'django_filters',
     'django_jwt',
@@ -201,9 +202,16 @@ MESSAGE_TAGS = {
     message_constants.ERROR: 'danger',
 }
 
-# Google recaptcha
-GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')
-GOOGLE_RECAPTCHA_SITE_KEY = os.environ.get('GOOGLE_RECAPTCHA_SITE_KEY', '')
+# Google Recaptcha configuration
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', '')
+RECAPTCHA_WIDGET = os.environ.get('RECAPTCHA_WIDGET', 'ReCaptchaV2Checkbox')
+RECAPTCHA_REGISTER = True
+RECAPTCHA_LOGIN = False
+try:
+    RECAPTCHA_REQUIRED_SCORE = float(os.environ.get('RECAPTCHA_REQUIRED_SCORE', "0.85"))
+except ValueError:
+    RECAPTCHA_REQUIRED_SCORE = 0.85
 
 # Login tries
 LOGIN_TRIES = 1000 if DEBUG else 4
