@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, GroupAdmin as 
 from django.contrib.auth.models import Group
 
 from user.forms import UserChangeForm, UserCreationForm
-from user.models import User, BlockedUser, LoginRequest
+from user.models import User, BlockedUser
 
 
 class UserAdmin(BaseUserAdmin):
@@ -45,5 +45,4 @@ class GroupAdmin(BaseGroupAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.unregister(Group)
 admin.site.register(Group, GroupAdmin)
-admin.site.register(LoginRequest)
 admin.site.register(BlockedUser)

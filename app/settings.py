@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
+from django.utils import timezone
 
 from .hackathon_variables import *
 
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     'application',
     'review',
     'event',
+    'axes',
 ]
 
 MIDDLEWARE = [
@@ -128,6 +130,18 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = [
+    # AxesStandaloneBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
+    'axes.backends.AxesStandaloneBackend',
+
+    # Django ModelBackend is the default authentication backend.
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+AXES_USERNAME_FORM_FIELD = 'user.models.User.USERNAME_FIELD'
+AXES_COOLOFF_TIME = timezone.timedelta(minutes=5)
+SILENCED_SYSTEM_CHECKS = ['axes.W002']
 
 
 # Internationalization
