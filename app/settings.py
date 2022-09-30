@@ -139,8 +139,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# django-axes configuration
 AXES_USERNAME_FORM_FIELD = 'user.models.User.USERNAME_FIELD'
 AXES_COOLOFF_TIME = timezone.timedelta(minutes=5)
+AXES_IP_BLACKLIST = os.environ.get('AXES_IP_BLACKLIST', '').split(',')
 SILENCED_SYSTEM_CHECKS = ['axes.W002']
 
 
