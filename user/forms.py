@@ -1,5 +1,7 @@
 import re
 
+from captcha.fields import ReCaptchaField
+from captcha import widgets as captcha_widgets
 from django import forms
 from django.conf import settings
 from django.contrib.auth import password_validation
@@ -8,8 +10,32 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from app.mixins import BootstrapFormMixin
+from app.utils import get_theme
 from user.models import User
 from django.utils.translation import gettext_lazy as _
+
+
+class RecaptchaForm(forms.Form):
+    @classmethod
+    def active(cls):
+        return getattr(settings, 'RECAPTCHA_PUBLIC_KEY', False) and getattr(settings, 'RECAPTCHA_PRIVATE_KEY', False)
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
+        widget_setting = getattr(settings, 'RECAPTCHA_WIDGET', 'ReCaptchaV2Checkbox')
+        widget_class = getattr(captcha_widgets, widget_setting, captcha_widgets.ReCaptchaV2Checkbox)
+        if widget_class == captcha_widgets.ReCaptchaBase or not issubclass(widget_class, captcha_widgets.ReCaptchaBase):
+            widget_class = captcha_widgets.ReCaptchaV2Checkbox
+        theme = get_theme(request) if request is not None else 'light'
+        self.base_fields['captcha'] = ReCaptchaField(
+            widget=widget_class(attrs={'data-theme': theme}),
+            error_messages={'required': _('You must pass the reCAPTCHA challenge!')})
+        super().__init__(*args, **kwargs)
+
+    captcha = ReCaptchaField(
+        widget=captcha_widgets.ReCaptchaV2Checkbox(),
+        error_messages={'required': _('You must pass the reCAPTCHA challenge!')}
+    )
 
 
 class LoginForm(BootstrapFormMixin, forms.Form):

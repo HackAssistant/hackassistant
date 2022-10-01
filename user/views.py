@@ -2,6 +2,7 @@ from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_ip_address, get_cool_off
 from axes.models import AccessAttempt
 from axes.utils import reset_request
+from django.conf import settings
 from django.contrib import auth, messages
 from django.shortcuts import redirect
 from django.urls import reverse, resolve
@@ -13,7 +14,7 @@ from django.utils.translation import gettext as _
 from app.mixins import TabsViewMixin
 from user import emails
 from user.forms import LoginForm, UserProfileForm, ForgotPasswordForm, SetPasswordForm, \
-    RegistrationForm
+    RegistrationForm, RecaptchaForm
 from user.mixins import LoginRequiredMixin, EmailNotVerifiedMixin
 from user.models import User
 from user.tokens import AccountActivationTokenGenerator
@@ -58,7 +59,17 @@ class AuthTemplateViews(TabsViewMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({'form': self.get_form(), 'auth': self.names.get(self.get_url_name, 'register')})
+        if getattr(settings, 'RECAPTCHA_%s' % self.get_url_name.upper(), False) and RecaptchaForm.active():
+            context.update({'recaptcha_form': RecaptchaForm(request=self.request)})
         return context
+
+    def forms_are_valid(self, form, context):
+        if getattr(settings, 'RECAPTCHA_%s' % self.get_url_name.upper(), False) and RecaptchaForm.active():
+            recaptcha_form = RecaptchaForm(self.request.POST, request=self.request)
+            if not recaptcha_form.is_valid():
+                context.update({'recaptcha_form': recaptcha_form})
+                return False
+        return form.is_valid()
 
 
 class Login(AuthTemplateViews):
@@ -79,7 +90,7 @@ class Login(AuthTemplateViews):
     def post(self, request, **kwargs):
         form = LoginForm(request.POST)
         context = self.get_context_data(**kwargs)
-        if form.is_valid():
+        if self.forms_are_valid(form, context):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             user = auth.authenticate(email=email, password=password, request=request)
@@ -100,19 +111,21 @@ class Login(AuthTemplateViews):
 class Register(Login):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update({'form': RegistrationForm(), 'auth': 'register'})
         context.pop("blocked_message", None)
         return context
 
     def post(self, request, **kwargs):
+        context = self.get_context_data(**kwargs)
         form = RegistrationForm(request.POST)
-        if form.is_valid() and request.recaptcha_is_valid:
+        recaptcha = RecaptchaForm(request.POST, request=request)
+        if self.forms_are_valid(form, context):
             user = form.save()
             auth.login(request, user)
             emails.send_verification_email(request=request, user=user)
             messages.success(request, _('Successfully registered!'))
             return self.redirect_successful()
-        context = self.get_context_data(**kwargs)
-        context.update({'form': form})
+        context.update({'form': form, 'recaptcha_form': recaptcha})
         return self.render_to_response(context)
 
 

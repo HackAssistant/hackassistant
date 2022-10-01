@@ -18,6 +18,7 @@ django-filter==22.1
 django-ipware==4.0.2
 django-jwt-oidc==0.3.9
 django-libsass==0.9
+django-recaptcha==3.0.0
 django-tables2==2.4.1
 flake8==4.0.1
 idna==3.3
