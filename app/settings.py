@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
+from django.utils import timezone
 
 from .hackathon_variables import *
 
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'captcha',
     'django_tables2',
     'django_filters',
     'django_jwt',
@@ -60,6 +62,7 @@ INSTALLED_APPS = [
     'application',
     'review',
     'event',
+    'axes',
 ]
 
 MIDDLEWARE = [
@@ -128,6 +131,22 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = [
+    # AxesStandaloneBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
+    'axes.backends.AxesStandaloneBackend',
+
+    # Django ModelBackend is the default authentication backend.
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# django-axes configuration
+AXES_USERNAME_FORM_FIELD = 'user.models.User.USERNAME_FIELD'
+AXES_COOLOFF_TIME = timezone.timedelta(minutes=5)
+AXES_FAILURE_LIMIT = os.environ.get('AXES_FAILURE_LIMIT', 3)
+AXES_ENABLED = os.environ.get('AXES_ENABLED', not DEBUG)
+AXES_IP_BLACKLIST = os.environ.get('AXES_IP_BLACKLIST', '').split(',')
+SILENCED_SYSTEM_CHECKS = ['axes.W002']
 
 
 # Internationalization
@@ -201,9 +220,16 @@ MESSAGE_TAGS = {
     message_constants.ERROR: 'danger',
 }
 
-# Google recaptcha
-GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')
-GOOGLE_RECAPTCHA_SITE_KEY = os.environ.get('GOOGLE_RECAPTCHA_SITE_KEY', '')
+# Google Recaptcha configuration
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', '')
+RECAPTCHA_WIDGET = os.environ.get('RECAPTCHA_WIDGET', 'ReCaptchaV2Checkbox')
+RECAPTCHA_REGISTER = True
+RECAPTCHA_LOGIN = False
+try:
+    RECAPTCHA_REQUIRED_SCORE = float(os.environ.get('RECAPTCHA_REQUIRED_SCORE', "0.85"))
+except ValueError:
+    RECAPTCHA_REQUIRED_SCORE = 0.85
 
 # Login tries
 LOGIN_TRIES = 1000 if DEBUG else 4

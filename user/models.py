@@ -222,18 +222,6 @@ class User(AbstractBaseUser, PermissionsMixin):
                                   Q(is_superuser=True)).distinct()
 
 
-class LoginRequest(models.Model):
-    ip = models.CharField(max_length=30)
-    latest_request = models.DateTimeField()
-    login_tries = models.IntegerField(default=1)
-
-    def __str__(self):
-        return self.ip
-
-    def reset_tries(self):
-        self.login_tries = 1
-
-
 class BlockedUser(models.Model):
     full_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100)

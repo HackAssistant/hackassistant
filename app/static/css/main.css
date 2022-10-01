@@ -147,3 +147,7 @@ footer {
 .bg-light .bg-contrast {
     background-color: rgba(0, 0, 0, 0.075);
 }
+
+.g-recaptcha {
+    display: inline-block;
+}
