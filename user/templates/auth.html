@@ -8,26 +8,34 @@
                 {% include 'components/tabs.html' %}
             {% endif %}
             <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="content p-4">
-                        {% include 'components/bootstrap5_form.html' with form=recaptcha_form only_errors=True %}
-                        {% include 'components/bootstrap5_form.html' %}
-                        {% if auth != 'register' %}
-                            <p><a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" style="text-decoration: none" href="{% url 'forgot_password' %}">{% translate 'Forgot your password?' %}</a></p>
-                        {% endif %}
-                        {% for field in recaptcha_form %}
-                            <div class="text-center mb-1">
-                                {{ field }}
-                            </div>
-                        {% endfor %}
-                        <div class="row justify-content-around">
-                            <div class="col-12 col-lg-6 d-grid d-md-block">
-                                <button type="submit" class="btn btn-primary col-12">{{ auth|title }}</button>
+                {% if not blocked_message %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="content p-4">
+                            {% include 'components/bootstrap5_form.html' %}
+                            {% if auth != 'register' %}
+                                <p><a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" style="text-decoration: none" href="{% url 'forgot_password' %}">{% translate 'Forgot your password?' %}</a></p>
+                            {% endif %}
+                            {% for field in recaptcha_form %}
+                                <div class="text-center mb-1">
+                                    {{ field }}
+                                </div>
+                            {% endfor %}
+                            <div class="row justify-content-around">
+                                <div class="col-12 col-lg-6 d-grid d-md-block">
+                                    <button type="submit" class="btn btn-primary col-12">{{ auth|title }}</button>
+                                </div>
                             </div>
                         </div>
+                    </form>
+                {% else %}
+                    <div class="p-3">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ blocked_message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                     </div>
-                </form>
+                {% endif %}
             </div>
         </div>
     </div>

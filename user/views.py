@@ -1,6 +1,11 @@
+from axes.handlers.proxy import AxesProxyHandler
+from axes.helpers import get_client_ip_address, get_cool_off
+from axes.models import AccessAttempt
+from axes.utils import reset_request
 from django.contrib import auth, messages
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import reverse, resolve
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
@@ -12,11 +17,21 @@ from user.forms import LoginForm, UserProfileForm, ForgotPasswordForm, SetPasswo
 from user.mixins import LoginRequiredMixin, EmailNotVerifiedMixin
 from user.models import User
 from user.tokens import AccountActivationTokenGenerator
-from user.verification import check_client_ip, reset_tries, check_recaptcha
 
 
-class Login(TabsViewMixin, TemplateView):
+class AuthTemplateViews(TabsViewMixin, TemplateView):
     template_name = 'auth.html'
+    names = {
+        'login': 'log in',
+        'register': 'register',
+    }
+    forms = {
+        'login': LoginForm,
+        'register': RegistrationForm,
+    }
+
+    def get_current_tabs(self, **kwargs):
+        return [('Log in', reverse('login')), ('Register', reverse('register'))]
 
     def redirect_successful(self):
         next_ = self.request.GET.get('next', reverse('home'))
@@ -29,31 +44,54 @@ class Login(TabsViewMixin, TemplateView):
             return self.redirect_successful()
         return super().get(request, *args, **kwargs)
 
-    def get_current_tabs(self, **kwargs):
-        return [('Log in', reverse('login')), ('Register', reverse('register'))]
+    @property
+    def get_url_name(self):
+        return resolve(self.request.path_info).url_name
+
+    def get_form_class(self):
+        return self.forms.get(self.get_url_name)
+
+    def get_form(self):
+        form_class = self.get_form_class()
+        return form_class()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({'form': LoginForm(), 'auth': 'log in'})
+        context.update({'form': self.get_form(), 'auth': self.names.get(self.get_url_name, 'register')})
         return context
 
-    @check_client_ip
+
+class Login(AuthTemplateViews):
+    def add_axes_context(self, context):
+        if not AxesProxyHandler.is_allowed(self.request):
+            ip_address = get_client_ip_address(self.request)
+            attempt = AccessAttempt.objects.get(ip_address=ip_address)
+            time_left = (attempt.attempt_time + get_cool_off()) - timezone.now()
+            minutes_left = int((time_left.total_seconds() + 59) // 60)
+            axes_error_message = _('Too many login attempts. Please try again in %s minutes.') % minutes_left
+            context.update({'blocked_message': axes_error_message})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.add_axes_context(context)
+        return context
+
     def post(self, request, **kwargs):
         form = LoginForm(request.POST)
-        if form.is_valid() and request.client_req_is_valid:
+        context = self.get_context_data(**kwargs)
+        if form.is_valid():
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
-            user = auth.authenticate(email=email, password=password)
+            user = auth.authenticate(email=email, password=password, request=request)
             if user and user.is_active:
                 auth.login(request, user)
-                reset_tries(request)
+                reset_request(request)
                 messages.success(request, _('Successfully logged in!'))
                 return self.redirect_successful()
+            elif getattr(request, 'axes_locked_out', False):
+                return redirect(reverse('login'))
             else:
                 form.add_error(None, _('Incorrect username or password. Please try again.'))
-        if not request.client_req_is_valid:
-            form.add_error(None, _('Too many login attempts. Please try again in 5 minutes.'))
-        context = self.get_context_data(**kwargs)
         form.reset_status_fields()
         context.update({'form': form})
         return self.render_to_response(context)
@@ -64,6 +102,7 @@ class Register(Login):
         context = super().get_context_data(**kwargs)
         context.update({'form': RegistrationForm(), 'auth': 'register',
                         'recaptcha_form': RecaptchaForm(request=self.request)})
+        context.pop("blocked_message", None)
         return context
 
     def post(self, request, **kwargs):
