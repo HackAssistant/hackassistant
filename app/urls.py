@@ -25,6 +25,7 @@ urlpatterns = [
     path('auth/', include('user.urls')),
     path('application/', include('application.urls')),
     path('review/', include('review.urls')),
+    path('friends/', include('friends.urls')),
 ]
 
 # JWT fake login on DEBUG for development purposes
