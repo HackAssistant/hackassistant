@@ -25,6 +25,11 @@ def nav_active(text, starts):
     return False
 
 
+@register.filter
+def get_type_list(app_list):
+    return [app.type.name for app in app_list]
+
+
 @register.simple_tag
 def crispy(*args, **kwargs):
     return None

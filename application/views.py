@@ -28,17 +28,27 @@ class ApplicationHome(LoginRequiredMixin, TemplateView):
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
+    def get_user_applications_grouped(self, user_applications):
+        result = {}
+        for user_application in user_applications:
+            status = user_application.get_public_status() if user_application.confirmed() else 'default'
+            aux = result.get(status, [])
+            aux.append(user_application)
+            result[status] = aux
+        return result
+
+    def get_application_type_left(self, user_applications):
+        user_types = [item.type_id for item in user_applications]
+        return ApplicationTypeConfig.objects.filter(public=True).exclude(id__in=user_types)\
+            .exclude(end_application_date__lt=timezone.now())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_applications = {app.type_id: app for app in Application.objects.actual().filter(user=self.request.user)}
-        application_types = ApplicationTypeConfig.objects.filter(public=True)
-        accepted_application = None
-        for application_type in application_types:
-            application_type.user_instance = user_applications.get(application_type.id, None)
-            if application_type.user_instance is not None and application_type.user_instance.confirmed():
-                accepted_application = application_type.user_instance
-        context.update({'user_applications': user_applications.values(), 'accepted_application': accepted_application,
-                        'application_types': application_types})
+        user_applications = Application.objects.actual().filter(user=self.request.user)
+        user_applications_grouped = self.get_user_applications_grouped(user_applications)
+        apply_types = self.get_application_type_left(user_applications)
+        context.update({'user_applications': user_applications, 'user_applications_grouped': user_applications_grouped,
+                        'apply_types': apply_types, 'Application': Application})
         return context
 
 

@@ -1,0 +1,23 @@
+{% load i18n %}
+<div class="mt-2 rounded-3 p-3 bg-contrast">
+    <h2>{% trans 'Apply' %}</h2>
+    {% if user_applications %}
+        <p>{% translate 'You have already applied but if you are interested in any other role, you can apply with them as well' %}</p>
+    {% endif %}
+    <ul>
+        {% for apply_type in apply_types %}
+            <li>
+                {{ apply_type.get_description }}<br>
+                <strong>
+                    {% if apply_type.active %}{% translate 'Closes in' %}{% else %}{% translate 'Opens in' %}{% endif %}{{ apply_type.time_left }}
+                </strong>
+                <div class="row justify-content-around mt-3 mb-3">
+                    <div class="col-6 d-grid d-md-block">
+                        <a href="{% url 'apply' %}?type={{ apply_type.name }}" class="btn {% if user_applications %}btn-secondary{% else %}btn-primary{% endif %} col-12">{% trans 'Apply as' %} {{ apply_type.name }}</a>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+
+</div>
