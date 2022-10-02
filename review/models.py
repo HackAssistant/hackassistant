@@ -23,7 +23,7 @@ class Vote(models.Model):
         """
         We are overriding this in order to standarize each review vote with the
         new vote.
-        Also we store a calculated vote for each vote so that we don't need to
+        Also, we store a calculated vote for each vote so that we don't need to
         do it later.
 
         Thanks to Django awesomeness we do all the calculations with only 3
@@ -73,3 +73,16 @@ class Vote(models.Model):
 
     class Meta:
         unique_together = ('application', 'user')
+
+
+class FileReview(models.Model):
+    application = models.ForeignKey('application.Application', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    field_name = models.CharField(max_length=100)
+    accept = models.BooleanField()
+
+    def __str__(self):
+        return '[%s] %s by %s' % (self.field_name, self.application, self.user)
+
+    class Meta:
+        unique_together = ('application', 'field_name')

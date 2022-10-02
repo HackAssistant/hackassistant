@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import RegexValidator
 from django.templatetags.static import static
@@ -30,6 +31,14 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
                 'manage the catering service only.') % getattr(settings, 'HACKATHON_ORG')
     )
 
+    terms_and_conditions = forms.BooleanField(
+        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
+                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
+                          'Privacy and Cookies Policy</a>.' % (
+                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
+                          )))
+    )
+
     exclude_save = ['terms_and_conditions', 'diet_notice']
 
     def save(self, commit=True):
@@ -49,8 +58,9 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
         files_fields = getattr(self, 'files', {})
         fs = FileSystemStorage()
         for field_name, file in files_fields.items():
-            file_path = '%s/%s/%s_%s.%s' % (instance.type.name, field_name, instance.get_full_name().replace(' ', '-'),
-                                            instance.get_uuid, file.name.split('.')[-1])
+            file_path = '%s/%s/%s/%s_%s.%s' % (instance.edition.name, instance.type.name, field_name,
+                                               instance.get_full_name().replace(' ', '-'), instance.get_uuid,
+                                               file.name.split('.')[-1])
             if fs.exists(file_path):
                 fs.delete(file_path)
             fs.save(name=file_path, content=file)
@@ -62,7 +72,7 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
         return files_fields.keys()
 
     def get_hidden_edit_fields(self):
-        return self.exclude_save
+        return self.exclude_save.copy()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -91,15 +101,24 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
                                    'rectification, suppression, limitation, portability and opposition '
                                    'please visit our Privacy and Cookies Policy.</p>'
                 }})
+        fields[next(iter(fields))]['fields'].append({'name': 'promotional_code'})
         return fields
 
     def get_policy_fields(self):
         return [{'name': 'terms_and_conditions', 'space': 12}, {'name': 'diet_notice', 'space': 12}]
 
+    def clean_promotional_code(self):
+        promotional_code = self.cleaned_data.get('promotional_code', None)
+        if promotional_code is not None:
+            if promotional_code.usages != -1 and promotional_code.application_set.count() >= promotional_code.usages:
+                raise ValidationError('This code is out of usages or not for this type')
+        return promotional_code
+
     class Meta:
         model = Application
+        description = ''
         exclude = ['user', 'uuid', 'data', 'submission_date', 'status_update_date', 'status', 'contacted_by', 'type',
-                   'last_modified']
+                   'last_modified', 'edition']
         help_texts = {
             'gender': _('This is for demographic purposes. You can skip this question if you want.'),
             'other_diet': _('Please fill here in your dietary requirements. '
@@ -113,13 +132,9 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
             'tshirt_size': _('What\'s your t-shirt size?'),
             'diet': _('Dietary requirements'),
         }
-    terms_and_conditions = forms.BooleanField(
-        label=mark_safe(_('I\'ve read, understand and accept <a href="/terms_and_conditions" target="_blank">%s '
-                          'Terms & Conditions</a> and <a href="/privacy_and_cookies" target="_blank">%s '
-                          'Privacy and Cookies Policy</a>.' % (
-                              getattr(settings, 'HACKATHON_NAME', ''), getattr(settings, 'HACKATHON_NAME', '')
-                          )))
-    )
+        widgets = {
+            'promotional_code': forms.HiddenInput
+        }
 
 
 # This class is linked to the instance of ApplicationTypeConfig where name = 'Hacker'
@@ -211,6 +226,8 @@ class HackerForm(ApplicationForm):
         return hidden_fields
 
     class Meta(ApplicationForm.Meta):
+        description = _('You will join a team with which you will do a project in a weekend. '
+                        'You will meet new people and learn a lot, don\'t think about it and apply!')
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},
@@ -314,6 +331,9 @@ class VolunteerForm(ApplicationForm):
                                     label=_('How did you discover %s?' % getattr(settings, 'HACKATHON_NAME')))
 
     class Meta(ApplicationForm.Meta):
+        description = _('Volunteers make the event possible by assisting the hackers and preparing the physical '
+                        'spaces of the event. By joining our team of volunteers, you will get to know how this '
+                        'amazing event works from the inside and meet amazing people and live a great experience!')
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},
@@ -415,6 +435,9 @@ class MentorForm(ApplicationForm):
     )
 
     class Meta(ApplicationForm.Meta):
+        description = _('Help and motivate hackers with your knowledge. Either because you are passionate about it'
+                        ', or if you\'ve graduated more than a year ago and can\'t participate as a hacker, '
+                        'apply now as a mentor!')
         api_fields = {
             'country': {'url': static('data/countries.json'), 'restrict': True, 'others': True},
             'university': {'url': static('data/universities.json')},

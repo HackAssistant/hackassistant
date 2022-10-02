@@ -6,6 +6,10 @@ env/
 .idea
 __pycache__/
 .DS_Store
+staticfiles/
 
 /files/*
 !files/.keep
+
+/db/*
+!db/.keep

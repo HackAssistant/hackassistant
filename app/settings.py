@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
+from django.utils import timezone
 
 from .hackathon_variables import *
 
@@ -47,16 +48,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'captcha',
     'django_tables2',
     'django_filters',
     'django_jwt',
     'django_jwt.server',
     'django_bootstrap5',
+    'compressor',
+    'colorfield',
     'corsheaders',
+    'django_crontab',
     'user',
     'application',
     'review',
     'friends',
+    'event',
+    'axes',
 ]
 
 MIDDLEWARE = [
@@ -88,6 +95,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'util': 'app.templatetags.util',
+                'crispy_forms_tags': 'app.templatetags.util',
             },
         },
     },
@@ -102,7 +110,7 @@ WSGI_APPLICATION = 'app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db' / 'db.sqlite3',
     }
 }
 
@@ -125,6 +133,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    # AxesStandaloneBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
+    'axes.backends.AxesStandaloneBackend',
+
+    # Django ModelBackend is the default authentication backend.
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# django-axes configuration
+AXES_USERNAME_FORM_FIELD = 'user.models.User.USERNAME_FIELD'
+AXES_COOLOFF_TIME = timezone.timedelta(minutes=5)
+AXES_FAILURE_LIMIT = os.environ.get('AXES_FAILURE_LIMIT', 3)
+AXES_ENABLED = os.environ.get('AXES_ENABLED', not DEBUG)
+AXES_IP_BLACKLIST = os.environ.get('AXES_IP_BLACKLIST', '').split(',')
+SILENCED_SYSTEM_CHECKS = ['axes.W002']
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
@@ -138,7 +162,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static files (CSS, JavaScript, Images) & compressor
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
@@ -146,6 +170,17 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'app' / 'static',
 ]
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder'
+]
+COMPRESS_PRECOMPILERS = (
+    ('text/x-scss', 'django_libsass.SassCompiler'),
+)
+COMPRESS_OFFLINE = True
+LIBSASS_OUTPUT_STYLE = 'compressed'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 MEDIA_ROOT = 'files'
 
@@ -167,7 +202,7 @@ JWT_CLIENT = {
     'CLIENT_ID': os.environ.get('OPENID_CLIENT_ID', 'client_id'),                       # Required
     'TYPE': 'fake' if DEBUG else 'local',                                               # Required
     'RESPONSE_TYPE': 'id_token',                                                        # Required
-    'RENAME_ATTRIBUTES': {'sub': 'email'},                                              # Optional
+    'RENAME_ATTRIBUTES': {'sub': 'email', 'groups': 'get_groups'},                      # Optional
 
 }
 JWT_SERVER = {
@@ -186,9 +221,76 @@ MESSAGE_TAGS = {
     message_constants.ERROR: 'danger',
 }
 
-# Google recaptcha
-GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')
-GOOGLE_RECAPTCHA_SITE_KEY = os.environ.get('GOOGLE_RECAPTCHA_SITE_KEY', '')
+# Google Recaptcha configuration
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', '')
+RECAPTCHA_WIDGET = os.environ.get('RECAPTCHA_WIDGET', 'ReCaptchaV2Checkbox')
+RECAPTCHA_REGISTER = True
+RECAPTCHA_LOGIN = False
+try:
+    RECAPTCHA_REQUIRED_SCORE = float(os.environ.get('RECAPTCHA_REQUIRED_SCORE', "0.85"))
+except ValueError:
+    RECAPTCHA_REQUIRED_SCORE = 0.85
 
 # Login tries
 LOGIN_TRIES = 1000 if DEBUG else 4
+
+# Cron from Django-crontab
+CRONJOBS = [
+    ('0   4 * * *', 'django.core.management.call_command', ['clearsessions']),
+    ('0 0 1 */6 *', 'django.core.management.call_command', ['compress', '--force']),
+]
+
+# Deployment configurations for proxy pass and csrf
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Logging config to send logs to email automatically
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'admin_email': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'app.log.HackathonDevEmailHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'level': 'ERROR',
+            'handlers': ['admin_email'],
+        },
+    },
+}
+
+# Sendgrid API key
+SENDGRID_API_KEY = os.environ.get('SENDGRID_KEY', None)
+
+# SMTP
+EMAIL_HOST = os.environ.get('EMAIL_HOST', None)
+EMAIL_PORT = os.environ.get('EMAIL_PORT', None)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
+
+# Load filebased email backend if no Sendgrid credentials and debug mode
+if not SENDGRID_API_KEY and not EMAIL_HOST and DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = 'tmp/email-messages/'
+else:
+    if SENDGRID_API_KEY:
+        EMAIL_BACKEND = "sgbackend.SendGridBackend"
+    else:
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Cache system
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}

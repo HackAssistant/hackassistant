@@ -12,6 +12,8 @@ class ApplicationTable(tables.Table):
                                           order_by='last_modified')
     votes = tables.Column(accessor='vote_count', verbose_name='Votes')
 
+    status = tables.TemplateColumn(template_name='tables/status.html')
+
     @staticmethod
     def get_queryset(queryset):
         return queryset.annotate(vote_avg=Avg('vote__calculated_vote'), vote_count=Count('vote'))
@@ -26,6 +28,14 @@ class ApplicationTable(tables.Table):
         fields = ('full_name', 'user.email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
         empty_text = 'No applications available'
         order_by = 'vote_avg'
+
+
+class ApplicationTableWithPromotion(ApplicationTable):
+    promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
+
+    class Meta(ApplicationTable.Meta):
+        fields = ('full_name', 'user.email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified',
+                  'detail')
 
 
 class ApplicationInviteTable(ApplicationTable):

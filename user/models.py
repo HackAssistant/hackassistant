@@ -1,10 +1,14 @@
+from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import PermissionsMixin, Group
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
 
@@ -91,7 +95,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     DIET_NONE = 'None'
     DIET_VEGETARIAN = 'Vegetarian'
     DIET_VEGAN = 'Vegan'
-    DIET_NO_PORK = 'No pork'
+    DIET_NO_PORK = 'No-pork'
     DIET_GLUTEN_FREE = 'Gluten-free'
     DIET_OTHER = 'Others'
 
@@ -156,6 +160,8 @@ class User(AbstractBaseUser, PermissionsMixin):
                                     help_text=_("Phone number must be entered in the format: +#########'. "
                                                 "Up to 15 digits allowed."))
 
+    qr_code = models.CharField(max_length=getattr(settings, 'QR_CODE_LENGTH', 16), blank=True, db_index=True)
+
     objects = UserManager()
 
     EMAIL_FIELD = "email"
@@ -193,20 +199,42 @@ class User(AbstractBaseUser, PermissionsMixin):
         number = self.__class__.objects.filter(email__endswith='@unknown.com').count()
         self.email = 'user' + str(number) + '@unknown.com'
 
+    def get_groups(self):
+        return list(self.groups.all().values_list('name', flat=True))
 
-class LoginRequest(models.Model):
-    ip = models.CharField(max_length=30)
-    latest_request = models.DateTimeField()
-    login_tries = models.IntegerField(default=1)
+    def get_encoded_pk(self):
+        return urlsafe_base64_encode(force_bytes(self.pk))
 
-    def get_latest_request(self):
-        return self.latest_request
+    @classmethod
+    def decode_encoded_pk(cls, encoded_pk):
+        return force_str(urlsafe_base64_decode(encoded_pk))
 
-    def set_latest_request(self, latest_request):
-        self.latest_request = latest_request
+    def get_diet_display_public(self):
+        if self.diet == self.DIET_OTHER:
+            return self.other_diet
+        return self.get_diet_display()
 
-    def reset_tries(self):
-        self.login_tries = 1
+    @classmethod
+    def get_users_with_permissions(cls, perms):
+        if isinstance(perms, str):
+            perms = [perms, ]
+        return cls.objects.filter(Q(groups__permissions__name__in=perms) | Q(user_permissions__name__in=perms) |
+                                  Q(is_superuser=True)).distinct()
 
-    def increment_tries(self):
-        self.login_tries += 1
+
+class BlockedUser(models.Model):
+    full_name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
+
+    def __str__(self):
+        return '%s - %s' % (self.full_name, self.email)
+
+    @classmethod
+    def get_blocked(cls, full_name, email):
+        email_name = email.split('@')[0]
+        queryset_filter = Q(full_name__icontains=full_name.lower()) | Q(
+            email__icontains=email.lower()) | Q(email__icontains=email_name.lower())
+        try:
+            return cls.objects.get(queryset_filter)
+        except cls.MultipleObjectsReturned:
+            return cls.objects.filter(queryset_filter).first()

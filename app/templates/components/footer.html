@@ -4,10 +4,10 @@
     <!-- Grid container -->
     <div class="container-lg p-3">
         <div class="row">
-            <div class="col-6">
+            <div class="col-lg-6">
                 <p>{% translate "Have a question? We're happy to help!" %} {{ app_contact | urlize }}</p>
             </div>
-            <div class="col-6">
+            <div class="col-lg-6">
                 {% for name, info in app_socials.items %}
                     {% with url=info.0 icon=info.1 %}
                         <a target="_blank" title="{{ name }}" class="text-{% if theme == 'dark' %}white{% else %}black{% endif %} ms-1" href="{{ url }}" role="button"><i class="bi {{ icon }}"></i></a>
@@ -25,9 +25,9 @@
                 {# You can remove it, but if you dont care, please keep it. I'm a sentimental - Gerard Casas contact@gerard.space #}
                 <span style="display: none">BIENE {{ app_author }}</span>
                 <br><br>
-                <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/legal_notice/">{% translate 'Legal notice' %}</a> |
-                <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/terms_and_conditions/">{% translate 'Terms and conditions' %}</a> |
-                <a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/privacy_and_cookies/">{% translate 'Privacy and cookies' %}</a>
+                <a target="_blank" class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/legal_notice/">{% translate 'Legal notice' %}</a> |
+                <a target="_blank" class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/terms_and_conditions/">{% translate 'Terms and conditions' %}</a> |
+                <a target="_blank" class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" href="/privacy_and_cookies/">{% translate 'Privacy and cookies' %}</a>
             </p>
 
         </section>

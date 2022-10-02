@@ -1,5 +1,5 @@
 HACKATHON_NAME = 'HackUPC'
-HACKATHON_DESCRIPTION = 'Join us for BarcelonaTech\'s hackathon. 36h. 29th April - 1st May.'
+HACKATHON_DESCRIPTION = 'Join us for BarcelonaTech\'s hackathon. 36h.'
 HACKATHON_ORG = 'Hackers@UPC'
 
 HACKATHON_CONTACT_EMAIL = 'contact@hackupc.com'
@@ -16,6 +16,9 @@ HACKATHON_LANDING = 'https://hackupc.com'
 REGEX_HACKATHON_ORGANIZER_EMAIL = "^.*@hackupc\.com$"
 HACKATHON_ORGANIZER_EMAILS = []
 APP_NAME = 'MyHackUPC'
-APP_EMAIL = ''
+APP_EMAIL = 'MyHackUPC <server@my.hackupc.com>'
+
+# (OPTIONAL) Send 500 errors to email while on production mode
+HACKATHON_DEV_EMAILS = ['devs@hackupc.com', ]
 
 SUPPORTED_RESUME_EXTENSIONS = ['.pdf']

@@ -2,6 +2,22 @@ from django.conf import settings
 from django.urls import reverse
 
 from app.utils import get_theme
+from application.models import ApplicationTypeConfig
+
+
+def add_file_nav(nav, request):
+    application_types = ApplicationTypeConfig.get_type_files()
+    default_type_file = 'Hacker'
+    if default_type_file in application_types:
+        application_types.remove(default_type_file)
+        application_types.insert(0, default_type_file)
+    if len(application_types) > 0:
+        all_perm = request.user.has_perm('application.can_review_files')
+        for application_type in application_types:
+            if all_perm or request.user.has_perm('application.can_review_files_%s' % application_type.lower()):
+                nav.extend([('Files', reverse('file_review') + '?type=%s' % default_type_file), ])
+                return nav
+    return nav
 
 
 def get_main_nav(request):
@@ -10,13 +26,16 @@ def get_main_nav(request):
         if getattr(settings, 'HACKATHON_LANDING', None) is not None:
             nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
         return nav
-    if not request.user.is_organizer():
-        if getattr(settings, 'HACKATHON_LANDING', None) is not None:
-            nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
-        return nav
     if request.user.is_staff:
         nav.append(('Admin', reverse('admin:index')))
-    nav.extend([('Review', reverse('application_review')), ])
+    if request.user.is_organizer():
+        nav.extend([('Review', reverse('application_review')), ])
+        nav = add_file_nav(nav, request)
+    else:
+        if getattr(settings, 'HACKATHON_LANDING', None) is not None:
+            nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
+    if request.user.has_module_perms('event'):
+        nav.append(('Checkin', reverse('checkin_list')))
     return nav
 
 

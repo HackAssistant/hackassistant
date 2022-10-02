@@ -1,65 +1,20 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load util %}
+{% load static %}
 {% block subtitle %}{% translate 'Home' %}{% endblock %}
+{% block head %}
+    <script type="text/javascript" src="{% static 'lib/QRCode/qrcode.min.js' %}"></script>
+{% endblock %}
 {% block content %}
     <div>
         <h1 style="text-align: center">{% translate 'Home' %}</h1>
         <p>{% blocktrans %}This is the main application of {{ app_hack }}. From here you can apply as all the possible roles and participate to {{ app_hack }}.{% endblocktrans %}</p>
-        {% if not accepted_application %}
-            <p>{% blocktrans %}All the applications are reviewed by the organizing team, please be patient if your application is still on review.{% endblocktrans %}</p>
-            <h2>{% translate 'Applicable roles' %} <a class="h6" target="_blank" href="{{ app_landing }}">{% translate 'More info' %}</a></h2>
-
-            {% for application_type in application_types %}
-                <div class="list-group rounded-3" style="margin-bottom: 10px">
-                    {% if application_type.user_instance and application_type.user_instance.invited %}
-                        <div class="list-group-item list-group-item-{{ application_type.user_instance.get_public_status_color|default:theme }} {% if not application_type.user_instance and not application_type.active %}disabled{% endif %}">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h3 class="mb-1">{{ application_type.name }}</h3>
-                                {% if not application_type.user_instance %}
-                                <small>{% if application_type.closed %}{% translate 'Closed' %}{% elif application_type.active %}{% translate 'Open. Closes in' %} {{ application_type.time_left }}{% else %}{% translate 'Closed. Opens in' %} {{ application_type.time_left }}{% endif %}</small>
-                                {% endif %}
-                            </div>
-                            <p>
-                                <strong>{% translate 'Status' %} {% if not application_type.user_instance %}{% translate 'Not applied' %}</strong>{% else %}{{ application_type.user_instance.get_public_status_display }}</strong>: {{ application_type.user_instance.get_public_status_description }}{% endif %}
-                            </p>
-                            <div class="d-grid gap-4 d-flex justify-content-around">
-                                <a style="flex: inherit" href="{% url 'change_status_application' application_type.user_instance.get_uuid application_type.user_instance.STATUS_CANCELLED %}" onclick="return confirm('{% trans 'Are you sure you want to cancel this application?' %}')" class="btn btn-danger col-4">{% trans 'Cancel application' %}</a>
-                                <a style="flex: inherit" href="{% url 'edit_application' application_type.user_instance.get_uuid %}" class="btn btn-secondary col-4">{% trans 'View application' %}</a>
-                                <a style="flex: inherit" href="{% url 'change_status_application' application_type.user_instance.get_uuid application_type.user_instance.STATUS_CONFIRMED %}" onclick="return confirm('{% blocktrans %}Your {{ application_type }} invitation will be confirmed. This means that all your other applications will be cancelled. Are you sure you want to confirm this one?{% endblocktrans %}')" class="btn btn-primary col-4">{% trans 'Confirm invitation' %}</a>
-                        </div>
-                        </div>
-                    {% else %}
-                        <a href="{% if application_type.user_instance %}{% url 'edit_application' application_type.user_instance.get_uuid %}{% elif application_type.active %}{% url 'apply' %}?type={{ application_type.name }}{% endif %}" class="list-group-item list-group-item-action list-group-item-{{ application_type.user_instance.get_public_status_color|default:theme }} {% if not application_type.user_instance and not application_type.active %}disabled{% endif %}">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h3 class="mb-1">{{ application_type.name }}</h3>
-                                {% if not application_type.user_instance %}
-                                <small>{% if application_type.closed %}{% translate 'Closed' %}{% elif application_type.active %}{% translate 'Open. Closes in' %} {{ application_type.time_left }}{% else %}{% translate 'Closed. Opens in' %} {{ application_type.time_left }}{% endif %}</small>
-                                {% endif %}
-                            </div>
-                            <p>
-                                <strong>{% translate 'Status' %} {% if not application_type.user_instance %}{% translate 'Not applied' %}</strong>{% else %}{{ application_type.user_instance.get_public_status_display }}</strong>: {{ application_type.user_instance.get_public_status_description }}{% endif %}
-                            </p>
-                        </a>
-                    {% endif %}
-                </div>
-            {% endfor %}
-
-        {% else %}
-            <p>{% blocktrans %}You confirmed your {{ accepted_application.type.name }} application. See you soon at {{ app_hack }}.{% endblocktrans %}</p>
-            <div class="list-group rounded-3" style="margin-bottom: 10px">
-                <div class="list-group-item list-group-item-{{ accepted_application.get_public_status_color|default:theme }}">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h3 class="mb-1">{{ accepted_application.type.name }}</h3>
-                    </div>
-                    <p>
-                        <strong>{% translate 'Status' %} {{ accepted_application.get_public_status_display }}</strong>: {{ accepted_application.get_public_status_description }}
-                    </p>
-                    <div class="d-grid gap-4 d-flex justify-content-around">
-                        <a href="{% url 'change_status_application' accepted_application.get_uuid accepted_application.STATUS_CANCELLED %}" onclick="return confirm('{% trans 'Are you sure you want to cancel this application? You will lose your invitation.' %}')" class="btn btn-danger col-4">{% trans 'Cancel application' %}</a>
-                        <a style="flex: inherit" href="{% url 'edit_application' accepted_application.get_uuid %}" class="btn btn-secondary col-4">{% trans 'View application' %}</a>
-                    </div>
-                </div>
-            </div>
+        {% if user_applications %}
+            {% include 'application_home/user_applications.html' %}
+        {% endif %}
+        {% if apply_types and not user_applications_grouped|get_item:'C' and not user_applications_grouped|get_item:'A' %}
+            {% include 'application_home/apply.html' %}
         {% endif %}
 
     </div>

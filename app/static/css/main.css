@@ -9,13 +9,6 @@ body {
     font-family: ProximaNovaRegular, 'Roboto', sans-serif;
 }
 
-body.dark {
-    background-image: linear-gradient(#60288d, #8a69d4);
-}
-
-body.light {
-    background-image: linear-gradient(#60288d, #8a69d4);
-}
 
 .background {
 
@@ -85,8 +78,76 @@ footer {
     -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 992px) { /* Bootstrap lg */
-    .border-lg {
-        border: 0 !important;
-    }
+#popup-scan {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    z-index: 1251;
+}
+
+.scan-region-highlight {
+    border-radius: 30px;
+    outline: rgba(0, 0, 0, .25) solid 50vmax;
+}
+
+.scan-region-highlight-svg {
+    display: none;
+}
+
+.veil {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1250;
+    background-color:rgba(30,30,30,0.9);
+    backdrop-filter: blur(2px);
+    cursor: pointer;
+}
+
+.bg-diet-others {
+    background-color: #f5df5d;
+    color: black;
+}
+
+.bg-diet-gluten-free {
+    background-color: #f5df5d;
+    color: black;
+}
+
+.bg-diet-no-pork {
+    background-color: #eb6262;
+    color: black;
+}
+
+.bg-diet-vegetarian {
+    background-color: #a6bb33;
+    color: black;
+}
+
+.bg-diet-vegan {
+    background-color: #a6bb33;
+    color: black;
+}
+
+.bg-diet-none {
+    background-color: #f7f8f9;
+    color: black;
+}
+
+.bg-dark .bg-contrast {
+    background-color: rgba(255, 255, 255, 0.075);
+}
+
+.bg-light .bg-contrast {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+.g-recaptcha {
+    display: inline-block;
 }

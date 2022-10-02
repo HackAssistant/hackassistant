@@ -1,12 +1,12 @@
 {% load util %}
 {% for title, item in main_nav %}
     {% if item|get_type == 'str' %}
-        <li class="nav-item {% if request.path|nav_active:title %}border-bottom border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}{% endif %}">
-            <a class="nav-link" href="{{ item }}">{{ title }}</a>
+        <li class="nav-item {% if request.path|nav_active:title %}border-bottom border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}{% endif %} border-xl">
+            <a class="nav-link {% if request.path|nav_active:title %}active{% endif %}" href="{{ item }}">{{ title }}</a>
         </li>
     {% elif item|get_type == 'list' %}
-        <li class="nav-item dropdown {% if request.path|nav_active:title|lower %}border-bottom border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %}{% endif %}">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMainMenu{{ forloop.counter }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <li class="nav-item dropdown">
+            <a class="nav-link {% if request.path|nav_active:title|lower %}active{% endif %} dropdown-toggle" href="#" id="navbarDropdownMainMenu{{ forloop.counter }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ title }}
             </a>
             <ul class="dropdown-menu dropdown-menu-{{ theme }}" aria-labelledby="navbarDropdownMainMenu{{ forloop.counter }}">
@@ -14,7 +14,7 @@
                     {% if sub_item != 'divider' %}
                         <li><a class="dropdown-item text-reset" href="{{ sub_item }}">{{ sub_title }}</a></li>
                     {% else %}
-                        <li role="separator" class="divider"></li>
+                        <li><hr class="divider mt-1 mb-1"></li>
                     {% endif %}
                 {% endfor %}
             </ul>

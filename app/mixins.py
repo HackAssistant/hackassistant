@@ -1,13 +1,14 @@
 import copy
 
 from django import forms
+from django.contrib.auth.mixins import PermissionRequiredMixin as OverridePermissionRequiredMixin
 from django.forms import model_to_dict
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 
 class TabsViewMixin:
-    def get_current_tabs(self):
+    def get_current_tabs(self, **kwargs):
         return []
 
     def get_back_url(self):
@@ -15,7 +16,7 @@ class TabsViewMixin:
 
     def get_context_data(self, **kwargs):
         context = super(TabsViewMixin, self).get_context_data(**kwargs)
-        tabs = self.get_current_tabs()
+        tabs = self.get_current_tabs(**kwargs)
         new_tabs = []
         for tab in tabs:
             new_tab = {'title': tab[0], 'url': tab[1], 'needs_action': tab[2] if len(tab) > 2 else None,
@@ -112,3 +113,13 @@ class BootstrapFormMixin:
                     del visible[field['field'].auto_id]
             list_fields['visible'] = visible
         return result
+
+
+class PermissionRequiredMixin(OverridePermissionRequiredMixin):
+    def get_permission_required(self):
+        permissions = super().get_permission_required()
+        if isinstance(permissions, dict):
+            permissions = permissions.get(self.request.method, [])
+            if isinstance(permissions, str):
+                permissions = [permissions, ]
+        return permissions

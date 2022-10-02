@@ -1,18 +1,23 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
 
 from application import forms
-from application.models import Application, ApplicationTypeConfig, ApplicationLog
+from application.emails import send_email_to_blocked_admins
+from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition
 from user.forms import UserProfileForm
 from user.mixins import LoginRequiredMixin
+from user.models import BlockedUser
 
 
 class ApplicationHome(LoginRequiredMixin, TemplateView):
@@ -23,17 +28,27 @@ class ApplicationHome(LoginRequiredMixin, TemplateView):
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
+    def get_user_applications_grouped(self, user_applications):
+        result = {}
+        for user_application in user_applications:
+            status = user_application.get_public_status() if user_application.confirmed() else 'default'
+            aux = result.get(status, [])
+            aux.append(user_application)
+            result[status] = aux
+        return result
+
+    def get_application_type_left(self, user_applications):
+        user_types = [item.type_id for item in user_applications]
+        return ApplicationTypeConfig.objects.filter(public=True).exclude(id__in=user_types)\
+            .exclude(end_application_date__lt=timezone.now())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_applications = {app.type_id: app for app in Application.objects.filter(user=self.request.user)}
-        application_types = ApplicationTypeConfig.objects.filter(public=True)
-        accepted_application = None
-        for application_type in application_types:
-            application_type.user_instance = user_applications.get(application_type.id, None)
-            if application_type.user_instance is not None and application_type.user_instance.confirmed():
-                accepted_application = application_type.user_instance
-        context.update({'user_applications': user_applications.values(), 'accepted_application': accepted_application,
-                        'application_types': application_types})
+        user_applications = Application.objects.actual().filter(user=self.request.user)
+        user_applications_grouped = self.get_user_applications_grouped(user_applications)
+        apply_types = self.get_application_type_left(user_applications)
+        context.update({'user_applications': user_applications, 'user_applications_grouped': user_applications_grouped,
+                        'apply_types': apply_types, 'Application': Application})
         return context
 
 
@@ -41,8 +56,9 @@ class ApplicationApplyTemplate(TemplateView):
     template_name = 'application_form.html'
     public = True
 
-    def get_form(self):
-        application_type = self.request.GET.get('type', 'Hacker').lower().title()
+    @classmethod
+    def get_form(cls, type_name):
+        application_type = type_name.lower().title()
         ApplicationForm = getattr(forms, application_type + 'Form', None)
         if ApplicationForm is None:
             raise Http404()
@@ -53,26 +69,51 @@ class ApplicationApplyTemplate(TemplateView):
         application_type = get_object_or_404(ApplicationTypeConfig,
                                              name__iexact=self.request.GET.get('type', 'Hacker').lower(),
                                              public=self.public)
-        ApplicationForm = self.get_form()
+        ApplicationForm = self.get_form(type_name=self.request.GET.get('type', 'Hacker'))
         initial_data = {key: value for key, value in self.request.GET.dict().items()
                         if key not in ApplicationForm.exclude_save}
         if self.public:
             user_form = UserProfileForm(instance=self.request.user, initial=initial_data)
+            last_edition = Edition.get_last_edition()
+            if last_edition is not None:
+                try:
+                    last_edition_app = Application.objects.get(edition_id=last_edition, type=application_type,
+                                                               user=self.request.user)
+                    initial_data.update({key: value for key, value in last_edition_app.form_data.items()
+                                         if isinstance(value, str)})
+                except Application.DoesNotExist:
+                    pass
         else:
             user_form = UserProfileForm(initial=initial_data)
         context.update({'edit': False, 'application_form': ApplicationForm(initial=initial_data),
                         'application_type': application_type, 'user_form': user_form, 'public': self.public})
         return context
 
+    def block_application(self, user, application):
+        blocked_user = BlockedUser.get_blocked(full_name=user.get_full_name(), email=user.email)
+        application.status = Application.STATUS_BLOCKED
+        User = get_user_model()
+        perms = ['can_review_blocked_application', 'can_review_blocked_application_%s' %
+                 application.type.name.lower()]
+        users_emails = User.get_users_with_permissions(perms).values_list('email', flat=True)
+        send_email_to_blocked_admins(self.request, users_emails, application=application, blocked_user=blocked_user)
+
     def save_application(self, form, app_type, user):
         try:
             if not self.public:
                 raise Application.DoesNotExist()
-            Application.objects.get(user=user, type__name__iexact=self.request.GET.get('type', 'Hacker').lower())
+            Application.objects.get(user=user, type_id=app_type.pk, edition=Edition.get_default_edition())
         except Application.DoesNotExist:
             instance = form.save(commit=False)
             instance.user = user
             instance.type_id = app_type.pk
+            if app_type.auto_confirm:
+                instance.status = Application.STATUS_CONFIRMED
+            if app_type.blocklist:
+                try:
+                    self.block_application(user, application=instance)
+                except BlockedUser.DoesNotExist:
+                    pass
             with transaction.atomic():
                 instance.save()
                 form.save_files(instance=instance)
@@ -84,7 +125,7 @@ class ApplicationApplyTemplate(TemplateView):
 
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
-        ApplicationForm = self.get_form()
+        ApplicationForm = self.get_form(type_name=self.request.GET.get('type', 'Hacker'))
         application_form = ApplicationForm(request.POST, request.FILES)
         if self.public:
             user_form = UserProfileForm(request.POST, instance=request.user)
@@ -129,12 +170,15 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
 
     def get_application(self):
         application = get_object_or_404(Application, uuid=self.kwargs.get('uuid'))
-        if not self.request.user.is_organizer() and self.request.user != application.user:
+        if self.request.user != application.user and not (self.request.user.is_organizer() and
+                                                          (self.request.user.has_perm('change_application') or
+                                                           self.request.user.has_perm('change_application_%s' %
+                                                                                      application.type.name.lower()))):
             raise PermissionDenied()
         return application
 
     def application_can_edit(self, application, application_type):
-        return self.request.user.is_organizer or (application.can_edit() and application_type.active())
+        return self.request.user.is_organizer() or (application.can_edit() and application_type.active())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -145,6 +189,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
         user_form = UserProfileForm(instance=application.user)
         if not self.application_can_edit(application, application_type):
             application_form.set_read_only()
+            user_form.set_read_only()
         context.update({'edit': True, 'application_form': application_form, 'full_name': application.get_full_name(),
                         'application_type': application_type, 'user_form': user_form})
         return context
@@ -238,4 +283,11 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
         with transaction.atomic():
             application.save()
             log.save()
+            if new_status == Application.STATUS_ATTENDED:
+                group = Group.objects.get_or_create(application.type.name)
+                group.user_set.add(application.user)
+            if new_status == application.STATUS_CONFIRMED:
+                Application.objects.actual().exclude(uuid=application.get_uuid)\
+                    .filter(user=application.user, type__compatible_with_others=False)\
+                    .update(status=Application.STATUS_CANCELLED, status_update_date=timezone.now())
         return redirect(next_page)

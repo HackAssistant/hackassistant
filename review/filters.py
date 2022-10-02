@@ -14,6 +14,13 @@ class ApplicationTableFilterForm(BootstrapFormMixin, forms.Form):
     }
 
 
+class ApplicationTableFilterFormWithPromotion(ApplicationTableFilterForm):
+    bootstrap_field_info = {'': {
+        'fields': [{'name': 'search', 'space': 8}, {'name': 'user__under_age', 'space': 2},
+                   {'name': 'promotional_code', 'space': 2}, {'name': 'status', 'space': 12}, {'name': 'type'}]},
+    }
+
+
 class ApplicationTableFilter(filters.FilterSet):
     search = filters.CharFilter(method='search_filter', label=_('Search'))
     status = filters.MultipleChoiceFilter(choices=Application.STATUS,
@@ -28,3 +35,9 @@ class ApplicationTableFilter(filters.FilterSet):
         model = Application
         fields = ['search', 'status', 'type', 'user__under_age']
         form = ApplicationTableFilterForm
+
+
+class ApplicationTableFilterWithPromotion(ApplicationTableFilter):
+    class Meta(ApplicationTableFilter.Meta):
+        fields = ['search', 'status', 'type', 'user__under_age', 'promotional_code']
+        form = ApplicationTableFilterFormWithPromotion

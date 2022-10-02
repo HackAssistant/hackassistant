@@ -59,13 +59,13 @@ def check_client_ip(view_func):
             print(request_time)
             try:
                 login_request = LoginRequest.objects.get(ip=client_ip)
-                latest_request = login_request.get_latest_request()
+                latest_request = login_request.latest_request
                 if request_time - latest_request < timedelta(minutes=5):
-                    login_request.increment_tries()
+                    login_request.login_tries += 1
                 else:
                     login_request.reset_tries()
                 if login_request.login_tries < getattr(settings, 'LOGIN_TRIES', 4):
-                    login_request.set_latest_request(request_time)
+                    login_request.latest_request = request_time
                     login_request.save()
             except LoginRequest.DoesNotExist:
                 login_request = LoginRequest.objects.create(ip=client_ip, latest_request=request_time)
