@@ -29,6 +29,7 @@ urlpatterns = [
     path('auth/', include('user.urls')),
     path('application/', include('application.urls')),
     path('review/', include('review.urls')),
+    path('friends/', include('friends.urls')),
     path('event/', include('event.urls')),
 ]
 
