@@ -15,5 +15,3 @@ def get_random_string():
 class FriendsCode(models.Model):
     code = models.CharField(default=get_random_string, max_length=getattr(settings, "FRIEND_CODE_LENGTH", 13))
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
-
