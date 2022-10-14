@@ -8,8 +8,6 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
 from app.utils import full_cache
@@ -57,7 +55,6 @@ class Edition(models.Model):
 
 class ApplicationTypeConfig(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    public = models.BooleanField(default=True)
     start_application_date = models.DateTimeField(default=timezone.now, null=True)
     end_application_date = models.DateTimeField(default=timezone.now, null=True)
     file_review_fields = models.CharField(blank=True, max_length=200)
@@ -66,6 +63,17 @@ class ApplicationTypeConfig(models.Model):
     blocklist = models.BooleanField(default=True, help_text=_('Applications pass test of blocklist table on apply'))
     auto_confirm = models.BooleanField(default=False, help_text=_('Applications set on status confirmed by default'))
     compatible_with_others = models.BooleanField(default=False, help_text=_('User can confirm in more than one type'))
+    create_user = models.BooleanField(default=True, help_text=_('Setting this to True creates a user if it was not '
+                                                                'authenticated create a user for him to enter later'))
+    only_authenticated = models.BooleanField(default=False, help_text=_('Setting this to True, user will need to be '
+                                                                        'authenticated tp apply'))
+    hidden = models.BooleanField(default=False, help_text=_('Setting this to True doesn\'t show the application '
+                                                            'to registered users'))
+    token = models.UUIDField(default=uuid.uuid4)
+
+    @property
+    def get_token(self):
+        return str(self.token)
 
     def get_description(self):
         from application import forms
@@ -88,13 +96,6 @@ class ApplicationTypeConfig(models.Model):
 
     def dubious_enabled(self):
         return self.dubious and not self.auto_confirm
-
-    @property
-    def get_token(self):
-        return urlsafe_base64_encode(force_bytes(self.id))
-
-    def token_is_valid(self, token):
-        return force_str(urlsafe_base64_decode(token)) == str(self.id)
 
     def __str__(self):
         return self.name

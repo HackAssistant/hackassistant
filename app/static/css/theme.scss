@@ -65,6 +65,14 @@ $table-variants: (
     color: $white;
 }
 
+.dark .btn-close {
+    filter: invert(1);
+}
+
+.dark .modal-backdrop {
+    --bs-backdrop-bg: rgb(75, 75, 75)
+}
+
 body.light {
   background-image: linear-gradient(darken($primary, 15%), $primary);
 }
