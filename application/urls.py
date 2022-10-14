@@ -5,7 +5,6 @@ from application import views
 urlpatterns = [
     path('', views.ApplicationHome.as_view(), name='apply_home'),
     path('apply/', views.ApplicationApply.as_view(), name='apply'),
-    path('apply/<str:token>/', views.ApplicationApplyPrivate.as_view(), name='apply_private'),
     path('<str:uuid>/', views.ApplicationEdit.as_view(), name='edit_application'),
     path('<str:uuid>/change_status/<str:status>/', views.ApplicationChangeStatus.as_view(),
          name='change_status_application'),

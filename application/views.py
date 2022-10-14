@@ -1,21 +1,25 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.exceptions import PermissionDenied
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
-from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import urlencode
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
+from uuid import UUID
 
 from application import forms
 from application.emails import send_email_to_blocked_admins
 from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition
-from user.forms import UserProfileForm
+from user.forms import UserProfileForm, RecaptchaForm
 from user.mixins import LoginRequiredMixin
 from user.models import BlockedUser
 
@@ -39,7 +43,7 @@ class ApplicationHome(LoginRequiredMixin, TemplateView):
 
     def get_application_type_left(self, user_applications):
         user_types = [item.type_id for item in user_applications]
-        return ApplicationTypeConfig.objects.filter(public=True).exclude(id__in=user_types)\
+        return ApplicationTypeConfig.objects.filter(hidden=False).exclude(id__in=user_types)\
             .exclude(end_application_date__lt=timezone.now())
 
     def get_context_data(self, **kwargs):
@@ -52,41 +56,73 @@ class ApplicationHome(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ApplicationApplyTemplate(TemplateView):
+class ApplicationApply(TemplateView):
     template_name = 'application_form.html'
     public = True
 
+    def dispatch(self, request, *args, **kwargs):
+        app_type = self.request.GET.get('type', None)
+        this_edition = Edition.get_default_edition()
+        try:
+            application_type = get_object_or_404(ApplicationTypeConfig,
+                                                 name__iexact=self.request.GET.get('type', 'Hacker').lower(),
+                                                 token=self.request.GET.get('token', None))
+        except ValidationError:
+            raise Http404
+        if request.user.is_authenticated and request.user.email_verified:
+            try:
+                Application.objects.get(user=request.user, type__name=app_type, edition=this_edition)
+                messages.warning(request, _('You have already applied!'))
+                return redirect(reverse('apply_home'))
+            except Application.DoesNotExist:
+                pass
+        elif application_type.only_authenticated:
+            return redirect(reverse('login') + '?' + urlencode({'next': request.get_full_path()}))
+        kwargs['application_type'] = application_type
+        return super().dispatch(request, *args, **kwargs)
+
     @classmethod
-    def get_form(cls, type_name):
+    def get_form_class(cls, type_name):
         application_type = type_name.lower().title()
         ApplicationForm = getattr(forms, application_type + 'Form', None)
         if ApplicationForm is None:
             raise Http404()
         return ApplicationForm
 
+    def update_from_last_edition_application(self, application_type, initial_data):
+        last_edition = Edition.get_last_edition()
+        try:
+            last_edition_app = Application.objects.get(edition_id=last_edition, type=application_type,
+                                                       user=self.request.user)
+            initial_data.update({key: value for key, value in last_edition_app.form_data.items()
+                                 if isinstance(value, str)})
+        except Application.DoesNotExist:
+            pass
+
+    def get_forms(self, application_type, application_form_class):
+        initial_data = {key: value for key, value in self.request.GET.dict().items()
+                        if key not in application_form_class.exclude_save}
+        if self.request.user.is_authenticated:
+            self.update_from_last_edition_application(application_type, initial_data)
+        app_form_kwargs = {'initial': initial_data}
+        user_form_kwargs = app_form_kwargs.copy()
+        if self.request.user.is_authenticated:
+            user_form_kwargs['instance'] = self.request.user
+        recaptcha_form = None
+        if not self.request.user.is_authenticated and getattr(settings, 'RECAPTCHA_REGISTER', False) and \
+                RecaptchaForm.active():
+            recaptcha_form = RecaptchaForm(request=self.request)
+        return application_form_class(**app_form_kwargs), UserProfileForm(**user_form_kwargs), recaptcha_form
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        application_type = get_object_or_404(ApplicationTypeConfig,
-                                             name__iexact=self.request.GET.get('type', 'Hacker').lower(),
-                                             public=self.public)
-        ApplicationForm = self.get_form(type_name=self.request.GET.get('type', 'Hacker'))
-        initial_data = {key: value for key, value in self.request.GET.dict().items()
-                        if key not in ApplicationForm.exclude_save}
-        if self.public:
-            user_form = UserProfileForm(instance=self.request.user, initial=initial_data)
-            last_edition = Edition.get_last_edition()
-            if last_edition is not None:
-                try:
-                    last_edition_app = Application.objects.get(edition_id=last_edition, type=application_type,
-                                                               user=self.request.user)
-                    initial_data.update({key: value for key, value in last_edition_app.form_data.items()
-                                         if isinstance(value, str)})
-                except Application.DoesNotExist:
-                    pass
-        else:
-            user_form = UserProfileForm(initial=initial_data)
-        context.update({'edit': False, 'application_form': ApplicationForm(initial=initial_data),
-                        'application_type': application_type, 'user_form': user_form, 'public': self.public})
+        application_type = kwargs.get('application_type')
+
+        application_form_class = self.get_form_class(type_name=self.request.GET.get('type', 'Hacker'))
+        application_form, user_form, recaptcha_form = self.get_forms(application_type, application_form_class)
+
+        context.update({'edit': False, 'application_form': application_form, 'application_type': application_type,
+                        'user_form': user_form, 'recaptcha_form': recaptcha_form})
         return context
 
     def block_application(self, user, application):
@@ -120,43 +156,49 @@ class ApplicationApplyTemplate(TemplateView):
         except Application.MultipleObjectsReturned:
             pass
 
-    def save_user(self, form):
-        pass
+    def save_user(self, form, create_active_user):
+        user = form.save(commit=False)
+        user_registered = False
+        if user._state.db is None and not create_active_user:
+            user.is_active = False
+        elif user._state.db is None:
+            user_registered = True
+        user.save()
+        return user, user_registered
+
+    def forms_are_valid(self, user_form, application_form, context):
+        if getattr(settings, 'RECAPTCHA_REGISTER', False) and RecaptchaForm.active():
+            recaptcha_form = RecaptchaForm(self.request.POST, request=self.request)
+            if not recaptcha_form.is_valid():
+                context.update({'recaptcha_form': recaptcha_form})
+                return False
+        return user_form.is_valid() and application_form.is_valid()
 
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
-        ApplicationForm = self.get_form(type_name=self.request.GET.get('type', 'Hacker'))
-        application_form = ApplicationForm(request.POST, request.FILES)
-        if self.public:
-            user_form = UserProfileForm(request.POST, instance=request.user)
-        else:
-            user_form = UserProfileForm(request.POST)
-        if user_form.is_valid() and application_form.is_valid():
-            user = user_form.save()
-            self.save_application(form=application_form, app_type=context['application_type'], user=user)
-            messages.success(request, _('Applied successfully!'))
-            return redirect('apply_home')
+        application_type = context.get('application_type')
+        application_form_class = self.get_form_class(type_name=self.request.GET.get('type', 'Hacker'))
+        application_form = application_form_class(request.POST, request.FILES)
+        user_form_kwargs = {}
+        if self.request.user.is_authenticated:
+            user_form_kwargs['instance'] = self.request.user
+        user_form = UserProfileForm(request.POST, **user_form_kwargs)
+        if self.forms_are_valid(user_form, application_form, context):
+            user, registered = self.save_user(user_form, application_type.create_user)
+            self.save_application(form=application_form, app_type=application_type, user=user)
+            return self.success_response(application_type, registered, user)
         context.update({'application_form': application_form, 'user_form': user_form})
         return self.render_to_response(context)
 
-
-class ApplicationApply(LoginRequiredMixin, ApplicationApplyTemplate):
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_organizer():
-            return self.handle_no_permission()
-        return super().dispatch(request, *args, **kwargs)
-
-
-class ApplicationApplyPrivate(ApplicationApplyTemplate):
-    public = False
-
-    def dispatch(self, request, *args, **kwargs):
-        application_type = get_object_or_404(ApplicationTypeConfig,
-                                             name__iexact=self.request.GET.get('type', 'Hacker').lower(),
-                                             public=self.public)
-        if not application_type.token_is_valid(kwargs.get('token')):
-            raise PermissionDenied()
-        return super().dispatch(request, *args, **kwargs)
+    def success_response(self, application_type, registered, user):
+        messages.success(self.request, _('Applied successfully!'))
+        if application_type.create_user and registered:
+            token = PasswordResetTokenGenerator().make_token(user)
+            uuid = user.get_encoded_pk()
+            return redirect(reverse('password_reset', kwargs={'uid': uuid, 'token': token}))
+        elif not application_type.create_user and not self.request.user.is_authenticated:
+            return render(self.request, 'application_success.html', {'application_type': application_type})
+        return redirect('apply_home')
 
 
 class ApplicationEdit(LoginRequiredMixin, TemplateView):

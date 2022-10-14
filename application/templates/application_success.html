@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+{% load perms %}
+{% block subtitle %}{% blocktrans %}Applying as {{ application_type }}{% endblocktrans %}{% endblock %}
+{% block content %}
+    <h1 style="text-align: center">{% blocktrans %}Applying as {{ application_type }}{% endblocktrans %}</h1>
+
+    <h2>{% translate 'You have applied successfully!' %}</h2>
+
+{% endblock %}
