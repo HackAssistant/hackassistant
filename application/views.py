@@ -6,7 +6,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.db import transaction
-from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -14,7 +14,6 @@ from django.utils.http import urlencode
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
-from uuid import UUID
 
 from application import forms
 from application.emails import send_email_to_blocked_admins
