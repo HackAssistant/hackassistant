@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from app import views
+from app.utils import is_installed
 
 urlpatterns = [
     path('', views.BaseView.as_view(), name='home'),
@@ -29,9 +30,11 @@ urlpatterns = [
     path('auth/', include('user.urls')),
     path('application/', include('application.urls')),
     path('review/', include('review.urls')),
-    path('friends/', include('friends.urls')),
     path('event/', include('event.urls')),
 ]
+
+if is_installed("friends"):
+    urlpatterns.append(path('friends/', include('friends.urls')))
 
 # JWT fake login on DEBUG for development purposes
 if getattr(settings, 'DEBUG', True):

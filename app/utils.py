@@ -24,3 +24,7 @@ def full_cache(func):
             cache.set(func.__qualname__, result, 60 * 60 * 24 * 360)
         return result
     return wrapper
+
+
+def is_installed(app):
+    return app in settings.INSTALLED_APPS
