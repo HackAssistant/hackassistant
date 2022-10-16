@@ -15,7 +15,7 @@
     {% if edit %}
         <div class="list-group rounded-3" style="margin-bottom: 10px; padding: calc(var(--bs-gutter-x) * .5);">
             <div class="list-group-item list-group-item-{% if request.user.is_organizer %}{{ application_form.instance.get_status_color|default:theme }}{% else %}{{ application_form.instance.get_public_status_color|default:theme }}{% endif %}" style="text-align: center">
-                <h3 class="mb-1">{% translate 'Status' %} {% if request.user.is_organizer %}{{ application_form.instance.get_status_display }}{% else %}{{ application_form.instance.get_public_status_display }}{% endif %}</h3>
+                <h3 class="mb-1">{% if request.user.is_organizer %}{{ application_form.instance.get_status_display }}{% else %}{{ application_form.instance.get_public_status_display }}{% endif %}</h3>
                 <p>
                     {{ application_form.instance.get_public_status_description }}
                 </p>
@@ -25,11 +25,20 @@
 
 
     <form method="post" enctype="multipart/form-data" class="mt-4">
+        {% if not request.user.is_authenticated %}
+            <p><i class="bi bi-exclamation-triangle-fill text-warning"></i> {% translate 'If you already have a user on this app, ' %}<a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">log in first</a></p>
+        {% endif %}
         {% csrf_token %}
         {% include 'components/bootstrap5_form.html' with form=user_form only_errors=True %}
         {% include 'components/bootstrap5_form.html' with form=application_form only_errors=True %}
+        {% include 'components/bootstrap5_form.html' with form=recaptcha_form only_errors=True %}
         {% include 'components/bootstrap5_form.html' with form=user_form only_form=True %}
         {% include 'components/bootstrap5_form.html' with form=application_form only_form=True %}
+        {% for field in recaptcha_form %}
+            <div class="text-center mb-1">
+                {{ field }}
+            </div>
+        {% endfor %}
 
         <div class="row justify-content-around">
             {% if edit and not request.user.is_organizer %}

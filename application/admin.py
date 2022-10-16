@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 
 from application import models
-from application.views import ApplicationApplyTemplate
+from application.views import ApplicationApply
 
 
 class ApplicationAdmin(admin.ModelAdmin):
@@ -15,7 +15,7 @@ class ApplicationTypeConfigAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if 'instance' in kwargs:
             self.initial['file_review_fields'] = kwargs['instance'].get_file_review_fields()
-            ApplicationForm = ApplicationApplyTemplate.get_form(kwargs['instance'].name)
+            ApplicationForm = ApplicationApply.get_form_class(kwargs['instance'].name)
             choices = []
             for name, field in ApplicationForm().declared_fields.items():
                 if isinstance(field, forms.FileField):
@@ -29,6 +29,10 @@ class ApplicationTypeConfigAdminForm(forms.ModelForm):
 
 class ApplicationTypeConfigAdmin(admin.ModelAdmin):
     form = ApplicationTypeConfigAdminForm
+    exclude = ('name', )
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class PromotionalCodeAdmin(admin.ModelAdmin):
