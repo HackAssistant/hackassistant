@@ -12,6 +12,8 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
 
+from app.mixins import TabsViewMixin
+from app.utils import is_installed
 from application import forms
 from application.emails import send_email_to_blocked_admins
 from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition
@@ -20,8 +22,16 @@ from user.mixins import LoginRequiredMixin
 from user.models import BlockedUser
 
 
-class ApplicationHome(LoginRequiredMixin, TemplateView):
+class ApplicationHome(LoginRequiredMixin, TabsViewMixin, TemplateView):
     template_name = 'application_home.html'
+
+    def get_current_tabs(self, **kwargs):
+        tabs = [("Applications", reverse("apply_home"))]
+        edition = Edition.get_default_edition()
+        if is_installed("friends") and Application.objects.filter(type__name="Hacker", user=self.request.user,
+                                                                  edition=edition).exists():
+            tabs.append(("Friends", reverse("join_friends")))
+        return tabs if len(tabs) > 1 else []
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.is_organizer():
