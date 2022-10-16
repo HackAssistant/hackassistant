@@ -99,7 +99,8 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
                                                       status=Application.STATUS_BLOCKED,
                                                       status_update_date__gt=(timezone.now() -
                                                                               timezone.timedelta(days=3))).exists()
-        context.update({'dubious': dubious, 'Application': Application, 'blocked': blocked})
+        context.update({'dubious': dubious, 'Application': Application, 'blocked': blocked,
+                        'apply_url': self.request.build_absolute_uri(reverse('apply'))})
         return context
 
 

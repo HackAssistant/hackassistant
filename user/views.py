@@ -234,7 +234,7 @@ class ChangePassword(TemplateView):
             context.update({'user': user})
         except User.DoesNotExist:
             form.add_error(None, _('Invalid link'))
-        context.update({'form': form})
+        context.update({'form': form, 'new': self.request.GET.get('new', None)})
         return context
 
     def post(self, request, **kwargs):
