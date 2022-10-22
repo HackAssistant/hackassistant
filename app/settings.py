@@ -58,12 +58,13 @@ INSTALLED_APPS = [
     'colorfield',
     'corsheaders',
     'django_crontab',
+    'axes',
     'user',
     'application',
     'review',
     'friends',
     'event',
-    'axes',
+    'stats',
 ]
 
 MIDDLEWARE = [

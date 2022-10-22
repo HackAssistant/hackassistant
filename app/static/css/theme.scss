@@ -92,3 +92,21 @@ body.dark {
         border: 0 !important;
     }
 }
+
+.dark {
+    .c3-axis-y text {
+       fill: #eeeeee;
+    }
+    .c3-axis-x text {
+        fill: #eeeeee;
+    }
+    .c3-legend-item {
+        fill: #eeeeee;
+    }
+    .c3 .c3-axis line, .c3 .c3-axis path {
+        stroke: #EEEEEE;
+    }
+    .c3-tooltip tr {
+        color: #222222;
+    }
+}
