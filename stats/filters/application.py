@@ -3,9 +3,8 @@ from django import forms
 from django.utils.translation import gettext as _
 
 from app.mixins import BootstrapFormMixin
-from application.models import ApplicationTypeConfig, Application, Edition
+from application.models import ApplicationTypeConfig, Application
 from stats.base import StatsFilterMixin
-from user.models import User
 
 
 class ApplicationStatsFilterForm(BootstrapFormMixin, forms.Form):

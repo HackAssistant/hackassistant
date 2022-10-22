@@ -2,7 +2,6 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
-from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 
 from app.mixins import TabsViewMixin
