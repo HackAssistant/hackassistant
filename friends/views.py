@@ -1,14 +1,26 @@
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import TemplateView
 
+from app.mixins import TabsViewMixin
+from application.models import Application, Edition
 from friends.forms import FriendsForm
 from friends.models import FriendsCode
 
 
-class JoinFriendsView(TemplateView):
+class JoinFriendsView(TabsViewMixin, TemplateView):
     template_name = "join_friends.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        edition = Edition.get_default_edition()
+        if not Application.objects.filter(type__name="Hacker", user=request.user, edition=edition).exists():
+            raise PermissionDenied()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_current_tabs(self, **kwargs):
+        return [("Applications", reverse("apply_home")), ("Friends", reverse("join_friends"))]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -21,7 +33,7 @@ class JoinFriendsView(TemplateView):
 
     def post(self, request, **kwargs):
         action = request.POST.get("action")
-        if action not in ["create", "join"]:
+        if action not in ["create", "join", "leave"]:
             return HttpResponseBadRequest()
         method = getattr(self, action)
         return method()
@@ -44,3 +56,11 @@ class JoinFriendsView(TemplateView):
         context = self.get_context_data()
         context.update({"friends_form": form})
         return self.render_to_response(context)
+
+    def leave(self, **kwargs):
+        try:
+            friends_code = FriendsCode.objects.get(user=self.request.user)
+            friends_code.delete()
+        except FriendsCode.DoesNotExist:
+            pass
+        return redirect(reverse("join_friends"))
