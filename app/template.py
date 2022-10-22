@@ -29,13 +29,15 @@ def get_main_nav(request):
     if request.user.is_staff:
         nav.append(('Admin', reverse('admin:index')))
     if request.user.is_organizer():
-        nav.extend([('Review', reverse('application_review')), ])
+        nav.extend([('Review', reverse('application_review')),])
         nav = add_file_nav(nav, request)
     else:
         if getattr(settings, 'HACKATHON_LANDING', None) is not None:
             nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
     if request.user.has_module_perms('event'):
         nav.append(('Checkin', reverse('checkin_list')))
+    if request.user.is_organizer():
+        nav.extend([('Stats', reverse('stats_home'))])
     return nav
 
 

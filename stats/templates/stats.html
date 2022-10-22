@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'lib/c3.min.css' %}">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="{% static 'lib/c3.min.js' %}" charset="utf-8"></script>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-lg-10">
+            <h1>{{ name }} stats</h1>
+        </div>
+        <div class="col-lg-2">
+            <div class="col-12 d-grid d-md-block">
+                <button type="button" class="btn btn-secondary col-12" data-bs-toggle="modal" data-bs-target="#filterModal">Filter</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade modal-xl" id="filterModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-{{ theme }}">
+                <form method="get" id="filter_form">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="filterModalLabel">Filter</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% include 'components/bootstrap5_form.html' with form=filter.form %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="filter_button">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6"><small><b>Total {{ name|lower }}s:</b> <span id="number_total"></span></small></div>
+        <div class="col-6 text-end"><small><b>Last updated:</b> <span id="update_date"></span> minutes ago <i id="update_cache" class="bi bi-arrow-repeat" style="cursor: pointer" title="Update cache"></i></small></div>
+    </div>
+
+    <div class="row align-content-center mt-3" id="stats_div"></div>
+    {{ stats.json|json_script:"stats-data" }}
+    <script>
+        $(document).ready(() => {
+            function convert_data(field_name, data_field) {
+                return Object.keys(data_field).map((key) => {
+                    let item = { {{ name }}: data_field[key]}
+                    item[field_name] = key
+                    return item
+                })
+            }
+            function bar_chart(field_name, data) {
+                c3.generate({
+                    bindto: '#' + field_name + '_stat',
+                    data: {
+                        json: convert_data(field_name, data[field_name]),
+                        type: 'bar',
+                        keys: {
+                            x: field_name,
+                            value: ['{{ name }}']
+                        },
+                    },
+                    axis: {
+                        x: {
+                            type: 'category'
+                        }
+                    }
+                })
+            }
+            function donut_chart(field_name, data) {
+                c3.generate({
+                    bindto: '#' + field_name + '_stat',
+                    data: {
+                        json: data[field_name],
+                        type: 'donut'
+                    },
+                    donut: {
+                        label: {
+                            format: function (value, ratio, id) {
+                                return value;
+                            }
+                        }
+                    }
+                })
+            }
+            function timeseries_chart(field_name, data) {
+                c3.generate({
+                    bindto: '#' + field_name + '_stat',
+                    data: {
+                        json: convert_data(field_name, data[field_name]),
+                        keys: {
+                            x: field_name,
+                            value: ['{{ name }}']
+                        }
+                    },
+                    axis: {
+                        x: {
+                            type: 'timeseries',
+                            tick: {
+                                format: '%Y-%m-%d'
+                            }
+                        }
+                    }
+                });
+            }
+            function objectifyArray(array) {
+                let returnArray = {}
+                for (let i = 0; i < array.length; i++) {
+                    let aux = returnArray[array[i]['name'] ?? array[i][0]]
+                    let val = array[i]['value'] ?? array[i][1]
+                    if (aux === undefined) {
+                        aux = val
+                    } else if (Array.isArray(aux)) {
+                        aux.push(val)
+                    } else {
+                        aux = [aux, val]
+                    }
+                    returnArray[array[i]['name'] ?? array[i][0]] = aux
+                }
+                return returnArray
+            }
+            let charts = {bar: bar_chart, donut: donut_chart, timeseries: timeseries_chart}
+            let stats = JSON.parse(document.getElementById('stats-data').textContent).sort((a, b) => a.order - b.order)
+            function toTitleCase(str) {
+                return [str.replace('_', ' ').toLowerCase()].map(function (word) {
+                    return (word.charAt(0).toUpperCase() + word.slice(1));
+                }).join(' ');
+            }
+            function update_chart(force=false, filter=false) {
+                let stats_div = $('#stats_div')
+                stats_div.empty()
+                let data = {}
+                if (force) {
+                    data['update_cache'] = 'true'
+                }
+                data = {
+                    ...objectifyArray(Array.from(new URLSearchParams(location.hash.replace('#', '')))),
+                    ...objectifyArray($('#filter_form').serializeArray()),
+                    ...data
+                }
+                let get_parameters = $.param(data, true)
+                location.hash = get_parameters
+                $.getJSON('{% url 'stats_data' name %}?' + get_parameters, {}, (data) => {
+                    $('#update_date').text(data['updated_time'])
+                    $('#number_total').text(data['total'])
+                    if (data['total'] > 0) {
+                        stats.forEach((item) => {
+                            if (data[item.field_name] !== undefined && !$.isEmptyObject(data[item.field_name])) {
+                                stats_div.append(`<div class="col-md-${item.col ?? 12}"><h3>${toTitleCase(item.field_name)}</h3><div id="${item.field_name}_stat"></div></div>`);
+                                charts[item.field_type](item.field_name, data);
+                            }
+                        })
+                    } else {
+                        stats_div.append('<p>No {{ name }}s found</p>')
+                    }
+                })
+            }
+            update_chart()
+            $('#update_cache').on('click', () => {update_chart(true)})
+            $('#filter_button').on('click', () => {update_chart(false)})
+        })
+    </script>
+{% endblock %}

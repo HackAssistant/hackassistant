@@ -80,8 +80,17 @@
                     let formArray = form.serializeArray()
                     //serialize data function
                     let returnArray = {}
-                    for (let i = 0; i < formArray.length; i++){
-                        returnArray[formArray[i]['name']] = formArray[i]['value']
+                    for (let i = 0; i < formArray.length; i++) {
+                        let aux = returnArray[formArray[i]['name']]
+                        let val = formArray[i]['value']
+                        if (aux === undefined) {
+                            aux = val
+                        } else if (Array.isArray(aux)) {
+                            aux.push(val)
+                        } else {
+                            aux = [aux, val]
+                        }
+                        returnArray[formArray[i]['name']] = aux
                     }
                     return returnArray
                 }
