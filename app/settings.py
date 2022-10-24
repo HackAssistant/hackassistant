@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app.middlewares.TimezoneMiddleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -108,13 +109,27 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db' / 'db.sqlite3',
-    }
-}
+DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite3')
+DB_ENGINE = DB_ENGINE if DB_ENGINE in ['sqlite3', 'postgresql', 'mysql', 'oracle'] else 'sqlite3'
 
+if DB_ENGINE == 'sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db' / 'db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.%s' % DB_ENGINE,
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST'),
+            'PORT': os.environ.get('DB_PORT'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -161,6 +176,8 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+USE_L10N = True
 
 
 # Static files (CSS, JavaScript, Images) & compressor
@@ -277,6 +294,11 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', None)
 EMAIL_PORT = os.environ.get('EMAIL_PORT', None)
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
+ADMINS_EMAIL = os.environ.get('ADMINS_EMAIL', '').split(',')
+try:
+    ADMINS = [(email.split('@')[0].replace('.', ' ').title(), email) for email in ADMINS_EMAIL]
+except:
+    ADMINS = []
 
 # Load filebased email backend if no Sendgrid credentials and debug mode
 if not SENDGRID_API_KEY and not EMAIL_HOST and DEBUG:
@@ -287,6 +309,57 @@ else:
         EMAIL_BACKEND = "sgbackend.SendGridBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Logging system
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': True,
+            },
+        },
+    }
+else:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'console': {
+                'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'console'
+            },
+            'mail_admins': {
+                'level': 'ERROR',
+                'class': 'django.utils.log.AdminEmailHandler',
+                'include_html': True,
+            }
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console', 'mail_admins'],
+                'level': 'INFO',
+                'propagate': True,
+            },
+        }
+    }
+
+SESSION_COOKIE_AGE = 86400
 
 # Cache system
 CACHES = {
