@@ -21,6 +21,9 @@ class BaseStats(object):
                     value = data.get(stat[1].field_name, None)
                     value = stat[1].update_field(value, instance)
                     data[stat[1].field_name] = value
+        for stat in inspect.getmembers(self):
+            if not stat[0].startswith('_') and isinstance(stat[1], Chart):
+                data[stat[1].field_name] = stat[1].finalize(data[stat[1].field_name])
         return data
 
 
@@ -30,7 +33,7 @@ class Chart(object):
     DONUT = 'donut'
     DEFAULT_COL = {TIMESERIES: 12, BAR: 6, DONUT: 6}
 
-    def __init__(self, field_type, col=None, datetime_format='%Y-%m-%d', value_getter=None, order=0):
+    def __init__(self, field_type, col=None, datetime_format='%Y-%m-%d', value_getter=None, order=0, top=None):
         self.datetime_format = datetime_format
         if field_type not in self.DEFAULT_COL.keys():
             raise Exception('Invalid field_type')
@@ -40,6 +43,7 @@ class Chart(object):
         self.stat_model = None
         self.col = col if isinstance(col, int) and 1 < col < 12 else self.DEFAULT_COL[field_type]
         self.order = order
+        self.top = top
 
     def set_field_name(self, field_name):
         self.field_name = field_name
@@ -78,8 +82,14 @@ class Chart(object):
             return updater(self.stat_model, value, instance)
         return self.update_default(value, instance)
 
+    def finalize(self, stats):
+        if self.top is None:
+            return stats
+        return {key: value for key, value in sorted(stats.items(), key=lambda x: -x[1])[:self.top]}
+
     def json(self):
-        return {'field_name': self.field_name, 'col': self.col, 'field_type': self.field_type, 'order': self.order}
+        return {'field_name': self.field_name, 'col': self.col, 'field_type': self.field_type, 'order': self.order,
+                'top': self.top}
 
 
 class ApplicationFormChart(Chart):
