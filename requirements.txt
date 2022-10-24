@@ -6,7 +6,7 @@ cffi==1.15.1
 charset-normalizer==2.1.0
 cryptography==37.0.2
 Deprecated==1.2.13
-Django==4.0.7
+Django==4.0.8
 django-appconf==1.0.5
 django-axes==5.39.0
 django-bootstrap5==21.3
