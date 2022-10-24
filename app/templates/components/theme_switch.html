@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load static %}
 <li class="nav-item" style="cursor: pointer">
-    <a class="nav-link" onclick="switch_theme(this)"><i class="bi bi-brightness-high"></i> {% translate 'Switch mode' %}</a>
+    <a class="nav-link" onclick="switch_theme(this)"><i id="switch-theme-icon" class="bi {% if theme == 'dark' %}bi-moon-fill{% else %}bi-sun-fill{% endif %}"></i> {% translate 'Theme' %}</a>
 </li>
 <script>
     let theme = '{{ theme }}'
@@ -26,6 +26,7 @@
         $('body').toggleClass('light dark')
         $(`img[src*=${theme}]`).attr('src', trans_switch_theme_logo[theme])
         theme = trans_switch_theme[theme]
+        $('#switch-theme-icon').toggleClass('bi-moon-fill bi-sun-fill')
         setCookie('theme', theme, 1000)
     }
     function setCookie(name,value,days) {
