@@ -28,9 +28,6 @@ jobs:
     - name: Check coding style
       run: |
         flake8
-    - name: Check migrations
-      run: |
-        python manage.py makemigrations --noinput --check
     - name: Run Tests
       run: |
         python manage.py test
