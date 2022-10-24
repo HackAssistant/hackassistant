@@ -17,8 +17,6 @@ REGEX_HACKATHON_ORGANIZER_EMAIL = "^.*@hackupc\.com$"
 HACKATHON_ORGANIZER_EMAILS = []
 APP_NAME = 'MyHackUPC'
 APP_EMAIL = 'MyHackUPC <server@my.hackupc.com>'
-
-# (OPTIONAL) Send 500 errors to email while on production mode
-HACKATHON_DEV_EMAILS = ['devs@hackupc.com', ]
+ADMINS = [('Admins', 'devs@hackupc.com')]
 
 SUPPORTED_RESUME_EXTENSIONS = ['.pdf']

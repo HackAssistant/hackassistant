@@ -124,7 +124,7 @@
             let charts = {bar: bar_chart, donut: donut_chart, timeseries: timeseries_chart}
             let stats = JSON.parse(document.getElementById('stats-data').textContent).sort((a, b) => a.order - b.order)
             function toTitleCase(str) {
-                return [str.replace('_', ' ').toLowerCase()].map(function (word) {
+                return [str.replaceAll('_', ' ').toLowerCase()].map(function (word) {
                     return (word.charAt(0).toUpperCase() + word.slice(1));
                 }).join(' ');
             }
@@ -148,7 +148,8 @@
                     if (data['total'] > 0) {
                         stats.forEach((item) => {
                             if (data[item.field_name] !== undefined && !$.isEmptyObject(data[item.field_name])) {
-                                stats_div.append(`<div class="col-md-${item.col ?? 12}"><h3>${toTitleCase(item.field_name)}</h3><div id="${item.field_name}_stat"></div></div>`);
+                                let top = item.top !== null ? `(Top ${item.top})` : ''
+                                stats_div.append(`<div class="col-md-${item.col ?? 12}"><h3>${toTitleCase(item.field_name)} ${top}</h3><div id="${item.field_name}_stat"></div></div>`);
                                 charts[item.field_type](item.field_name, data);
                             }
                         })
