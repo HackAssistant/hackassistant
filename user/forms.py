@@ -63,7 +63,7 @@ class UserCreationForm(BootstrapFormMixin, forms.ModelForm):
 
     password1 = forms.CharField(label=_('Password'), widget=forms.PasswordInput)
     password2 = forms.CharField(label=_('Password confirmation'), widget=forms.PasswordInput,
-                                help_text=' '.join(password_validation.password_validators_help_texts()))
+                                help_text=password_validation.password_validators_help_text_html())
 
     class Meta:
         model = User
@@ -213,16 +213,16 @@ class ForgotPasswordForm(BootstrapFormMixin, forms.Form):
     email = forms.EmailField(label=_('Email'), max_length=100)
 
 
-class SetPasswordForm(BootstrapFormMixin, forms.Form):
+class SetPasswordForm(BootstrapFormMixin, forms.ModelForm):
     """
     A form that lets a user change set their password without entering the old
     password
     """
 
-    bootstrap_field_info = {'': {'fields': [{'name': 'new_password1', 'space': 12},
+    bootstrap_field_info = {'': {'fields': [{'name': 'password', 'space': 12},
                                             {'name': 'new_password2', 'space': 12}]}}
 
-    new_password1 = forms.CharField(
+    password = forms.CharField(
         label=_("New password"),
         widget=forms.PasswordInput,
         strip=False,
@@ -231,19 +231,25 @@ class SetPasswordForm(BootstrapFormMixin, forms.Form):
         label=_("New password confirmation"),
         strip=False,
         widget=forms.PasswordInput,
-        help_text=' '.join(password_validation.password_validators_help_texts()),
+        help_text=password_validation.password_validators_help_text_html(),
     )
 
     def clean_new_password2(self):
-        password1 = self.cleaned_data.get('new_password1')
+        password1 = self.cleaned_data.get('password')
         password2 = self.cleaned_data.get('new_password2')
         if password1 and password2:
             if password1 != password2:
                 raise forms.ValidationError(_("The passwords do not match."))
-        password_validation.validate_password(password2)
+        password_validation.validate_password(password2, self.instance)
         return password2
 
-    def save(self, user):
-        password = self.cleaned_data["new_password1"]
-        user.set_password(password)
-        user.save()
+    def save(self, commit=True):
+        password = self.cleaned_data["password"]
+        self.instance.set_password(password)
+        if commit:
+            self.instance.save()
+        return self.instance
+
+    class Meta:
+        model = User
+        fields = ['password', 'new_password2']

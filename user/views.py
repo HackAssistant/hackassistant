@@ -4,6 +4,7 @@ from axes.models import AccessAttempt
 from axes.utils import reset_request
 from django.conf import settings
 from django.contrib import auth, messages
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.shortcuts import redirect
 from django.urls import reverse, resolve
 from django.utils import timezone
@@ -121,7 +122,7 @@ class Register(Login):
         recaptcha = RecaptchaForm(request.POST, request=request)
         if self.forms_are_valid(form, context):
             user = form.save()
-            auth.login(request, user)
+            auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             emails.send_verification_email(request=request, user=user)
             messages.success(request, _('Successfully registered!'))
             return self.redirect_successful()
@@ -227,22 +228,27 @@ class ChangePassword(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form = SetPasswordForm()
+        form = None
         try:
             uid = User.decode_encoded_pk(self.kwargs.get('uid'))
             user = User.objects.get(pk=uid)
-            context.update({'user': user})
+            form = SetPasswordForm(instance=user)
+            if PasswordResetTokenGenerator().check_token(user, self.kwargs.get('token')):
+                context.update({'user': user})
+            else:
+                context.update({'error': _('Invalid link')})
         except User.DoesNotExist:
-            form.add_error(None, _('Invalid link'))
+            context.update({'error': _('Invalid link')})
         context.update({'form': form, 'new': self.request.GET.get('new', None)})
         return context
 
     def post(self, request, **kwargs):
         context = self.get_context_data()
-        form = SetPasswordForm(request.POST)
-        if form.is_valid() and context.get('user', None) is not None:
-            form.save(context.get('user'))
-            context.update({'success': True})
-        else:
-            context.update({'form': form})
+        if context.get('user', None) is not None:
+            form = SetPasswordForm(request.POST, instance=context['user'])
+            if form.is_valid():
+                form.save()
+                context.update({'success': True})
+            else:
+                context.update({'form': form})
         return self.render_to_response(context)

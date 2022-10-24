@@ -141,19 +141,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-    {
         'NAME': 'django_password_validators.password_history.password_validation.UniquePasswordsValidator',
-        'OPTIONS': {
-            # How many recently entered passwords matter.
-            # Passwords out of range are deleted.
-            # Default: 0 - All passwords entered by the user. All password hashes are stored.
-            'last_passwords': 5  # Only the last 5 passwords entered by the user
-        }
     },
     {
         'NAME': 'django_password_validators.password_character_requirements.password_validation.'

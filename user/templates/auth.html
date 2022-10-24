@@ -12,7 +12,10 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="content p-4">
-                            {% include 'components/bootstrap5_form.html' %}
+                            {% if auth != 'register' %}
+                                {% include 'components/bootstrap5_form.html' with only_errors=True %}
+                            {% endif %}
+                            {% include 'components/bootstrap5_form.html' with only_form=True %}
                             {% if auth != 'register' %}
                                 <p><a class="text-{% if theme == 'dark' %}white{% else %}black{% endif %}" style="text-decoration: none" href="{% url 'forgot_password' %}">{% translate 'Forgot your password?' %}</a></p>
                             {% endif %}
