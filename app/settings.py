@@ -296,9 +296,9 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
 ADMINS_EMAIL = os.environ.get('ADMINS_EMAIL', '').split(',')
 try:
-    ADMINS = [(email.split('@')[0].replace('.', ' ').title(), email) for email in ADMINS_EMAIL]
+    ADMINS.extend([(email.split('@')[0].replace('.', ' ').title(), email) for email in ADMINS_EMAIL])
 except:
-    ADMINS = []
+    pass
 
 # Load filebased email backend if no Sendgrid credentials and debug mode
 if not SENDGRID_API_KEY and not EMAIL_HOST and DEBUG:

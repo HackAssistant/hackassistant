@@ -17,5 +17,6 @@ REGEX_HACKATHON_ORGANIZER_EMAIL = "^.*@hackupc\.com$"
 HACKATHON_ORGANIZER_EMAILS = []
 APP_NAME = 'MyHackUPC'
 APP_EMAIL = 'MyHackUPC <server@my.hackupc.com>'
+ADMINS = [('Admins', 'devs@hackupc.com')]
 
 SUPPORTED_RESUME_EXTENSIONS = ['.pdf']
