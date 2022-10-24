@@ -20,7 +20,6 @@ from .hackathon_variables import *
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
@@ -37,7 +36,6 @@ if DEBUG:
     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1'])
 elif HOST is not None:
     ALLOWED_HOSTS.append(HOST)
-
 
 # Application definition
 
@@ -59,6 +57,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_crontab',
     'axes',
+    'django_password_validators',
+    'django_password_validators.password_history',
     'user',
     'application',
     'review',
@@ -105,7 +105,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
@@ -147,6 +146,27 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'django_password_validators.password_history.password_validation.UniquePasswordsValidator',
+        'OPTIONS': {
+            # How many recently entered passwords matter.
+            # Passwords out of range are deleted.
+            # Default: 0 - All passwords entered by the user. All password hashes are stored.
+            'last_passwords': 5  # Only the last 5 passwords entered by the user
+        }
+    },
+    {
+        'NAME': 'django_password_validators.password_character_requirements.password_validation.'
+                'PasswordCharacterValidator',
+        'OPTIONS': {
+            'min_length_digit': 1,
+            'min_length_alpha': 1,
+            'min_length_special': 1,
+            'min_length_lower': 1,
+            'min_length_upper': 1,
+            'special_characters': ",.-~!@#$%^&*()_+{}\":;'[]"
+        }
+    },
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -165,7 +185,6 @@ AXES_ENABLED = os.environ.get('AXES_ENABLED', not DEBUG)
 AXES_IP_BLACKLIST = os.environ.get('AXES_IP_BLACKLIST', '').split(',')
 SILENCED_SYSTEM_CHECKS = ['axes.W002']
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -178,7 +197,6 @@ USE_I18N = True
 USE_TZ = True
 
 USE_L10N = True
-
 
 # Static files (CSS, JavaScript, Images) & compressor
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
@@ -217,15 +235,15 @@ LOGIN_URL = '/auth/login'
 # JWT settings
 JWT_CLIENT = {
     'OPENID2_URL': os.environ.get('OPENID_CLIENT_ID', 'http://localhost:8000/openid'),  # Required
-    'CLIENT_ID': os.environ.get('OPENID_CLIENT_ID', 'client_id'),                       # Required
-    'TYPE': 'fake' if DEBUG else 'local',                                               # Required
-    'RESPONSE_TYPE': 'id_token',                                                        # Required
-    'RENAME_ATTRIBUTES': {'sub': 'email', 'groups': 'get_groups'},                      # Optional
+    'CLIENT_ID': os.environ.get('OPENID_CLIENT_ID', 'client_id'),  # Required
+    'TYPE': 'fake' if DEBUG else 'local',  # Required
+    'RESPONSE_TYPE': 'id_token',  # Required
+    'RENAME_ATTRIBUTES': {'sub': 'email', 'groups': 'get_groups'},  # Optional
 
 }
 JWT_SERVER = {
-    'JWK_EXPIRATION_TIME': 3600,                # Optional
-    'JWT_EXPIRATION_TIME': 14400                # Optional
+    'JWK_EXPIRATION_TIME': 3600,  # Optional
+    'JWT_EXPIRATION_TIME': 14400  # Optional
 }
 
 DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap-responsive.html'
