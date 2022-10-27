@@ -35,8 +35,7 @@ class Email:
 
     # Public method that sends the mail to [list_mails] if not debug else saves the file at mails folder
     def send(self):
-        email_from = '%s Team <%s>' % (getattr(settings, 'HACKATHON_NAME', ''),
-                                       getattr(settings, 'HACKATHON_CONTACT_EMAIL'))
+        email_from = getattr(settings, 'SERVER_EMAIL', '')
 
         if settings.DEBUG:
             base_dir = getattr(settings, 'BASE_DIR', '')
