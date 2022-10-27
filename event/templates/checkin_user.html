@@ -71,7 +71,7 @@
             </div>
         </div>
     </div>
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         $(document).ready(() => {
             let scanner = new Scanner('qr-video', (content) => {
                 if (content.data) {

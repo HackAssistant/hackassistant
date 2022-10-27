@@ -24,7 +24,7 @@
     </div>
 {% endblock %}
 {% block scripts %}
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         function delete_user() {
             if ($('#delete-user-input').val() === '{{ request.user.email }}') {
                 $('#profile-form').submit()

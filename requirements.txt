@@ -7,6 +7,7 @@ charset-normalizer==2.1.0
 cryptography==37.0.2
 Deprecated==1.2.13
 Django==4.0.8
+django-admin-honeypot@https://github.com/dmpayton/django-admin-honeypot/archive/refs/heads/develop.zip
 django-appconf==1.0.5
 django-axes==5.39.0
 django-bootstrap5==21.3
@@ -14,6 +15,7 @@ django-colorfield==0.7.2
 django-compressor==4.1
 django-cors-headers==3.13.0
 django-crontab==0.7.1
+django-csp==3.7
 django-filter==22.1
 django-ipware==4.0.2
 django-jwt-oidc==0.3.9

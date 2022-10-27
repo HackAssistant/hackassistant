@@ -64,7 +64,7 @@
         {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
     </form>
 
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         function copyUrl() {
               // Get the text field
               let copyText = document.getElementById("url-copy");
@@ -93,7 +93,7 @@
                 <button class="btn btn-primary" onclick="return confirm_invite()">{% translate 'Confirm invite' %}</button>
             </div>
         </form>
-        <script>
+        <script nonce="{{ request.csp_nonce }}">
             function select_all(source) {
                 $('input[name="select"]').prop('checked', source.checked);
             }

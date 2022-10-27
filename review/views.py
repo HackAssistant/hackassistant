@@ -35,7 +35,8 @@ from user.models import BlockedUser
 class ReviewApplicationTabsMixin(TabsViewMixin):
     def get_review_application(self, application_type):
         max_votes_to_app = getattr(settings, 'MAX_VOTES_TO_APP', 50)
-        return Application.objects.actual().filter(type__name=application_type, status=Application.STATUS_PENDING) \
+        return Application.objects.actual().filter(type__name__iexact=application_type,
+                                                   status=Application.STATUS_PENDING) \
             .exclude(Q(vote__user_id=self.request.user.id) | Q(user_id=self.request.user.id)) \
             .filter(submission_date__lte=timezone.now() - timedelta(hours=2)) \
             .annotate(count=Count('vote__calculated_vote')) \
@@ -212,7 +213,7 @@ class CommentSubmit(IsOrganizerMixin, PermissionRequiredMixin, View):
         log_id = self.kwargs.get('log_id', None)
         if log_id is None:
             return super().get_permission_required()
-        return ['application.change_applicationlog', ]
+        return []
 
     def post(self, request, *args, **kwargs):
         log_id = kwargs.get('log_id', None)
@@ -220,12 +221,13 @@ class CommentSubmit(IsOrganizerMixin, PermissionRequiredMixin, View):
             comment_form = CommentForm(request.POST)
         else:
             log = get_object_or_404(ApplicationLog, id=log_id)
-            if log.user != request.user:
-                raise PermissionDenied()
+            if log.user != request.user and not request.user.has_perm('application.change_applicationlog'):
+                return self.handle_no_permission()
             comment_form = CommentForm(request.POST, instance=log)
         if comment_form.is_valid():
             log = comment_form.save(commit=False)
-            log.user = request.user
+            if log_id is None:
+                log.user = request.user
             log.save()
             log_dict = log.__dict__
             del log_dict['_state']

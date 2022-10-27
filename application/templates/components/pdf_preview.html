@@ -4,7 +4,7 @@
         <i onclick="close_tab()" class="bi bi-x-lg fs-4" style="position: absolute; z-index: 1252; left: 1%; top: 0.5%; cursor: pointer; mix-blend-mode: difference; color: white"></i>
     {% endif %}
 </div>
-<script>
+<script nonce="{{ request.csp_nonce }}">
     pdfjsLib.getDocument('{{ pdf_link }}').promise.then(doc => {
         let pdf_div = $('#pdf-div');
         let size = pdf_div.width();

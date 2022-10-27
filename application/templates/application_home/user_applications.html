@@ -41,7 +41,7 @@
                 </div>
             </div>
         </div>
-        <script>
+        <script nonce="{{ request.csp_nonce }}">
             $(document).ready(() => {
                 let qrcode = new QRCode("qrcode", {
                     text: "{{ request.user.get_encoded_pk }}",
@@ -71,7 +71,7 @@
                 </div>
             </div>
         </div>
-        <script>
+        <script nonce="{{ request.csp_nonce }}">
             $(document).ready(() => {
                 let qrcode = new QRCode("qrcode", {
                     text: "{{ request.user.qr_code }}",
