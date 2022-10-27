@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'admin_honeypot',
     'captcha',
     'django_tables2',
     'django_filters',
@@ -77,6 +78,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'app.middlewares.TimezoneMiddleware',
+    'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -94,6 +96,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.request',
                 'app.template.app_variables',
+                'csp.context_processors.nonce',
             ],
             'libraries': {
                 'util': 'app.templatetags.util',
@@ -374,3 +377,16 @@ CACHES = {
         'LOCATION': '/var/tmp/django_cache',
     }
 }
+
+# Content-Security-Policy
+CSP_DEFAULT_SRC = ["'self'", "www.w3.org", "data:", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"]
+CSP_FRAME_SRC = ['www.google.com']
+CSP_SCRIPT_SRC = ["'self'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "code.jquery.com", "d3js.org",
+                  "www.google.com", "www.gstatic.com", "'unsafe-inline'"]
+CSP_STYLE_SRC = ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"]
+
+# Securing Admin Page
+ADMIN_URL = os.environ.get('ADMIN_URL', 'secret/')
+
+# Security
+SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = not DEBUG

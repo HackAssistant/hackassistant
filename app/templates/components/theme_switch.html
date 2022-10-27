@@ -3,7 +3,7 @@
 <li class="nav-item" style="cursor: pointer">
     <a class="nav-link" onclick="switch_theme(this)"><i id="switch-theme-icon" class="bi {% if theme == 'dark' %}bi-moon-fill{% else %}bi-sun-fill{% endif %}"></i> {% translate 'Theme' %}</a>
 </li>
-<script>
+<script nonce="{{ CSP_NONCE }}">
     let theme = '{{ theme }}'
     const trans_text_theme = {dark: 'white', light: 'black'}
     const trans_switch_theme = {dark: 'light', light: 'dark'}

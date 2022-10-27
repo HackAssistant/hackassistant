@@ -10,18 +10,16 @@ class ApplicationConfig(AppConfig):
     name = 'application'
 
     def auto_create_application_types(self):
-        from application.forms import ApplicationForm
+        from application.forms.base import ApplicationForm
         from django.contrib.auth.models import Group
 
         ApplicationTypeConfig = self.get_model('ApplicationTypeConfig')
-        organizer_group = Group.objects.get_or_create(name='Organizer')[0]
 
         for name, obj in inspect.getmembers(sys.modules['application.forms']):
             if inspect.isclass(obj) and issubclass(obj, ApplicationForm) and obj != ApplicationForm:
                 type_name = name.split('Form')[0]
                 Group.objects.get_or_create(name=type_name)
                 ApplicationTypeConfig.objects.get_or_create(name=type_name, defaults={
-                    'group_id': organizer_group.pk,
                     'end_application_date': timezone.now() + timezone.timedelta(days=300)})
 
     def create_permissions(self):

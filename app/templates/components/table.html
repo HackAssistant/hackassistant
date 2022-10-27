@@ -1,6 +1,6 @@
 {% load render_table from django_tables2 %}
 {% render_table table %}
-<script>
+<script nonce="{{ CSP_NONCE }}">
     $(document).ready(() => {
         $('.table').addClass('table-{{ theme }}')
     })

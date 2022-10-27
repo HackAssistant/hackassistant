@@ -159,7 +159,7 @@ class ApplicationQueryset(models.QuerySet):
     def convert_kwargs(self, kwargs):
         attributes = [item.attname.replace('_id', '') for item in self.model._meta.fields]
         attributes.extend(self.model._meta.fields_map.keys())
-        attributes.append('pk')
+        attributes.extend(['pk', 'count'])
         new_kwargs = {}
         for key, value in kwargs.items():
             if key.split('__')[0] in attributes or key[:-3] in attributes:

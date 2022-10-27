@@ -32,7 +32,7 @@
                     {% bootstrap_field field.field %}
                 {% endif %}
                 {% if field.api %}
-                    <script>
+                    <script nonce="{{ CSP_NONCE }}">
                         $(document).ready(() => {
                             var data = new Bloodhound({
                                 datumTokenizer: Bloodhound.tokenizers.whitespace,
@@ -75,7 +75,7 @@
                 {% endif %}
             {% endfor %}
             </div>
-            <script>
+            <script nonce="{{ CSP_NONCE }}">
                 function objectifyForm(form) {
                     let formArray = form.serializeArray()
                     //serialize data function
@@ -118,7 +118,7 @@
             </script>
         </fieldset>
     {% endfor %}
-    <script>
+    <script nonce="{{ CSP_NONCE }}">
         $(document).ready(() => {
             $('.bootstrap-fieldset :input').not('[type="checkbox"]').not('[type="radio"]').each((i, item) => {
                 $(item).addClass('bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}')
@@ -140,7 +140,7 @@
         })
 
     </script>
-    <style>
+    <style nonce="{{ CSP_NONCE }}">
         .twitter-typeahead {
             width: 100%;
         }

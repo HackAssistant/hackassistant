@@ -1,5 +1,5 @@
 {% if record.promotional_code %}
-    <p class="border-2 border-{% if theme == 'dark' %}light{% else %}dark{% endif %} m-0" style="width: fit-content; border-radius: 5px; border: solid; color: {{ record.promotional_code.color }}; background-color: {{ record.promotional_code.background_color }}">&nbsp{{ record.promotional_code.name }}&nbsp</p>
+    <p class="m-0" style="width: fit-content; border-radius: 5px; color: {{ record.promotional_code.color }}; background-color: {{ record.promotional_code.background_color }}">&nbsp{{ record.promotional_code.name }}&nbsp</p>
 {% else %}
     —
 {% endif %}

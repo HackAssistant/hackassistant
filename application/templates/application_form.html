@@ -59,7 +59,7 @@
         </div>
         {% if request.user.is_organizer %}
             <input style="display: none" id="comment_applicationlog_input" name="comment_applicationlog" value="">
-            <script>
+            <script nonce="{{ request.csp_nonce }}">
                 function confirm_edit() {
                     let comment = prompt('{% translate 'Add a comment on the reason of your change (optional)' %}')
                     if (comment === null) return false

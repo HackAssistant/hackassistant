@@ -11,7 +11,7 @@
         <a onclick="right_arrow_tabs()" class="nav-link bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}"><i class="bi bi-arrow-right"></i></a>
     </li>
 </ul>
-<script>
+<script nonce="{{ CSP_NONCE }}">
     $(document).ready(() => {
         calculate_tabs()
         resize_tabs()
@@ -79,7 +79,7 @@
     }
 
 </script>
-<style>
+<style nonce="{{ CSP_NONCE }}">
     .nav-tabs > .nav-item > .nav-link {
         margin-bottom: 0;
         border: none;

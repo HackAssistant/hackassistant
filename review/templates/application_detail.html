@@ -151,7 +151,7 @@
                 <hr>
             </div>
         </div>
-        <script>
+        <script nonce="{{ request.csp_nonce }}">
             function edit_comment(log_id) {
                 let form_block = $(`#comment-form-${log_id}`)
                 $(`#comment-block-${log_id}`).hide()
@@ -228,7 +228,7 @@
                         <button class="btn btn-secondary" name="skip" value="skip" onclick="return confirm('{% translate "This option is placed in order to equality of votes in applications. Are you sure you know this person and want to skip? " %}')">{% translate 'Skip application' %}</button>
                     </div>
                 </form>
-                <script type="text/javascript">
+                <script nonce="{{ request.csp_nonce }}" type="text/javascript">
                     $(document).ready(() => {
                         $('.barrating').barrating({
                             theme: 'bars-square',
@@ -261,7 +261,7 @@
             <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
                 {% if application.type.dubious_enabled and application.status != application.STATUS_DUBIOUS and application.status !=  application.STATUS_NEEDS_CHANGE and application.status != application.STATUS_BLOCKED %}
                     <button class="btn btn-warning" onclick="mark_dubious()">{% translate 'Mark as dubious' %}</button>
-                    <script>
+                    <script nonce="{{ request.csp_nonce }}">
                         function mark_dubious() {
                             let comment = prompt("{% translate "Are you sure there's something wrong with this application? Add the reason" %}")
                             if (comment === null) return false

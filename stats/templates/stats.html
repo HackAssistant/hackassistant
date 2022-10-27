@@ -42,7 +42,7 @@
 
     <div class="row align-content-center mt-3" id="stats_div"></div>
     {{ stats.json|json_script:"stats-data" }}
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         $(document).ready(() => {
             function convert_data(field_name, data_field) {
                 return Object.keys(data_field).map((key) => {

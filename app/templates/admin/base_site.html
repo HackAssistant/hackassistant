@@ -6,7 +6,7 @@
 
 {% block extrahead %}{{ block.super }}
     {% include 'components/favicon.html' %}
-    <script>
+    <script nonce="{{ CSP_NONCE }}">
         function setCookie(name,value,days) {
             var expires = "";
             if (days) {
@@ -29,7 +29,7 @@
             document.cookie = "django_timezone=" + timezone;
         });
     </script>
-    <style>
+    <style nonce="{{ CSP_NONCE }}">
         :root.dark {
             --primary: #264b5d;
             --primary-fg: #f7f7f7;

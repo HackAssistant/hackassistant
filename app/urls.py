@@ -26,7 +26,8 @@ urlpatterns = [
     path('terms_and_conditions/', views.TermsConditions.as_view(), name='terms_and_conditions'),
     path('privacy_and_cookies/', views.PrivacyCookies.as_view(), name='privacy_and_cookies'),
 
-    path('admin/', admin.site.urls),
+    path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
+    path(getattr(settings, 'ADMIN_URL', 'secret/'), admin.site.urls),
     path('auth/', include('user.urls')),
     path('application/', include('application.urls')),
     path('review/', include('review.urls')),
