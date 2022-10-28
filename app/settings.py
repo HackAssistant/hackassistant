@@ -269,7 +269,9 @@ CRONJOBS = [
 ]
 
 # Deployment configurations for proxy pass and csrf
-USE_X_FORWARDED_HOST = True
+SECURE_HSTS_SECONDS = 30
+SECURE_HSTS_PRELOAD = True
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Logging config to send logs to email automatically
@@ -390,3 +392,4 @@ ADMIN_URL = os.environ.get('ADMIN_URL', 'secret/')
 
 # Security
 SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = not DEBUG
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
