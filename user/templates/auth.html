@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load socialaccount %}
 {% block subtitle %}{{ auth|title }}{% endblock %}
 {% block container %}
     <div class="row justify-content-md-center" style="margin: 0">
@@ -28,6 +29,14 @@
                                 <div class="col-12 col-lg-6 d-grid d-md-block">
                                     <button type="submit" class="btn btn-primary col-12">{{ auth|title }}</button>
                                 </div>
+                            </div>
+                        </div>
+                    </form>
+                    <form method="post" action="{% provider_login_url 'github' %}" class="content pb-4 ps-4 pe-4">
+                        {% csrf_token %}
+                        <div class="row justify-content-around">
+                            <div class="col-12 col-lg-6 d-grid d-md-block">
+                                <button type="submit" class="btn btn-primary col-12">{% translate 'Log In with' %} <i class="bi bi-github"></i></button>
                             </div>
                         </div>
                     </form>
