@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block subtitle %}{% translate 'Check-in meal' %}{% endblock %}
+
+{% block head %}
+    {% include 'components/import_qr_scanner.html' %}
+{% endblock %}
+
+{% block container %}
+    <div class="row justify-content-md-center" style="margin: 0">
+        <div class="col-lg-4" style="margin: 40px 0;">
+            <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+                <div class="p-2">
+                    <div class="row justify-content-between mb-3">
+                        <div class="col-12 col-lg-4 d-grid d-md-block">
+                            <a href="{% url 'checkin_list' %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+                        </div>
+                    </div>
+                    {% if meal_obj != '' %}
+                        <div class="row m-0">
+                            <div class="col-12 fw-bold text-start"><h1></h1>{% translate 'Scanning' %} {{ meal_obj.name }}</h1></div>
+                            <div class="text-muted">({{   meal_obj.starts }})</div>
+                            <div class="mt-2" style="display: flex">
+                                <form method="get" id="filter-form" style="width: 100%" class="mr-2">
+                                    {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
+                                </form>
+                                <div class="ms-2">
+                                    <button title="Scan QR Code" id="qr_button" class="btn btn-secondary"><i class="bi bi-qr-code-scan"></i></button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                    {% else %}
+                        <div class="alert alert-danger text-center" role="alert">
+                            {% translate 'No meal found' %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script nonce="{{ request.csp_nonce }}">
+        $(document).ready(() => {
+            let scanner = new Scanner('qr-video', (content) => {
+                if (content.data) {
+                    $('input[name="qr_code"]').val(content.data)
+                    scanner.hide()
+                    $('#button-rescan').show()
+                }
+            })
+            scanner.show()
+            $('#button-rescan').on('click', (e) => {
+                $(e.target).hide()
+                $('input[name="qr_code"]').val('')
+                scanner.show()
+            })
+        })
+    </script>
+{% endblock %}
