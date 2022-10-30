@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'friends',
     'event',
     'stats',
+    'event.meals',
 ]
 
 MIDDLEWARE = [
