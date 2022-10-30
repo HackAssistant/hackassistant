@@ -32,14 +32,18 @@
                             </div>
                         </div>
                     </form>
-                    <form method="post" action="{% provider_login_url 'github' %}" class="content pb-4 ps-4 pe-4">
-                        {% csrf_token %}
-                        <div class="row justify-content-around">
-                            <div class="col-12 col-lg-6 d-grid d-md-block">
-                                <button type="submit" class="btn btn-primary col-12">{% translate 'Log In with' %} <i class="bi bi-github"></i></button>
-                            </div>
-                        </div>
-                    </form>
+                    <div class="content pb-4 ps-4 pe-4">
+                        {% for key, value in socialaccount_providers.items %}
+                            <form method="post" action="{% provider_login_url key %}">
+                                {% csrf_token %}
+                                <div class="row justify-content-around">
+                                    <div class="col-12 col-lg-6 d-grid d-md-block">
+                                        <button type="submit" class="btn btn-primary col-12">{% translate 'Log In with' %} <i class="{{ value.ICON }}"></i></button>
+                                    </div>
+                                </div>
+                            </form>
+                        {% endfor %}
+                    </div>
                 {% else %}
                     <div class="p-3">
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">

@@ -408,10 +408,13 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+SOCIALACCOUNT_ADAPTER = "app.allauth.MySocialAccountAdapter"
 
 # Provider specific settings
-SOCIALACCOUNT_PROVIDERS = {
-    'github': {
+SOCIALACCOUNT_PROVIDERS = {}
+if os.environ.get('GITHUB_CLIENT_ID', None) is not None and os.environ.get('GITHUB_SECRET', None) is not None:
+    SOCIALACCOUNT_PROVIDERS['github'] = {
         'SCOPE': [
             'user',
             'repo',
@@ -421,7 +424,8 @@ SOCIALACCOUNT_PROVIDERS = {
             'client_id': os.environ.get('GITHUB_CLIENT_ID'),
             'secret': os.environ.get('GITHUB_SECRET'),
             'key': '',
-        }
+        },
+        'ICON': 'bi bi-github',
     }
-}
+
 
