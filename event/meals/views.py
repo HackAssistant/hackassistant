@@ -18,3 +18,15 @@ class MealsList(SingleTableMixin, TemplateView): # later on: AnyApplicationPermi
 
     def get_queryset(self):
         return Meal.objects.all()
+
+class CheckinMeal(TemplateView):
+    template_name = 'checkin_meal.html'
+
+    # def has_permission(self, types):
+    #     permission = 'event.meals.can_checkin'
+    #     if self.request.user.has_perm(permission):
+    #         return True
+    #     for application_type in types:
+    #         if not self.request.user.has_perm('%s_%s' % (permission, application_type.lower())):
+    #             return False
+    #     return True
