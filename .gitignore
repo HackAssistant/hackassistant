@@ -13,3 +13,5 @@ staticfiles/
 
 /db/*
 !db/.keep
+
+/tmp/
