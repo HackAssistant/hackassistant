@@ -1,3 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
+from event.meals.models import Meal
+
+admin.site.register(Meal)
