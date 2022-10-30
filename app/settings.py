@@ -45,7 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.github',
     'admin_honeypot',
     'captcha',
     'django_tables2',
@@ -167,6 +172,9 @@ AUTHENTICATION_BACKENDS = [
 
     # Django ModelBackend is the default authentication backend.
     'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 # django-axes configuration
@@ -394,3 +402,31 @@ ADMIN_URL = os.environ.get('ADMIN_URL', 'secret/')
 # Security
 SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = not DEBUG
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# Allauth settings
+SITE_ID = 1
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+SOCIALACCOUNT_ADAPTER = "app.allauth.MySocialAccountAdapter"
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {}
+if os.environ.get('GITHUB_CLIENT_ID', None) is not None and os.environ.get('GITHUB_SECRET', None) is not None:
+    SOCIALACCOUNT_PROVIDERS['github'] = {
+        'SCOPE': [
+            'user',
+            'repo',
+            'read:org',
+        ],
+        'APP': {
+            'client_id': os.environ.get('GITHUB_CLIENT_ID'),
+            'secret': os.environ.get('GITHUB_SECRET'),
+            'key': '',
+        },
+        'ICON': 'bi bi-github',
+    }
+
+
