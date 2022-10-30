@@ -1,0 +1,16 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>
+        Hi {{ application.get_full_name }},
+    </p>
+    <p>
+        We are really sorry but your {{ application.type.name|lower }} invitation for {{ app_hack }} has expired.
+
+        <b>If you change your mind you can contact us at {{ app_contact }} and we will review your case.</b>
+    </p>
+
+    <p>Best regards,</p>
+    <p>{{ app_hack }} Team.</p>
+
+
+{% endblock %}

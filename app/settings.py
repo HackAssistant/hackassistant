@@ -266,6 +266,7 @@ LOGIN_TRIES = 1000 if DEBUG else 4
 CRONJOBS = [
     ('0   4 * * *', 'django.core.management.call_command', ['clearsessions']),
     ('0 0 1 */6 *', 'django.core.management.call_command', ['compress', '--force']),
+    ('0 */12 * * *', 'django.core.management.call_command', ['expire_invitations']),
 ]
 
 # Deployment configurations for proxy pass and csrf
