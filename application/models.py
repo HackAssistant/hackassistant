@@ -57,8 +57,12 @@ class ApplicationTypeConfig(models.Model):
     name = models.CharField(max_length=100, unique=True)
     start_application_date = models.DateTimeField(default=timezone.now, null=True)
     end_application_date = models.DateTimeField(default=timezone.now, null=True)
-    file_review_fields = models.CharField(blank=True, max_length=200)
+    file_review_fields = models.CharField(blank=True, max_length=200, help_text=_('Activate the file fields from the '
+                                                                                  'form that you want to review'))
     vote = models.BooleanField(default=True, help_text=_('Activate voting system'))
+    expire_invitations = models.IntegerField(default=0, help_text=_(
+        'Setting this to different to 0, sets the days that the invitation will last until expires. '
+        '1 day before it expires there will be a reminder'))
     dubious = models.BooleanField(default=True, help_text=_('Dubious reviewing system'))
     blocklist = models.BooleanField(default=True, help_text=_('Applications pass test of blocklist table on apply'))
     auto_confirm = models.BooleanField(default=False, help_text=_('Applications set on status confirmed by default'))
