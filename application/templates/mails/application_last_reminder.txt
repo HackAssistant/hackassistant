@@ -1,0 +1,1 @@
+Last reminder email for {{ app_hack }} as {{ application.type.name|lower }}

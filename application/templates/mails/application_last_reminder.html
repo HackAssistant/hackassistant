@@ -1,0 +1,19 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>
+        Hi {{ application.get_full_name }},
+    </p>
+    <p>
+        We are still waiting for your answer! You have been officially accepted to {{ app_hack }} as {{ application.type.name|lower }}
+        but you still haven't either confirmed or canceled your spot.
+
+        <b>You have 24h to answer, after that, your application will expire and we will give your spot to another
+          {{ application.type.name|lower }}.</b>
+    </p>
+    {% include 'mails/components/button.html' with url=url text='Go to my application' %}
+
+    <p>Best regards,</p>
+    <p>{{ app_hack }} Team.</p>
+
+
+{% endblock %}

@@ -207,7 +207,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @classmethod
     def decode_encoded_pk(cls, encoded_pk):
-        return force_str(urlsafe_base64_decode(encoded_pk))
+        try:
+            return force_str(urlsafe_base64_decode(encoded_pk))
+        except ValueError:
+            return None
 
     def get_diet_display_public(self):
         if self.diet == self.DIET_OTHER:
