@@ -89,14 +89,15 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
                 _('HackUPC Polices'): {
                     'fields': policy_fields,
                     'description': '<p style="color: margin-top: 1em;display: block;'
-                                   'margin-bottom: 1em;line-height: 1.25em;">We, Hackers at UPC, '
+                                   'margin-bottom: 1em;line-height: 1.25em;">We, %s, '
                                    'process your information to organize an awesome hackathon. It '
                                    'will also include images and videos of yourself during the event. '
-                                   'Your data will be used for admissions mainly.'
+                                   'Your data will be used for admissions mainly. '
                                    'For more information on the processing of your '
                                    'personal data and on how to exercise your rights of access, '
                                    'rectification, suppression, limitation, portability and opposition '
-                                   'please visit our Privacy and Cookies Policy.</p>'
+                                   'please visit our Privacy and Cookies Policy.</p>' %
+                                   getattr(settings, 'HACKATHON_ORG')
                 }})
         fields[next(iter(fields))]['fields'].append({'name': 'promotional_code'})
         return fields
