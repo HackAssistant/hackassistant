@@ -22,7 +22,7 @@ class BaseStats(object):
                     value = stat[1].update_field(value, instance)
                     data[stat[1].field_name] = value
         for stat in inspect.getmembers(self):
-            if not stat[0].startswith('_') and isinstance(stat[1], Chart):
+            if not stat[0].startswith('_') and isinstance(stat[1], Chart) and stat[1].field_name in data:
                 data[stat[1].field_name] = stat[1].finalize(data[stat[1].field_name])
         return data
 
