@@ -11,7 +11,7 @@ class MentorForm(ApplicationForm):
         '': {'fields': [
             {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
             {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}, {'name': 'study_work', 'space': 6},
-            {'name': 'company', 'space': 6, 'visible': {'study_work': 'True'}}]},
+            {'name': 'company', 'space': 6, 'visible': {'study_work': 'Work'}}]},
         'Hackathons': {
             'fields': [{'name': 'first_timer', 'space': 4},
                        {'name': 'previous_roles', 'space': 4, 'visible': {'first_timer': 'False'}},
@@ -32,8 +32,7 @@ class MentorForm(ApplicationForm):
     study_work = forms.TypedChoiceField(
         required=True,
         label='Are you studying or working?',
-        coerce=lambda x: x == 'True',
-        choices=((False, _('Study')), (True, _('Work'))),
+        choices=(('Study', _('Study')), ('Study', _('Work'))),
         widget=forms.RadioSelect(attrs={'class': 'inline'})
     )
 
