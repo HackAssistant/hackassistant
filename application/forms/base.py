@@ -19,6 +19,7 @@ EXTRA_NAME = [' 2016 Fall', ' 2016 Winter', ' 2017 Fall', '  2017 Winter', ' 201
 PREVIOUS_HACKS = [(i, HACK_NAME + EXTRA_NAME[i]) for i in range(0, len(EXTRA_NAME))]
 HACK_DAYS = [(x, x) for x in ['Friday', 'Saturday', 'Sunday']]
 ENGLISH_LEVELS = [(x, x) for x in ['1', '2', '3', '4', '5']]
+FIELD_OF_EXPERTISE = [('Technology', 'Technology'), ('Health', 'Health'), ('Others', 'Others')]
 
 
 class ApplicationForm(BootstrapFormMixin, forms.ModelForm):

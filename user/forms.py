@@ -142,9 +142,9 @@ class UserChangeForm(forms.ModelForm):
 class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
     bootstrap_field_info = {_('Personal Info'): {'fields': [
         {'name': 'first_name', 'space': 6}, {'name': 'last_name', 'space': 6}, {'name': 'email', 'space': 6},
-        {'name': 'phone_number', 'space': 6}, {'name': 'tshirt_size', 'space': 4}, {'name': 'diet', 'space': 4},
-        {'name': 'other_diet', 'space': 4, 'visible': {'diet': User.DIET_OTHER}}, {'name': 'under_age', 'space': 4},
-        {'name': 'gender', 'space': 4}, {'name': 'other_gender', 'space': 4, 'visible': {'gender': User.GENDER_OTHER}},
+        {'name': 'phone_number', 'space': 0}, {'name': 'tshirt_size', 'space': 0}, {'name': 'under_age', 'space': 6},
+        {'name': 'diet', 'space': 3}, {'name': 'other_diet', 'space': 3, 'visible': {'diet': User.DIET_OTHER}},
+        {'name': 'gender', 'space': 3}, {'name': 'other_gender', 'space': 3, 'visible': {'gender': User.GENDER_OTHER}},
     ],
         'description': _('Hey there, before we begin we would like to know a little more about you.')}, }
 

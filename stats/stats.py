@@ -5,7 +5,8 @@ class UserStats(base.BaseStats):
     date_joined = base.Chart(base.Chart.TIMESERIES, order=1)
     diet = base.Chart(base.Chart.DONUT, order=2)
     gender = base.Chart(base.Chart.DONUT, order=3)
-    tshirt_size = base.Chart(base.Chart.DONUT, order=4)
+    # tshirt_size = base.Chart(base.Chart.DONUT, order=4)
+    under_age = base.Chart(base.Chart.DONUT, order=5)
 
 
 class ApplicationStats(base.BaseStats):
@@ -25,3 +26,4 @@ class ApplicationStats(base.BaseStats):
     attendance = base.ApplicationFormChart(base.Chart.BAR, order=14)
     previous_roles = base.ApplicationFormChart(base.Chart.DONUT, order=15)
     company = base.ApplicationFormChart(base.Chart.BAR, order=16)
+    field_of_expertise = base.ApplicationFormChart(base.Chart.DONUT, order=17)

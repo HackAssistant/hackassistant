@@ -3,15 +3,15 @@ from django.conf import settings
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
 
-from application.forms.base import ApplicationForm
+from application.forms.base import ApplicationForm, FIELD_OF_EXPERTISE
 
 
 class MentorForm(ApplicationForm):
     bootstrap_field_info = {
         '': {'fields': [
             {'name': 'university', 'space': 6}, {'name': 'degree', 'space': 6},
-            {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}, {'name': 'study_work', 'space': 6},
-            {'name': 'company', 'space': 6, 'visible': {'study_work': 'True'}}]},
+            {'name': 'country', 'space': 6}, {'name': 'origin', 'space': 6}, {'name': 'field_of_expertise', 'space': 4},
+            {'name': 'study_work', 'space': 4}, {'name': 'company', 'space': 4, 'visible': {'study_work': 'True'}}]},
         'Hackathons': {
             'fields': [{'name': 'first_timer', 'space': 4},
                        {'name': 'previous_roles', 'space': 4, 'visible': {'first_timer': 'False'}},
@@ -60,6 +60,12 @@ class MentorForm(ApplicationForm):
     more_information = forms.CharField(
         required=False,
         label=_('There\'s something else we need to know?')
+    )
+
+    field_of_expertise = forms.TypedChoiceField(
+        label=_('Which is your field of expertise?'),
+        widget=forms.RadioSelect(attrs={'class': 'inline'}),
+        choices=FIELD_OF_EXPERTISE
     )
 
     class Meta(ApplicationForm.Meta):

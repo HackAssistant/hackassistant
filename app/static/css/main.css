@@ -1,20 +1,16 @@
-@font-face {
-    font-family: ProximaNovaRegular;
-    src: url(../fonts/ProximaNovaRegular.ttf);
-}
-
 body {
     background-position: center center;
     background-attachment: fixed;
-    font-family: ProximaNovaRegular, 'Roboto', sans-serif;
+    font-family: Montserrat, sans-serif;
 }
 
 
 .background {
 
-    background-position: center center;
+    background-position: 50%;
+    background-size: cover;
     background-attachment: fixed;
-    background-repeat: repeat repeat;
+    background-repeat: no-repeat;
 
     min-height: 100%;
     min-width: 100%;
@@ -24,11 +20,11 @@ body {
 }
 
 .dark > .background {
-    background-image: url("../img/background-dark.png");
+    background-image: url("../img/bg-dark.jpg");
 }
 
 .light > .background {
-    background-image: url("../img/background-light.png");
+    background-image: url("../img/bg-light.jpg");
 }
 
 .content {

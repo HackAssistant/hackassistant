@@ -5,12 +5,12 @@
 
 // Picked colors from here: https://color.adobe.com/es/create/color-wheel
 
-$primary:       #5760d1;
-$secondary:     darken(#92939C, 20%);
+$primary:       #0166cc;
+$secondary:     #666666;
 $success:       #4CE081;
-$info:          #5BD3EB;
-$warning:       #E0BA2F;
-$danger:        #E05159;
+$info:          #21C2F8;
+$warning:       #ffc800;
+$danger:        #ff1b28;
 $light:         white;
 $dark:          black;
 
@@ -73,12 +73,6 @@ $table-variants: (
     --bs-backdrop-bg: rgb(75, 75, 75)
 }
 
-body.light {
-  background-image: linear-gradient(darken($primary, 15%), $primary);
-}
-body.dark {
-  background-image: linear-gradient(lighten($primary, 5%), darken($primary, 10%));
-}
 @media (max-width: map-get($grid-breakpoints, "lg")) {
     .border-lg {
         border: 0 !important;
