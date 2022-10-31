@@ -12,25 +12,28 @@ from django.utils.html import strip_tags
 # Author Arnau Casas Saez
 class Email:
 
-    def __init__(self, name, context, to, request, **kwargs) -> None:
+    def __init__(self, name, context, to, request=None, **kwargs) -> None:
         super().__init__()
         self.kwargs = kwargs
         self.name = name
         self.list_mails = [to, ] if isinstance(to, str) else to
         self.request = request
         self.context = context
+        self.render_kwargs = {}
+        if request is not None:
+            self.render_kwargs['request'] = request
         self.__get_subject__()
         self.__get_content__()
 
     # Private method that renders and save the subject of the mail
     def __get_subject__(self):
         file_template = 'mails/%s.txt' % self.name
-        self.subject = render_to_string(template_name=file_template, context=self.context, request=self.request)
+        self.subject = render_to_string(template_name=file_template, context=self.context, **self.render_kwargs)
 
     # Private method that renders and save the HTML content of the mail
     def __get_content__(self):
         file_template = 'mails/%s.html' % self.name
-        self.html_message = render_to_string(template_name=file_template, context=self.context, request=self.request)
+        self.html_message = render_to_string(template_name=file_template, context=self.context, **self.render_kwargs)
         self.plain_message = strip_tags(self.html_message)
 
     # Public method that sends the mail to [list_mails] if not debug else saves the file at mails folder
