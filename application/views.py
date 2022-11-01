@@ -176,7 +176,8 @@ class ApplicationApply(TemplateView):
         return user, user_registered
 
     def forms_are_valid(self, user_form, application_form, context):
-        if getattr(settings, 'RECAPTCHA_REGISTER', False) and RecaptchaForm.active():
+        if not self.request.user.is_authenticated and getattr(settings, 'RECAPTCHA_REGISTER', False) \
+                and RecaptchaForm.active():
             recaptcha_form = RecaptchaForm(self.request.POST, request=self.request)
             if not recaptcha_form.is_valid():
                 context.update({'recaptcha_form': recaptcha_form})
