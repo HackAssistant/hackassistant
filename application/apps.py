@@ -14,6 +14,7 @@ class ApplicationConfig(AppConfig):
         from django.contrib.auth.models import Group
 
         ApplicationTypeConfig = self.get_model('ApplicationTypeConfig')
+        Group.objects.get_or_create(name='Organizer')
 
         for name, obj in inspect.getmembers(sys.modules['application.forms']):
             if inspect.isclass(obj) and issubclass(obj, ApplicationForm) and obj != ApplicationForm:

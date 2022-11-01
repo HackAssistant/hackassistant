@@ -24,6 +24,7 @@ from app.mixins import TabsViewMixin
 from application import forms
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig, PromotionalCode
+from review.emails import send_invitation_email
 from review.filters import ApplicationTableFilter, ApplicationTableFilterWithPromotion
 from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote, FileReview
@@ -274,6 +275,7 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
             try:
                 application.save()
                 log.save()
+                send_invitation_email(request, application)
             except Error:
                 error += 1
         if error > 0:

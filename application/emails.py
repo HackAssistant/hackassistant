@@ -19,7 +19,7 @@ def send_email_to_blocked_admins(request, users, application, blocked_user):
 def send_email_last_reminder(application):
     context = {
         'application': application,
-        'url': 'https://' + str(settings.HOST) + reverse('edit_application', kwargs={'uuid': application.get_uuid}),
+        'url': 'https://' + str(settings.HOST) + reverse('home'),
         'app_hack': getattr(settings, 'HACKATHON_NAME'),
     }
     Email(name='application_last_reminder', context=context, to=application.user.email).send()
