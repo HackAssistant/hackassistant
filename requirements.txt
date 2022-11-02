@@ -7,7 +7,7 @@ charset-normalizer==2.1.0
 cryptography==37.0.2
 Deprecated==1.2.13
 Django==4.0.8
-django-admin-honeypot@https://github.com/dmpayton/django-admin-honeypot/archive/refs/heads/develop.zip
+django-admin-honeypot @ https://github.com/dmpayton/django-admin-honeypot/archive/refs/heads/develop.zip
 django-appconf==1.0.5
 django-axes==5.39.0
 django-bootstrap5==21.3
@@ -23,6 +23,7 @@ django-libsass==0.9
 django-password-validators==1.7.0
 django-recaptcha==3.0.0
 django-tables2==2.4.1
+filetype==1.1.0
 flake8==4.0.1
 idna==3.3
 jwcrypto==1.4
