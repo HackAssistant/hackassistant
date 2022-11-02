@@ -54,4 +54,5 @@ def app_variables(request):
         'app_landing': getattr(settings, 'HACKATHON_LANDING'),
         'theme': get_theme(request),
         'captcha_site_key': getattr(settings, 'GOOGLE_RECAPTCHA_SITE_KEY', ''),
+        'socialaccount_providers': getattr(settings, 'SOCIALACCOUNT_PROVIDERS', {}),
     }
