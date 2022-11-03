@@ -4,7 +4,7 @@ beautifulsoup4==4.11.1
 certifi==2022.6.15
 cffi==1.15.1
 charset-normalizer==2.1.0
-cryptography==37.0.2
+cryptography==38.0.3
 defusedxml==0.7.1
 Deprecated==1.2.13
 Django==4.0.8
@@ -25,6 +25,7 @@ django-libsass==0.9
 django-password-validators==1.7.0
 django-recaptcha==3.0.0
 django-tables2==2.4.1
+filetype==1.1.0
 flake8==4.0.1
 idna==3.3
 jwcrypto==1.4

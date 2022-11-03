@@ -5,6 +5,7 @@ class UserStats(base.BaseStats):
     date_joined = base.Chart(base.Chart.TIMESERIES, order=1)
     diet = base.Chart(base.Chart.DONUT, order=2)
     gender = base.Chart(base.Chart.DONUT, order=3)
+    other_diet = base.Chart(base.Chart.EXTRAS, order=4)
     # tshirt_size = base.Chart(base.Chart.DONUT, order=4)
     under_age = base.Chart(base.Chart.DONUT, order=5)
 
