@@ -33,6 +33,7 @@ urlpatterns = [
     path('review/', include('review.urls')),
     path('event/', include('event.urls')),
     path('stats/', include('stats.urls')),
+    path('accounts/', include('allauth.urls')),
 ]
 
 if is_installed("friends"):
