@@ -79,6 +79,14 @@ body.light {
 body.dark {
   background-image: linear-gradient(lighten($primary, 5%), darken($primary, 10%));
 }
+@media (min-width: map-get($grid-breakpoints, "md")) {
+    .ms-md-auto {
+        margin-left: auto !important;
+    }
+    .w-md-fc {
+        width: fit-content;
+    }
+}
 @media (max-width: map-get($grid-breakpoints, "lg")) {
     .border-lg {
         border: 0 !important;
