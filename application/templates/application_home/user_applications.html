@@ -63,13 +63,13 @@
 {% for app in user_applications_grouped|get_item:'default' %}
     <div class="mt-2 rounded-3 p-3 bg-contrast">
         <div class="row">
-            <div class="col-12 col-lg-10"><h2>{{ app.type.name }} {% translate 'application' %}</h2></div>
-            <div class="col-12 col-lg-2 text-end"><p class="h5 bg-{{ app.get_public_status_color }} p-1 m-0" style="margin-left: auto !important; width: fit-content; border-radius: 5px; margin-right: 0">&nbsp{{ app.get_public_status_display }}&nbsp</p></div>
+            <div class="col-6 col-xl-10"><h2>{{ app.type.name }} {% translate 'application' %}</h2></div>
+            <div class="col-6 col-xl-2 text-end"><p class="h5 bg-{{ app.get_public_status_color }} p-1 m-0" style="margin-left: auto !important; width: fit-content; border-radius: 5px; margin-right: 0">&nbsp{{ app.get_public_status_display }}&nbsp</p></div>
         </div>
         <p>{{ app.get_public_status_description }}</p>
         {% if app.get_public_status == app.STATUS_PENDING or app.get_public_status == app.STATUS_NEEDS_CHANGE %}
             <div class="row justify-content-around mt-3 mb-3">
-                <div class="col-6 d-grid d-md-block">
+                <div class="col-lg-6 col-12 d-grid d-md-block">
                     <a href="{% url 'edit_application' app.get_uuid %}" class="btn btn-primary col-12">{% if app.can_edit %}{% translate 'Edit application' %}{% else %}{% translate 'View application' %}{% endif %}</a>
                 </div>
             </div>
