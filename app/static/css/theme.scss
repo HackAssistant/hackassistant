@@ -73,6 +73,14 @@ $table-variants: (
     --bs-backdrop-bg: rgb(75, 75, 75)
 }
 
+@media (min-width: map-get($grid-breakpoints, "md")) {
+    .ms-md-auto {
+        margin-left: auto !important;
+    }
+    .w-md-fc {
+        width: fit-content;
+    }
+}
 @media (max-width: map-get($grid-breakpoints, "lg")) {
     .border-lg {
         border: 0 !important;
