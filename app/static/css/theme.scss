@@ -30,6 +30,8 @@ $table-variants: (
   "dark":       lighten($dark, 5%),
 );
 
+$pagination-bg: darken($light, 5%);
+
 
 @import './bootstrap/bootstrap';
 
@@ -102,6 +104,18 @@ body.dark {
 }
 
 .dark {
+    .pagination {
+        li > a {
+            background-color: lighten($dark, 5%);
+            border-color: lighten($dark, 30%);
+        }
+
+        .active > a {
+            background-color: $primary;
+            border-color: $primary;
+        }
+    }
+
     .c3-axis-y text {
        fill: #eeeeee;
     }
@@ -117,4 +131,14 @@ body.dark {
     .c3-tooltip tr {
         color: #222222;
     }
+}
+
+::-moz-selection {
+  color: $white;
+  background: $primary;
+}
+
+::selection {
+  color: $white;
+  background: $primary;
 }

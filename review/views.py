@@ -63,7 +63,7 @@ class ReviewApplicationTabsMixin(TabsViewMixin):
 class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableMixin, FilterView):
     template_name = 'application_list.html'
     table_class = ApplicationTable
-    table_pagination = {'per_page': 100}
+    table_pagination = {'per_page': 50}
     filterset_class = ApplicationTableFilter
 
     def get_table_class(self):
@@ -101,8 +101,9 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
                                                       status=Application.STATUS_BLOCKED,
                                                       status_update_date__gt=(timezone.now() -
                                                                               timezone.timedelta(days=3))).exists()
+        emails = list(context['object_list'].values_list('user__email', flat=True))
         context.update({'dubious': dubious, 'Application': Application, 'blocked': blocked,
-                        'apply_url': self.request.build_absolute_uri(reverse('apply'))})
+                        'apply_url': self.request.build_absolute_uri(reverse('apply')), 'emails': emails})
         return context
 
 
