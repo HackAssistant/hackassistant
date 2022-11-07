@@ -20,6 +20,7 @@ from app.utils import is_installed
 from application import forms
 from application.emails import send_email_to_blocked_admins
 from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition
+from user.emails import send_verification_email
 from user.forms import UserProfileForm, RecaptchaForm
 from user.mixins import LoginRequiredMixin
 from user.models import BlockedUser
@@ -203,6 +204,7 @@ class ApplicationApply(TemplateView):
     def success_response(self, application_type, registered, user):
         messages.success(self.request, _('Applied successfully!'))
         if application_type.create_user and registered:
+            send_verification_email(request=self.request, user=user)
             token = PasswordResetTokenGenerator().make_token(user)
             uuid = user.get_encoded_pk()
             return redirect(reverse('password_reset', kwargs={'uid': uuid, 'token': token}))
