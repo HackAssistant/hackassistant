@@ -32,7 +32,7 @@ jwcrypto==1.4
 libsass==0.21.0
 mccabe==0.6.1
 oauthlib==3.2.2
-Pillow==9.2.0
+Pillow==9.3.0
 pycodestyle==2.8.0
 pycparser==2.21
 pycryptodome==3.15.0
