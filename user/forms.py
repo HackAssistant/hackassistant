@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from app.mixins import BootstrapFormMixin
-from app.utils import get_theme
+from app.utils import get_theme, is_instance_on_db
 from user.models import User
 from django.utils.translation import gettext_lazy as _
 
@@ -160,7 +160,7 @@ class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         instance = kwargs.get('instance', None)
-        if instance is not None and instance._state.db is not None:  # instance in DB
+        if is_instance_on_db(instance):  # instance in DB
             email_field = self.fields.get('email')
             email_field.widget.attrs['readonly'] = True
             email_field.help_text = _('This field cannot be modified')
@@ -168,7 +168,7 @@ class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
     def get_bootstrap_field_info(self):
         info = super().get_bootstrap_field_info()
         instance = getattr(self, 'instance', None)
-        if instance is None or instance._state.db is None:  # instance not in DB
+        if not is_instance_on_db(instance):  # instance not in DB
             fields = info[_('Personal Info')]['fields']
             result = []
             for field in fields:
@@ -183,7 +183,7 @@ class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
 
     def clean_email(self):
         instance = getattr(self, 'instance', None)
-        if instance is not None and instance._state.db is not None:  # instance in DB
+        if is_instance_on_db(instance):  # instance in DB
             return self.instance.email
         return self.cleaned_data.get('email')
 
