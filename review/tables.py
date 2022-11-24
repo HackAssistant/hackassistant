@@ -45,3 +45,11 @@ class ApplicationInviteTable(ApplicationTable):
 
     class Meta(ApplicationTable.Meta):
         fields = ('select', 'full_name', 'user.email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
+
+
+class ApplicationInviteTableWithPromotion(ApplicationInviteTable):
+    promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
+
+    class Meta(ApplicationTable.Meta):
+        fields = ('select', 'full_name', 'user.email', 'status', 'promotional_code', 'votes', 'vote_avg',
+                  'last_modified', 'detail')
