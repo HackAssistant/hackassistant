@@ -28,3 +28,7 @@ def full_cache(func):
 
 def is_installed(app):
     return app in settings.INSTALLED_APPS
+
+
+def is_instance_on_db(instance):
+    return instance is not None and instance._state.db is not None and not instance._state.adding

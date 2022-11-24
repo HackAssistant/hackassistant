@@ -7,6 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from app.mixins import BootstrapFormMixin
+from app.utils import is_instance_on_db
 from application.models import Application
 
 
@@ -76,14 +77,14 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
         self.initial.update(self.instance.form_data)
         instance = kwargs.get('instance', None)
         hidden_fields = self.get_hidden_edit_fields()
-        if instance is not None and instance._state.db is not None:  # instance in DB
+        if is_instance_on_db(instance):  # instance in DB
             for hidden_field in hidden_fields:
                 self.fields.get(hidden_field).required = False
 
     def get_bootstrap_field_info(self):
         fields = super().get_bootstrap_field_info()
         instance = getattr(self, 'instance', None)
-        if instance is None or instance._state.db is None:  # instance not in DB
+        if not is_instance_on_db(instance):  # instance not in DB
             policy_fields = self.get_policy_fields()
             fields.update({
                 _('HackUPC Polices'): {
