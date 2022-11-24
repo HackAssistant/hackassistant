@@ -84,7 +84,8 @@ class HackerForm(ApplicationForm):
     resume_share = forms.BooleanField(required=False, initial=False, label=_(
         'I authorize %s to share my CV with %s Sponsors.' % (getattr(settings, 'HACKATHON_ORG'),
                                                              getattr(settings, 'HACKATHON_NAME'))))
-    resume = forms.FileField(validators=[validate_file_extension], label=_('Upload your resume'), help_text=_(
+    resume = forms.FileField(validators=[validate_file_extension(EXTENSIONS)],
+                             label=_('Upload your resume'), help_text=_(
         'Accepted file formats: %s' % (', '.join(EXTENSIONS) if EXTENSIONS else 'Any')))
 
     def get_policy_fields(self):

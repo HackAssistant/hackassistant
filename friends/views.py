@@ -1,4 +1,3 @@
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -8,16 +7,19 @@ from app.mixins import TabsViewMixin
 from application.models import Application, Edition
 from friends.forms import FriendsForm
 from friends.models import FriendsCode
+from user.mixins import LoginRequiredMixin
 
 
-class JoinFriendsView(TabsViewMixin, TemplateView):
+class JoinFriendsView(LoginRequiredMixin, TabsViewMixin, TemplateView):
     template_name = "join_friends.html"
 
-    def dispatch(self, request, *args, **kwargs):
+    def handle_permissions(self, request):
+        permission = super().handle_permissions(request)
         edition = Edition.get_default_edition()
-        if not Application.objects.filter(type__name="Hacker", user=request.user, edition=edition).exists():
-            raise PermissionDenied()
-        return super().dispatch(request, *args, **kwargs)
+        if permission is None and not \
+                Application.objects.filter(type__name="Hacker", user=request.user, edition=edition).exists():
+            return self.handle_no_permission()
+        return permission
 
     def get_current_tabs(self, **kwargs):
         return [("Applications", reverse("apply_home")), ("Friends", reverse("join_friends"))]

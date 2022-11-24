@@ -24,10 +24,12 @@ from app.mixins import TabsViewMixin
 from application import forms
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig, PromotionalCode
+from review.emails import send_invitation_email
 from review.filters import ApplicationTableFilter, ApplicationTableFilterWithPromotion
 from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote, FileReview
-from review.tables import ApplicationTable, ApplicationInviteTable, ApplicationTableWithPromotion
+from review.tables import ApplicationTable, ApplicationInviteTable, ApplicationTableWithPromotion, \
+    ApplicationInviteTableWithPromotion
 from user.mixins import IsOrganizerMixin
 from user.models import BlockedUser
 
@@ -62,12 +64,13 @@ class ReviewApplicationTabsMixin(TabsViewMixin):
 class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableMixin, FilterView):
     template_name = 'application_list.html'
     table_class = ApplicationTable
-    table_pagination = {'per_page': 100}
+    table_class_with_promotion = ApplicationTableWithPromotion
+    table_pagination = {'per_page': 50}
     filterset_class = ApplicationTableFilter
 
     def get_table_class(self):
         if PromotionalCode.active():
-            return ApplicationTableWithPromotion
+            return self.table_class_with_promotion
         return super().get_table_class()
 
     def get_filterset_class(self):
@@ -100,8 +103,9 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
                                                       status=Application.STATUS_BLOCKED,
                                                       status_update_date__gt=(timezone.now() -
                                                                               timezone.timedelta(days=3))).exists()
+        emails = list(context['object_list'].values_list('user__email', flat=True))
         context.update({'dubious': dubious, 'Application': Application, 'blocked': blocked,
-                        'apply_url': self.request.build_absolute_uri(reverse('apply'))})
+                        'apply_url': self.request.build_absolute_uri(reverse('apply')), 'emails': emails})
         return context
 
 
@@ -248,6 +252,7 @@ class ApplicationLogs(IsOrganizerMixin, PermissionRequiredMixin, TemplateView):
 
 class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList):
     table_class = ApplicationInviteTable
+    table_class_with_promotion = ApplicationInviteTableWithPromotion
     permission_required = 'application.can_invite_application'
 
     def get_current_tabs(self, **kwargs):
@@ -274,6 +279,7 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
             try:
                 application.save()
                 log.save()
+                send_invitation_email(request, application)
             except Error:
                 error += 1
         if error > 0:

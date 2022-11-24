@@ -12,7 +12,7 @@
                     {% if apply_type.active %}{% translate 'Closes in' %}{% else %}{% translate 'Opens in' %}{% endif %}{{ apply_type.time_left }}
                 </strong>
                 <div class="row justify-content-around mt-3 mb-3">
-                    <div class="col-6 d-grid d-md-block">
+                    <div class="col-lg-6 col-12 d-grid d-md-block">
                         <a href="{% url 'apply' %}?type={{ apply_type.name }}&token={{ apply_type.get_token }}" class="btn {% if user_applications %}btn-secondary{% else %}btn-primary{% endif %} col-12">{% trans 'Apply as' %} {{ apply_type.name }}</a>
                     </div>
                 </div>

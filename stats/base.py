@@ -22,7 +22,7 @@ class BaseStats(object):
                     value = stat[1].update_field(value, instance)
                     data[stat[1].field_name] = value
         for stat in inspect.getmembers(self):
-            if not stat[0].startswith('_') and isinstance(stat[1], Chart):
+            if not stat[0].startswith('_') and isinstance(stat[1], Chart) and stat[1].field_name in data:
                 data[stat[1].field_name] = stat[1].finalize(data[stat[1].field_name])
         return data
 
@@ -31,7 +31,8 @@ class Chart(object):
     TIMESERIES = 'timeseries'
     BAR = 'bar'
     DONUT = 'donut'
-    DEFAULT_COL = {TIMESERIES: 12, BAR: 6, DONUT: 6}
+    EXTRAS = 'extras'
+    DEFAULT_COL = {TIMESERIES: 12, BAR: 6, DONUT: 6, EXTRAS: 12}
 
     def __init__(self, field_type, col=None, datetime_format='%Y-%m-%d', value_getter=None, order=0, top=None):
         self.datetime_format = datetime_format
@@ -93,7 +94,7 @@ class Chart(object):
 
 
 class ApplicationFormChart(Chart):
-    DEFAULT_COL = {Chart.TIMESERIES: 12, Chart.BAR: 12, Chart.DONUT: 6}
+    DEFAULT_COL = {Chart.TIMESERIES: 12, Chart.BAR: 12, Chart.DONUT: 6, Chart.EXTRAS: 12}
 
     def get_field_value(self, instance):
         return instance.form_data.get(self.field_name)

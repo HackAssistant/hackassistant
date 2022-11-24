@@ -3,5 +3,8 @@
 <script nonce="{{ CSP_NONCE }}">
     $(document).ready(() => {
         $('.table').addClass('table-{{ theme }}')
+        $('.pagination > * > a').addClass('page-link')
+        $('.pagination > * > a:first').addClass('rounded-start')
+        $('.pagination > * > a:last').addClass('rounded-end')
     })
 </script>

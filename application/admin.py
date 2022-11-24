@@ -2,7 +2,6 @@ from django import forms
 from django.contrib import admin
 
 from application import models
-from application.views import ApplicationApply
 
 
 class ApplicationAdmin(admin.ModelAdmin):
@@ -13,6 +12,7 @@ class ApplicationAdmin(admin.ModelAdmin):
 class ApplicationTypeConfigAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        from application.views import ApplicationApply
         if 'instance' in kwargs:
             self.initial['file_review_fields'] = kwargs['instance'].get_file_review_fields()
             ApplicationForm = ApplicationApply.get_form_class(kwargs['instance'].name)

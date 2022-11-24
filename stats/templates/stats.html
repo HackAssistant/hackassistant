@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block subtitle %}{{ name }} stats{% endblock %}
 {% block head %}
     <link rel="stylesheet" href="{% static 'lib/c3.min.css' %}">
     <script src="https://d3js.org/d3.v3.min.js"></script>
@@ -105,6 +106,17 @@
                     }
                 });
             }
+            function extra_chart(field_name, data) {
+                let list = '<ul>'
+                const field_data = data[field_name]
+                Object.keys(field_data).sort((a, b) => {
+                    return field_data[a] < field_data[b]
+                }).forEach((item) => {
+                    list = list + `<li><strong>${item}</strong>: ${field_data[item]}</li>`
+                })
+                list = list + '</ul>'
+                $('#' + field_name + '_stat').append(list)
+            }
             function objectifyArray(array) {
                 let returnArray = {}
                 for (let i = 0; i < array.length; i++) {
@@ -121,7 +133,7 @@
                 }
                 return returnArray
             }
-            let charts = {bar: bar_chart, donut: donut_chart, timeseries: timeseries_chart}
+            let charts = {bar: bar_chart, donut: donut_chart, timeseries: timeseries_chart, extras: extra_chart}
             let stats = JSON.parse(document.getElementById('stats-data').textContent).sort((a, b) => a.order - b.order)
             function toTitleCase(str) {
                 return [str.replaceAll('_', ' ').toLowerCase()].map(function (word) {
