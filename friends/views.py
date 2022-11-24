@@ -8,9 +8,10 @@ from app.mixins import TabsViewMixin
 from application.models import Application, Edition
 from friends.forms import FriendsForm
 from friends.models import FriendsCode
+from user.mixins import LoginRequiredMixin
 
 
-class JoinFriendsView(TabsViewMixin, TemplateView):
+class JoinFriendsView(LoginRequiredMixin, TabsViewMixin, TemplateView):
     template_name = "join_friends.html"
 
     def dispatch(self, request, *args, **kwargs):
