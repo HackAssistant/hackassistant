@@ -5,7 +5,6 @@ from axes.utils import reset_request
 from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse, resolve
 from django.utils import timezone
@@ -79,7 +78,7 @@ class Login(AuthTemplateViews):
         if not AxesProxyHandler.is_allowed(self.request):
             ip_address = get_client_ip_address(self.request)
             attempt = AccessAttempt.objects\
-                .fitler(ip_address=ip_address, failures_since_start__gte=getattr(settings, 'AXES_FAILURE_LIMIT'))\
+                .filter(ip_address=ip_address, failures_since_start__gte=getattr(settings, 'AXES_FAILURE_LIMIT'))\
                 .first()
             if attempt is not None:
                 time_left = (attempt.attempt_time + get_cool_off()) - timezone.now()
@@ -100,8 +99,7 @@ class Login(AuthTemplateViews):
         if self.forms_are_valid(form, context):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
-            with transaction.atomic():
-                user = auth.authenticate(email=email, password=password, request=request)
+            user = auth.authenticate(email=email, password=password, request=request)
             if user and user.is_active:
                 auth.login(request, user)
                 reset_request(request)
