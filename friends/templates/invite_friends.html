@@ -1,0 +1,18 @@
+{% extends 'application_list.html' %}
+{% load i18n %}
+{% block invite_list_title %}
+    <div class="row justify-content-between gy-2">
+        <div class="col-12 col-lg-2 d-grid d-md-block">
+            <a href="{% url 'application_invite' %}?type={{ application_type.name }}&status={{ Application.STATUS_PENDING }}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+        </div>
+    </div>
+    <h1 class="mt-3">{% translate 'Friend list invite' %}</h1>
+{% endblock %}
+{% block count_application_number %}
+    function get_invited_application_number() {
+        let result = 0
+        $('input[name="select"]:checkbox:checked').parent().parent().find('td[class="pending"]').each((_, item) => result += parseInt(item.innerHTML))
+        return result
+    }
+{% endblock %}
+{% block more_invites %}{% endblock %}

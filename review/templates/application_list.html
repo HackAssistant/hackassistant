@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load perms %}
+{% load util %}
 {% block subtitle %}{% translate 'Application list' %}{% endblock %}
 {% block content %}
     {% if not invite %}
@@ -22,12 +23,14 @@
             {% endif %}
         </div>
         <div class="row mt-3">
-            <div class="col-9">
-                <h1>{% translate 'Application list' %}</h1>
-            </div>
-            <div class="col-3 text-end">
-                <button type="button" class="btn btn-secondary align-middle" data-bs-toggle="modal" data-bs-target="#urlFormLink"><i class="bi bi-info-circle-fill"></i></button>
-            </div>
+            {% block table_list_title %}
+                <div class="col-9">
+                    <h1>{% translate 'Application list' %}</h1>
+                </div>
+                <div class="col-3 text-end">
+                    <button type="button" class="btn btn-secondary align-middle" data-bs-toggle="modal" data-bs-target="#urlFormLink"><i class="bi bi-info-circle-fill"></i></button>
+                </div>
+            {% endblock %}
             <div class="modal fade" id="urlFormLink" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content bg-{{ theme }} border-1">
@@ -48,12 +51,14 @@
             </div>
         </div>
     {% else %}
-        <div class="row justify-content-between gy-2">
-            <div class="col-12 col-lg-2 d-grid d-md-block">
-                <a href="{% url 'application_list' %}?type={{ application_type.name }}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+        {% block invite_list_title %}
+            <div class="row justify-content-between gy-2">
+                <div class="col-12 col-lg-2 d-grid d-md-block">
+                    <a href="{% url 'application_list' %}?type={{ application_type.name }}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+                </div>
             </div>
-        </div>
-        <h1 class="mt-3">{% translate 'Invite applications' %}</h1>
+            <h1 class="mt-3">{% translate 'Invite applications' %}</h1>
+        {% endblock %}
     {% endif %}
 
     {% if application_type %}
@@ -94,21 +99,55 @@
             </div>
         {% endif %}
     {% else %}
+        <div class="progress">
+            <div class="progress-bar bg-primary" role="progressbar" aria-label="Invited" style="width: {{ application_stats.accepted|percent:application_type.spots }}%">{{ application_stats.accepted }} accepted</div>
+            <div class="progress-bar bg-secondary" role="progressbar" aria-label="Invited" style="width: {{ application_stats.invited|percent:application_type.spots }}%">{{ application_stats.invited }} invited</div>
+            <div id="progress-select" class="progress-bar bg-info" style="width: 0%" role="progressbar" aria-label="Selected">0 selected</div>
+        </div>
         <form method="post" id="invite-form">
             {% csrf_token %}
             {% include 'components/table.html' %}
             <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
                 <button class="btn btn-primary" onclick="return confirm_invite()">{% translate 'Confirm invite' %}</button>
             </div>
+            {% block more_invites %}
+                <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
+                    <a href="{% url 'invite_friends' %}?type={{ application_type.name }}" class="btn btn-secondary">{% translate 'Group by friends' %}</a>
+                </div>
+            {% endblock %}
         </form>
         <script nonce="{{ request.csp_nonce }}">
             function select_all(source) {
                 $('input[name="select"]').prop('checked', source.checked);
             }
+            {% block count_application_number %}
+                function get_invited_application_number() {
+                    return $('input[name="select"]:checkbox:checked').length
+                }
+            {% endblock %}
             function confirm_invite() {
-                let number_checked = $('input[name="select"]:checkbox:checked').length
+                let number_checked = get_invited_application_number()
                 return confirm(number_checked + ' {% translate 'applications will be invited. Are you sure?' %}')
             }
+            $(document).ready(() => {
+                let spots = {{ application_type.spots }};
+                let free_spots = spots - ({{ application_stats.accepted }} + {{ application_stats.invited }});
+                let progress_bar = $('#progress-select')
+                let accepted_to_pass_limit = false
+                $('input[name="select"]').click((event) => {
+                    let selected = get_invited_application_number()
+                    if (selected > free_spots && !accepted_to_pass_limit) {
+                        accepted_to_pass_limit = confirm('{% translate 'You have reached the limit. Do you want to continue?' %}')
+                    }
+                    if (selected <= free_spots || accepted_to_pass_limit) {
+                        progress_bar.html(`${selected} of ${free_spots} selected`)
+                        progress_bar.css('width', `${Math.min(((selected / spots) * 100), (((spots - free_spots) / spots) * 100))}%`)
+                    } else {
+                        $(event.target).prop('checked', false)
+                    }
+                    if (selected <= free_spots) accepted_to_pass_limit = false
+                })
+            })
         </script>
     {% endif %}
 {% endblock %}
