@@ -74,6 +74,7 @@ class ApplicationTypeConfig(models.Model):
     hidden = models.BooleanField(default=False, help_text=_('Setting this to True doesn\'t show the application '
                                                             'to registered users'))
     token = models.UUIDField(default=uuid.uuid4)
+    spots = models.PositiveIntegerField(default=100, help_text=_('Number of total spots for this type of participants'))
 
     @property
     def get_token(self):

@@ -33,3 +33,8 @@ def get_type_list(app_list):
 @register.simple_tag
 def crispy(*args, **kwargs):
     return None
+
+
+@register.filter
+def percent(number_one, number_all):
+    return (number_one / number_all) * 100

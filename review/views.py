@@ -279,9 +279,16 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
             raise PermissionDenied()
         return super().dispatch(request, *args, **kwargs)
 
+    @staticmethod
+    def get_application_status(application_type):
+        return Application.objects.actual().filter(type=application_type).aggregate(
+            accepted=Count('uuid', filter=Q(status__in=[Application.STATUS_CONFIRMED, Application.STATUS_ATTENDED])),
+            invited=Count('uuid', filter=Q(status__in=[Application.STATUS_INVITED, Application.STATUS_LAST_REMINDER]))
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({'invite': True})
+        context.update({'invite': True, 'application_stats': self.get_application_status(context['application_type'])})
         return context
 
     def post(self, request, *args, **kwargs):
