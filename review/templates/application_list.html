@@ -141,7 +141,7 @@
                     }
                     if (selected <= free_spots || accepted_to_pass_limit) {
                         progress_bar.html(`${selected} of ${free_spots} selected`)
-                        progress_bar.css('width', `${Math.min(((selected / spots) * 100), (((spots - free_spots) / spots) * 100))}%`)
+                        progress_bar.css('width', `${Math.min(((selected / spots) * 100), ((free_spots / spots) * 100))}%`)
                     } else {
                         $(event.target).prop('checked', false)
                     }
