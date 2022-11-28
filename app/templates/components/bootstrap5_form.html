@@ -63,7 +63,7 @@
                                         field.removeClass('is-valid').addClass('is-invalid')
                                         let div_field = $('.mb-3').has('#{{ field.field.auto_id }}')
                                         div_field.find('.valid-feedback, .invalid-feedback').remove()
-                                        field.after('<div class="invalid-feedback">{% translate 'Please select one of the dropdown options or write: Others' %}.</div>')
+                                        field.after('<div class="invalid-feedback">{% translate 'Please select one of the autocomplete options or write: Others' %}.</div>')
                                         $([document.documentElement, document.body]).animate({
                                             scrollTop: div_field.offset().top
                                         }, 100)

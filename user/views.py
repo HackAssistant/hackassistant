@@ -77,9 +77,14 @@ class Login(AuthTemplateViews):
     def add_axes_context(self, context):
         if not AxesProxyHandler.is_allowed(self.request):
             ip_address = get_client_ip_address(self.request)
-            attempt = AccessAttempt.objects.get(ip_address=ip_address)
-            time_left = (attempt.attempt_time + get_cool_off()) - timezone.now()
-            minutes_left = int((time_left.total_seconds() + 59) // 60)
+            attempt = AccessAttempt.objects\
+                .filter(ip_address=ip_address, failures_since_start__gte=getattr(settings, 'AXES_FAILURE_LIMIT'))\
+                .first()
+            if attempt is not None:
+                time_left = (attempt.attempt_time + get_cool_off()) - timezone.now()
+                minutes_left = int((time_left.total_seconds() + 59) // 60)
+            else:
+                minutes_left = 5
             axes_error_message = _('Too many login attempts. Please try again in %s minutes.') % minutes_left
             context.update({'blocked_message': axes_error_message})
 
