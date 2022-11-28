@@ -428,3 +428,6 @@ if os.environ.get('GITHUB_CLIENT_ID', None) is not None and os.environ.get('GITH
         },
         'ICON': 'bi bi-github',
     }
+
+# Disposable email token from https://api.testmail.top/
+DISPOSABLE_EMAIL_TOKEN = os.environ.get('DISPOSABLE_EMAIL_TOKEN', None)
