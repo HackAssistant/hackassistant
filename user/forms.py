@@ -42,7 +42,7 @@ class LoginForm(BootstrapFormMixin, forms.Form):
     bootstrap_field_info = {'': {'fields': [{'name': 'email', 'space': 12}, {'name': 'password', 'space': 12}]}}
 
     email = forms.EmailField(label=_('Email'), max_length=100)
-    password = forms.CharField(widget=forms.PasswordInput, label=_('Password'), max_length=100)
+    password = forms.CharField(widget=forms.PasswordInput, label=_('Password'), max_length=128)
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -61,8 +61,8 @@ class UserCreationForm(BootstrapFormMixin, forms.ModelForm):
                                             {'name': 'email', 'space': 12}, {'name': 'password1', 'space': 12},
                                             {'name': 'password2', 'space': 12}]}}
 
-    password1 = forms.CharField(label=_('Password'), widget=forms.PasswordInput)
-    password2 = forms.CharField(label=_('Password confirmation'), widget=forms.PasswordInput,
+    password1 = forms.CharField(label=_('Password'), widget=forms.PasswordInput, max_length=128)
+    password2 = forms.CharField(label=_('Password confirmation'), widget=forms.PasswordInput, max_length=128,
                                 help_text=password_validation.password_validators_help_text_html())
 
     class Meta:
@@ -196,8 +196,6 @@ class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
             'gender': _('This is for demographic purposes. You can skip this question if you want.'),
             'other_diet': _('Please fill here in your dietary requirements. '
                             'We want to make sure we have food for you!'),
-            'origin': "Please select one of the dropdown options or write 'Others'. If the dropdown doesn't show up,"
-                      " type following this schema: <strong>city, nation, country</strong>"
         }
         labels = {
             'gender': _('What gender do you identify as?'),

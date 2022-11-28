@@ -122,8 +122,6 @@ class ApplicationForm(BootstrapFormMixin, forms.ModelForm):
             'gender': _('This is for demographic purposes. You can skip this question if you want.'),
             'other_diet': _('Please fill here in your dietary requirements. '
                             'We want to make sure we have food for you!'),
-            'origin': "Please select one of the dropdown options or write 'Others'. If the dropdown doesn't show up,"
-                      " type following this schema: <strong>city, nation, country</strong>"
         }
         labels = {
             'gender': _('What gender do you identify as?'),

@@ -1,6 +1,7 @@
 import django_tables2 as tables
 from django.db.models import Avg, F, Count
 
+from app.tables import FloatColumn
 from application.models import Application
 
 
@@ -11,8 +12,8 @@ class ApplicationTable(tables.Table):
     last_modified = tables.TemplateColumn(template_code='{{ record.last_modified|timesince }}',
                                           order_by='last_modified')
     votes = tables.Column(accessor='vote_count', verbose_name='Votes')
-
     status = tables.TemplateColumn(template_name='tables/status.html')
+    vote_avg = FloatColumn(float_digits=3)
 
     @staticmethod
     def get_queryset(queryset):

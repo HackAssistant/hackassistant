@@ -108,7 +108,8 @@ class BootstrapFormMixin:
                 if name in api_fields:
                     field['api'] = api_fields[name]
                     if field['api'].get('restrict', False):
-                        field['field'].help_text += _("Please select one of the dropdown options or write 'Others'.")
+                        field['field'].help_text += _("Please select one of the autocomplete options "
+                                                      "or write 'Others'.")
                 if not visible[field['field'].auto_id]:
                     del visible[field['field'].auto_id]
             list_fields['visible'] = visible

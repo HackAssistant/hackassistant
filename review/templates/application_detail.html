@@ -43,25 +43,25 @@
                     </div>
                 {% endif %}
                 <div class="row">
-                    <div class="col-lg-3 fw-bold pb-3 text-lg-end">{% translate 'Full name' %}</div>
-                    <div class="col-lg-9 pb-3">{{ application.user.get_full_name }}</div>
+                    <div class="col-lg-3 fw-bold pb-3 text-lg-end text-break">{% translate 'Full name' %}</div>
+                    <div class="col-lg-9 pb-3 text-break">{{ application.user.get_full_name }}</div>
                 </div>
                 {% if not vote %}
                     <div class="row">
-                        <div class="col-lg-3 fw-bold pb-3 text-lg-end">{% translate 'Email' %}</div>
-                        <div class="col-lg-9 pb-3">{{ application.user.email }}</div>
+                        <div class="col-lg-3 fw-bold pb-3 text-lg-end text-break">{% translate 'Email' %}</div>
+                        <div class="col-lg-9 pb-3 text-break">{{ application.user.email }}</div>
                     </div>
                 {% endif %}
                 <div class="row">
-                    <div class="col-lg-3 fw-bold pb-3 text-lg-end">{% translate 'Status' %}</div>
-                    <div class="col-lg-9 pb-3">
+                    <div class="col-lg-3 fw-bold pb-3 text-lg-end text-break">{% translate 'Status' %}</div>
+                    <div class="col-lg-9 pb-3 text-break">
                         {% include 'tables/status.html' with record=application %}
                     </div>
                 </div>
                 {% if application.promotional_code %}
                     <div class="row">
-                        <div class="col-lg-3 fw-bold pb-3 text-lg-end">{% translate 'Promotion' %}</div>
-                        <div class="col-lg-9 pb-3">
+                        <div class="col-lg-3 fw-bold pb-3 text-lg-end text-break">{% translate 'Promotion' %}</div>
+                        <div class="col-lg-9 pb-3 text-break">
                             {% include 'tables/promotional_code.html' with record=application %}
                         </div>
                     </div>
@@ -69,8 +69,8 @@
                 {% for name, data in details.items %}
                     {% if name not in icons.keys and data != '' %}
                         <div class="row">
-                            <div class="col-lg-3 fw-bold pb-3 text-lg-end">{{ name }}</div>
-                            <div class="col-lg-9 pb-3">{{ data }}</div>
+                            <div class="col-lg-3 fw-bold pb-3 text-lg-end text-break">{{ name }}</div>
+                            <div class="col-lg-9 pb-3 text-break">{{ data }}</div>
                         </div>
                     {% endif %}
                 {% endfor %}
