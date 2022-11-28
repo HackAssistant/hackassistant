@@ -11,6 +11,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
+from user.validations import disposable_email
+
 
 # UserManager from default Auth Django models. This is just to get rid of username field
 class UserManager(BaseUserManager):
@@ -128,7 +130,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     first_name = models.CharField(_("first name"), max_length=150)
     last_name = models.CharField(_("last names"), max_length=150)
-    email = models.EmailField(_("email address"), unique=True)
+    email = models.EmailField(_("email address"), unique=True, validators=[disposable_email])
     email_verified = models.BooleanField(_('email verified'), default=False)
     email_subscribe = models.BooleanField(_('email subscribed'), default=False)
     is_staff = models.BooleanField(
