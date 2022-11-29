@@ -21,6 +21,7 @@ from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
 from app.mixins import TabsViewMixin
+from app.utils import is_installed
 from application import forms
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig, PromotionalCode
@@ -123,22 +124,36 @@ class ApplicationDetail(IsOrganizerMixin, ApplicationPermissionRequiredMixin, Te
             raise Http404()
         return ApplicationForm
 
+    def add_friends_details(self, details, application):
+        if is_installed('friends'):
+            friend_code = application.user.friendscode_set.first()
+            if friend_code is not None:
+                friends = friend_code.get_members().exclude(pk=friend_code.pk).values_list('user__email', flat=True)
+                if len(friends) > 0:
+                    details[_('Number of friends')] = len(friends)
+                    details[_('Friends list')] = ', '.join(friends)
+
+    def get_details(self, application):
+        details = {_('Full Name'): application.user.get_full_name(), _('Status'): application.get_status_display()}
+        if application.promotional_code:
+            details[_('Promotion')] = application.promotional_code.name
+        for name, value in application.form_data.items():
+            if isinstance(value, FileField):
+                value = value.url
+            if isinstance(value, bool):
+                value = _('Yes') if value else _('No')
+            if isinstance(value, list):
+                value = ', '.join(value)
+            details[name.replace('_', ' ').lower().title()] = value
+        self.add_friends_details(details, application)
+        return details
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         application = self.get_application()
         if application is not None:
-            details = {_('Full Name'): application.user.get_full_name(), _('Status'): application.get_status_display()}
-            if application.promotional_code:
-                details[_('Promotion')] = application.promotional_code.name
+            details = self.get_details(application)
             ApplicationForm = self.get_form(application.type)
-            for name, value in application.form_data.items():
-                if isinstance(value, FileField):
-                    value = value.url
-                if isinstance(value, bool):
-                    value = _('Yes') if value else _('No')
-                if isinstance(value, list):
-                    value = ', '.join(value)
-                details[name.replace('_', ' ').lower().title()] = value
             icons = {name.replace('_', ' ').lower().title(): value
                      for name, value in getattr(ApplicationForm.Meta, 'icon_link', {}).items()}
             comments = application.logs.filter(comment__isnull=False)
@@ -264,9 +279,16 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
             raise PermissionDenied()
         return super().dispatch(request, *args, **kwargs)
 
+    @staticmethod
+    def get_application_status(application_type):
+        return Application.objects.actual().filter(type=application_type).aggregate(
+            accepted=Count('uuid', filter=Q(status__in=[Application.STATUS_CONFIRMED, Application.STATUS_ATTENDED])),
+            invited=Count('uuid', filter=Q(status__in=[Application.STATUS_INVITED, Application.STATUS_LAST_REMINDER]))
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({'invite': True})
+        context.update({'invite': True, 'application_stats': self.get_application_status(context['application_type'])})
         return context
 
     def post(self, request, *args, **kwargs):
