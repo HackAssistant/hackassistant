@@ -12,6 +12,7 @@ class CommentForm(BootstrapFormMixin, forms.ModelForm):
                                             {'name': 'comment', 'space': 12}]}}
 
     name = forms.CharField(initial='Comment', widget=forms.HiddenInput())
+    comment = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), max_length=250, label=_('Add new comment'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
