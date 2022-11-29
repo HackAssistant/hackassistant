@@ -97,7 +97,7 @@
                             <div id="comment-block-{{ log.id }}">
                                 <div class="row">
                                     <div class="col-11">
-                                        <p class="fs-5 mb-0" id="comment-text-{{ log.id }}">{{ log.comment }}</p>
+                                        <p class="fs-5 mb-0 text-break" id="comment-text-{{ log.id }}">{{ log.comment }}</p>
                                         <p style="color:gray; margin: 0">by <span title="{{ log.user.get_full_name }}">{% if request.user != log.user %}{{ log.user.email }}{% else %}{% translate 'me' %}{% endif %}</span>
                                             <small class="pull-right">{{ log.date|timesince }} ago</small>
                                         </p>
@@ -129,7 +129,7 @@
             <div id="comment-template" style="display: none">
                 <div>
                     <div id="comment-block-">
-                        <p class="fs-5 mb-0" id="comment-text-"></p>
+                        <p class="fs-5 mb-0 text-break" id="comment-text-"></p>
                         <div class="row">
                             <div class="col-11">
                                 <p style="color:gray; margin: 0">by <span title="{{ request.user.get_full_name }}">me</span>
