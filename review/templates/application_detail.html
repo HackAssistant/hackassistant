@@ -259,7 +259,7 @@
                 </ul>
             {% endif %}
             <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
-                {% if application.type.dubious_enabled and application.status != application.STATUS_DUBIOUS and application.status !=  application.STATUS_NEEDS_CHANGE and application.status != application.STATUS_BLOCKED %}
+                {% if application.type.dubious_enabled and application.status == application.STATUS_PENDING and perms|add_type:application.type.name|has_application_perm:'can_vote_application' %}
                     <button class="btn btn-warning" onclick="mark_dubious()">{% translate 'Mark as dubious' %}</button>
                     <script nonce="{{ request.csp_nonce }}">
                         function mark_dubious() {
