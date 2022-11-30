@@ -9,7 +9,7 @@ def send_dubious_email(request, application, reason, name):
     url = request.build_absolute_uri(reverse('edit_application', kwargs={'uuid': application.get_uuid}))
     now = timezone.now()
     types = ApplicationTypeConfig.objects.exclude(id=application.type_id)\
-        .filter(public=True, end_application_date__gt=now)
+        .filter(hidden=False, end_application_date__gt=now)
     context = {
         'application': application,
         'organizer': request.user,
