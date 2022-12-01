@@ -16,12 +16,42 @@
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-{{ theme }} border-1">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">{% translate 'QR code' %}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="p-3 rounded-3" id="qrcode-in" style="background-color: #ffffff; width: fit-content; margin: auto"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <script nonce="{{ request.csp_nonce }}">
             $(document).ready(() => {
+                let width = ((window.innerWidth > 0) ? window.innerWidth : screen.width) - 100;
+                let inner_qr = undefined;
+                $('#qrcode').click(()=> {
+                    let modal_div = document.getElementById('exampleModal')
+                    let modal = bootstrap.Modal.getOrCreateInstance(modal_div)
+                    if (inner_qr === undefined) {
+                        inner_qr = new QRCode("qrcode-in", {
+                            text: "{{ request.user.qr_code }}",
+                            width: Math.min(400, width),
+                            height: Math.min(400, width),
+                            colorDark : "#000000",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.H
+                        });
+                    }
+                    modal.show()
+                })
                 let qrcode = new QRCode("qrcode", {
                     text: "{{ request.user.qr_code }}",
-                    width: 200,
-                    height: 200,
+                    width: Math.min(200, width),
+                    height: Math.min(200, width),
                     colorDark : "#000000",
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.H
