@@ -26,4 +26,4 @@ def send_invitation_email(request, application):
         'application': application,
         'url': request.build_absolute_uri(reverse('home')),
     }
-    Email(name='application_invite', context=context, to=application.user.email, request=request).send()
+    return Email(name='application_invite', context=context, to=application.user.email, request=request)

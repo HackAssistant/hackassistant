@@ -22,7 +22,7 @@ def send_email_last_reminder(application):
         'url': 'https://' + str(settings.HOST) + reverse('home'),
         'app_hack': getattr(settings, 'HACKATHON_NAME'),
     }
-    Email(name='application_last_reminder', context=context, to=application.user.email).send()
+    return Email(name='application_last_reminder', context=context, to=application.user.email)
 
 
 def send_email_expired(application):
@@ -31,4 +31,4 @@ def send_email_expired(application):
         'app_hack': getattr(settings, 'HACKATHON_NAME'),
         'app_contact': getattr(settings, 'HACKATHON_CONTACT_EMAIL', ''),
     }
-    Email(name='application_expired', context=context, to=application.user.email).send()
+    return Email(name='application_expired', context=context, to=application.user.email)

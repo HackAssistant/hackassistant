@@ -104,8 +104,8 @@ class FriendsListInvite(ApplicationPermissionRequiredMixin, IsOrganizerMixin, Re
 
     def post(self, request, *args, **kwargs):
         selection = request.POST.getlist('select')
-        error = 0
-        invited = 0
+        error = invited = 0
+        emails = None
         for application in Application.objects.actual().filter(user__friendscode__code__in=selection,
                                                                status=Application.STATUS_PENDING):
             log = ApplicationLog(application=application, user=request.user, name='Invited by friends')
@@ -115,12 +115,17 @@ class FriendsListInvite(ApplicationPermissionRequiredMixin, IsOrganizerMixin, Re
                 with transaction.atomic():
                     application.save()
                     log.save()
-                    send_invitation_email(request, application)
                     invited += 1
+                if emails is None:
+                    emails = send_invitation_email(request, application)
+                else:
+                    emails.add(send_invitation_email(request, application))
             except Error:
                 error += 1
+        if emails is not None:
+            emails = emails.send()
         if error > 0:
-            messages.error(request, _('Invited %s, Error: %s') % (invited, error))
+            messages.error(request, _('Invited %s, Emails sent: %s, Error: %s') % (invited, emails or 0, error))
         else:
-            messages.success(request, _('Invited: %s' % invited))
+            messages.success(request, _('Invited: %s, Emails sent: %s' % (invited, emails or 0)))
         return redirect(reverse('invite_friends') + ('?type=%s' % self.request.GET.get('type', 'hacker')))
