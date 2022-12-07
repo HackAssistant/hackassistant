@@ -77,7 +77,7 @@ class Email:
             return len(self.massive_email_list) + 1
         else:
             mail = EmailMultiAlternatives(subject=self.subject, body=self.plain_text, from_email=email_from,
-                                         to=self.list_mails, **self.kwargs)
+                                          to=self.list_mails, **self.kwargs)
             mail.attach_alternative(self.html_message, "text/html")
             if immediate:
                 return self.__send_mails(mail, fail_silently)
