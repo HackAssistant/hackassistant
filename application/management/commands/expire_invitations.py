@@ -4,7 +4,8 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from application.emails import send_email_last_reminder, send_email_expired
+from app.emails import EmailList
+from application.emails import get_email_last_reminder, get_email_expired
 from application.models import ApplicationTypeConfig, Application, ApplicationLog
 from user.models import User
 
@@ -13,6 +14,7 @@ class Command(BaseCommand):
     help = 'Expires all current applications that need to be expired'
 
     def handle(self, *args, **kwargs):
+        emails = EmailList()
         for application_type in ApplicationTypeConfig.objects.filter(expire_invitations__gt=0):
             now = timezone.now()
             server_email = re.search('(?<=<).+?(?=>)', getattr(settings, 'SERVER_EMAIL', ''))
@@ -22,7 +24,6 @@ class Command(BaseCommand):
                     'is_active': False, 'first_name': 'Server', 'last_name': 'Cron'})[0]
             # First we set the last reminder
             diff = timezone.timedelta(days=application_type.expire_invitations - 1)
-            mails = None
             for application in application_type.application_set.actual().filter(status=Application.STATUS_INVITED,
                                                                                 status_update_date__lt=now - diff):
                 log = ApplicationLog(application=application, user=user, name='Last reminder')
@@ -32,10 +33,7 @@ class Command(BaseCommand):
                 application.save()
                 if user is not None:
                     log.save()
-                if mails is None:
-                    mails = send_email_last_reminder(application)
-                else:
-                    mails.add(send_email_last_reminder(application))
+                emails.add(get_email_last_reminder(application))
             # Lastly we set the expired
             diff = timezone.timedelta(days=1)
             for application in application_type.application_set.actual().filter(status=Application.STATUS_LAST_REMINDER,
@@ -47,9 +45,5 @@ class Command(BaseCommand):
                 application.save()
                 if user is not None:
                     log.save()
-                if mails is None:
-                    mails = send_email_expired(application)
-                else:
-                    mails.add(send_email_expired(application))
-            if mails is not None:
-                mails.send()
+                emails.add(get_email_expired(application))
+            emails.send_all()
