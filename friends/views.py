@@ -7,6 +7,7 @@ from django.views.generic import TemplateView
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
+from app.emails import EmailList
 from app.mixins import TabsViewMixin
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, Edition, ApplicationTypeConfig, ApplicationLog
@@ -14,7 +15,7 @@ from friends.filters import FriendsInviteTableFilter
 from friends.forms import FriendsForm
 from friends.models import FriendsCode
 from friends.tables import FriendInviteTable
-from review.emails import send_invitation_email
+from review.emails import get_invitation_email
 from review.views import ReviewApplicationTabsMixin, ApplicationListInvite
 from user.mixins import LoginRequiredMixin, IsOrganizerMixin
 from django.utils.translation import gettext_lazy as _
@@ -105,7 +106,7 @@ class FriendsListInvite(ApplicationPermissionRequiredMixin, IsOrganizerMixin, Re
     def post(self, request, *args, **kwargs):
         selection = request.POST.getlist('select')
         error = invited = 0
-        emails = None
+        emails = EmailList()
         for application in Application.objects.actual().filter(user__friendscode__code__in=selection,
                                                                status=Application.STATUS_PENDING):
             log = ApplicationLog(application=application, user=request.user, name='Invited by friends')
@@ -116,14 +117,10 @@ class FriendsListInvite(ApplicationPermissionRequiredMixin, IsOrganizerMixin, Re
                     application.save()
                     log.save()
                     invited += 1
-                if emails is None:
-                    emails = send_invitation_email(request, application)
-                else:
-                    emails.add(send_invitation_email(request, application))
+                emails.add(get_invitation_email(request, application))
             except Error:
                 error += 1
-        if emails is not None:
-            emails = emails.send()
+        emails = emails.send_all()
         if error > 0:
             messages.error(request, _('Invited %s, Emails sent: %s, Error: %s') % (invited, emails or 0, error))
         else:

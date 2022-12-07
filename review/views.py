@@ -20,12 +20,13 @@ from django.utils.translation import gettext_lazy as _
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
+from app.emails import EmailList
 from app.mixins import TabsViewMixin
 from app.utils import is_installed
 from application import forms
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig, PromotionalCode
-from review.emails import send_invitation_email
+from review.emails import get_invitation_email
 from review.filters import ApplicationTableFilter, ApplicationTableFilterWithPromotion
 from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote, FileReview
@@ -294,7 +295,7 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
     def post(self, request, *args, **kwargs):
         selection = request.POST.getlist('select')
         error = 0
-        emails = None
+        emails = EmailList()
         for application in Application.objects.actual().filter(uuid__in=selection):
             log = ApplicationLog(application=application, user=request.user, name='Invited')
             log.changes = {'status': {'old': application.status, 'new': Application.STATUS_INVITED}}
@@ -302,14 +303,10 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
             try:
                 application.save()
                 log.save()
-                if emails is None:
-                    emails = send_invitation_email(request, application)
-                else:
-                    emails.add(send_invitation_email(request, application))
+                emails.add(get_invitation_email(request, application))
             except Error:
                 error += 1
-        if emails is not None:
-            emails = emails.send()
+        emails = emails.send_all()
         if error > 0:
             messages.error(request, _('Invited %s, Emails sent: %s, Error: %s') %
                            (len(selection) - error, emails or 0, error))
