@@ -1,6 +1,8 @@
 import os
+import re
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
@@ -35,15 +37,29 @@ class Email:
     def __get_content__(self):
         file_template = 'mails/%s.html' % self.name
         self.html_message = render_to_string(template_name=file_template, context=self.context, **self.render_kwargs)
-        self.plain_message = strip_tags(self.html_message)
+        self.__get_plain_text_from_html()
+
+    # Private method that converts the html to plaintext
+    def __get_plain_text_from_html(self):
+        soup = BeautifulSoup(self.html_message, 'html.parser')
+        html_mail_content = soup.find('div', id='email-content')  # We get only the email-content div
+        html_mail_content.find('div', id='socials-content').clear()
+        mail_content = strip_tags(html_mail_content)
+        self.plain_text = re.sub(r'\n\n+', '\n\n', re.sub(r'\n[ \t\r\f\v]+', '\n',
+                                                          re.sub(r'[ \t\r\f\v]+', ' ', mail_content).strip()))
+
+    def __save_email_debug(self, path, extension):
+        content = {'.html': self.html_message, '.txt': self.plain_text}.get(extension)
+        separator = '_'
+        final_path = os.path.join(path, separator.join(self.list_mails) + extension)
+        with open(final_path, "w", encoding='utf-8') as text_file:
+            text_file.write(content)
 
     # Private method that sends all mails
     def __send_mails(self, msg, fail_silently=False):
         self.massive_email_list.insert(0, msg)
-        if settings.DEBUG:
-            connection = get_connection(fail_silently=fail_silently)
-            return connection.send_messages(self.massive_email_list)
-        return len(self.massive_email_list)
+        connection = get_connection(fail_silently=fail_silently)
+        return connection.send_messages(self.massive_email_list)
 
     # Public method that sends the mail to [list_mails] if not debug else saves the file at mails folder
     def send(self, immediate=True, fail_silently=False):
@@ -56,19 +72,16 @@ class Email:
             Path(mails_folder).mkdir(parents=True, exist_ok=True)
             path_mail_test = os.path.join(mails_folder, self.name)
             Path(path_mail_test).mkdir(parents=True, exist_ok=True)
-            separator = '_'
-            final_path = os.path.join(path_mail_test, separator.join(self.list_mails) + '.html')
-            with open(final_path, "w", encoding='utf-8') as text_file:
-                text_file.write(self.html_message)
+            self.__save_email_debug(path_mail_test, '.html')
+            self.__save_email_debug(path_mail_test, '.txt')
             return len(self.massive_email_list) + 1
         else:
-            msg = EmailMultiAlternatives(subject=self.subject, body=self.plain_message, from_email=email_from,
+            mail = EmailMultiAlternatives(subject=self.subject, body=self.plain_text, from_email=email_from,
                                          to=self.list_mails, **self.kwargs)
-            msg.attach_alternative(self.html_message, "text/html")
-            msg.content_subtype = "html"
+            mail.attach_alternative(self.html_message, "text/html")
             if immediate:
-                return self.__send_mails(msg, fail_silently)
-            return msg
+                return self.__send_mails(mail, fail_silently)
+            return mail
 
     # Public email to add an email to the list to send them
     def add(self, mail: 'Email'):
