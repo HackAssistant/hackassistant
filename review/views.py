@@ -294,6 +294,7 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
     def post(self, request, *args, **kwargs):
         selection = request.POST.getlist('select')
         error = 0
+        emails = None
         for application in Application.objects.actual().filter(uuid__in=selection):
             log = ApplicationLog(application=application, user=request.user, name='Invited')
             log.changes = {'status': {'old': application.status, 'new': Application.STATUS_INVITED}}
@@ -301,13 +302,19 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
             try:
                 application.save()
                 log.save()
-                send_invitation_email(request, application)
+                if emails is None:
+                    emails = send_invitation_email(request, application)
+                else:
+                    emails.add(send_invitation_email(request, application))
             except Error:
                 error += 1
+        if emails is not None:
+            emails = emails.send()
         if error > 0:
-            messages.error(request, _('Invited %s, Error: %s') % (len(selection) - error, error))
+            messages.error(request, _('Invited %s, Emails sent: %s, Error: %s') %
+                           (len(selection) - error, emails or 0, error))
         else:
-            messages.success(request, _('Invited: %s' % len(selection)))
+            messages.success(request, _('Invited: %s, Emails sent: %s' % (len(selection), emails or 0)))
         return redirect(reverse('application_list') + '?type=%s&status=%s' % (self.get_application_type(),
                                                                               Application.STATUS_INVITED))
 

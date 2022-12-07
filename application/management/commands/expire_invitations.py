@@ -22,6 +22,7 @@ class Command(BaseCommand):
                     'is_active': False, 'first_name': 'Server', 'last_name': 'Cron'})[0]
             # First we set the last reminder
             diff = timezone.timedelta(days=application_type.expire_invitations - 1)
+            mails = None
             for application in application_type.application_set.actual().filter(status=Application.STATUS_INVITED,
                                                                                 status_update_date__lt=now - diff):
                 log = ApplicationLog(application=application, user=user, name='Last reminder')
@@ -31,7 +32,10 @@ class Command(BaseCommand):
                 application.save()
                 if user is not None:
                     log.save()
-                send_email_last_reminder(application)
+                if mails is None:
+                    mails = send_email_last_reminder(application)
+                else:
+                    mails.add(send_email_last_reminder(application))
             # Lastly we set the expired
             diff = timezone.timedelta(days=1)
             for application in application_type.application_set.actual().filter(status=Application.STATUS_LAST_REMINDER,
@@ -43,4 +47,9 @@ class Command(BaseCommand):
                 application.save()
                 if user is not None:
                     log.save()
-                send_email_expired(application)
+                if mails is None:
+                    mails = send_email_expired(application)
+                else:
+                    mails.add(send_email_expired(application))
+            if mails is not None:
+                mails.send()
