@@ -9,7 +9,7 @@ def send_dubious_email(request, application, reason, name):
     url = request.build_absolute_uri(reverse('edit_application', kwargs={'uuid': application.get_uuid}))
     now = timezone.now()
     types = ApplicationTypeConfig.objects.exclude(id=application.type_id)\
-        .filter(public=True, end_application_date__gt=now)
+        .filter(hidden=False, end_application_date__gt=now)
     context = {
         'application': application,
         'organizer': request.user,
@@ -21,9 +21,9 @@ def send_dubious_email(request, application, reason, name):
           bcc=[request.user.email, ], request=request).send()
 
 
-def send_invitation_email(request, application):
+def get_invitation_email(request, application):
     context = {
         'application': application,
         'url': request.build_absolute_uri(reverse('home')),
     }
-    Email(name='application_invite', context=context, to=application.user.email, request=request).send()
+    return Email(name='application_invite', context=context, to=application.user.email, request=request)
