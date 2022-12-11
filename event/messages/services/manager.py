@@ -21,7 +21,7 @@ class MessageServiceManager(metaclass=SingletonMeta):
         services_conf = getattr(settings, 'MESSAGES_SERVICES', {})
         if not isinstance(services_conf, dict):
             raise cls.MessageServiceDoNotExists('MESSAGES_SERVICES expected a dict and %s was found' %
-                                                 type(services_conf))
+                                                type(services_conf))
         return services_conf.keys() if only_names else services_conf
 
     def __get_services(self) -> dict:
