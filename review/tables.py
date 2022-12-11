@@ -1,12 +1,12 @@
 import django_tables2 as tables
 from django.db.models import Avg, F, Count
 
-from app.tables import FloatColumn
+from app.tables import FloatColumn, TruncatedEmailColumn, TruncatedTextColumn
 from application.models import Application
 
 
 class ApplicationTable(tables.Table):
-    full_name = tables.Column(accessor='user.get_full_name', order_by=('user.first_name', 'user.last_name'))
+    full_name = TruncatedTextColumn(accessor='user.get_full_name', order_by=('user.first_name', 'user.last_name'))
     detail = tables.TemplateColumn(template_name='tables/application_detail.html', verbose_name='Actions',
                                    orderable=False)
     last_modified = tables.TemplateColumn(template_code='{{ record.last_modified|timesince }}',
@@ -14,6 +14,7 @@ class ApplicationTable(tables.Table):
     votes = tables.Column(accessor='vote_count', verbose_name='Votes')
     status = tables.TemplateColumn(template_name='tables/status.html')
     vote_avg = FloatColumn(float_digits=3)
+    email = TruncatedEmailColumn(accessor='user.email')
 
     @staticmethod
     def get_queryset(queryset):
@@ -26,7 +27,7 @@ class ApplicationTable(tables.Table):
     class Meta:
         model = Application
         attrs = {'class': 'table table-striped'}
-        fields = ('full_name', 'user.email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
+        fields = ('full_name', 'email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
         empty_text = 'No applications available'
         order_by = 'vote_avg'
 
@@ -35,7 +36,7 @@ class ApplicationTableWithPromotion(ApplicationTable):
     promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
 
     class Meta(ApplicationTable.Meta):
-        fields = ('full_name', 'user.email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified',
+        fields = ('full_name', 'email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified',
                   'detail')
 
 
@@ -45,12 +46,12 @@ class ApplicationInviteTable(ApplicationTable):
                                                          'td__input': {'class': 'form-check-input'}})
 
     class Meta(ApplicationTable.Meta):
-        fields = ('select', 'full_name', 'user.email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
+        fields = ('select', 'full_name', 'email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
 
 
 class ApplicationInviteTableWithPromotion(ApplicationInviteTable):
     promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
 
     class Meta(ApplicationTable.Meta):
-        fields = ('select', 'full_name', 'user.email', 'status', 'promotional_code', 'votes', 'vote_avg',
+        fields = ('select', 'full_name', 'email', 'status', 'promotional_code', 'votes', 'vote_avg',
                   'last_modified', 'detail')
