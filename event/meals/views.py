@@ -15,13 +15,15 @@ from user.models import User
 # TODO: optional: meal edit i meal create (UI)
 
 
-class MealsList(SingleTableMixin, TemplateView): # later on: AnyApplicationPermissionRequiredMixin / PermissionRequiredMixin
+class MealsList(SingleTableMixin,
+                TemplateView):  # later on: AnyApplicationPermissionRequiredMixin / PermissionRequiredMixin
     # permission_required = 'event.meals.can_view_meals'
     template_name = 'meals_list.html'
     table_class = MealsTable
 
     def get_queryset(self):
         return Meal.objects.all()
+
 
 # class CheckinList(AnyApplicationPermissionRequiredMixin, SingleTableMixin, FilterView):
 #     permission_required = 'event.can_checkin'
@@ -35,7 +37,6 @@ class MealsList(SingleTableMixin, TemplateView): # later on: AnyApplicationPermi
 class CheckinMeal(TemplateView):
     template_name = 'checkin_meal.html'
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
@@ -43,7 +44,7 @@ class CheckinMeal(TemplateView):
             meal = Meal.objects.get(id=mid)
             context.update({'meal': meal})
         except (Meal.DoesNotExist, ValueError):
-            return {'meal_obj':''}
+            return {'meal_obj': ''}
         return context
 
     # def has_permission(self, types):
@@ -62,21 +63,22 @@ class CheckinMeal(TemplateView):
         try:
             user = User.objects.get(qr_code=request.POST.get("qrCode"))
         except:
-            return JsonResponse({'success':False,'message':'User not found with QRCode: '+request.POST.get("qrCode")+". Please try again"})
+            return JsonResponse({'success': False, 'message': 'User not found with QRCode: ' + request.POST.get(
+                "qrCode") + ". Please try again"})
         uid = user.id
         entries = Eaten.objects.all().filter(user_id=uid, meal_id=mid)
         eLen = entries.count()
         timesStr = str(eLen) + "/" + str(meal.times)
-        if(eLen == 0 or eLen < meal.times):
+        if (eLen == 0 or eLen < meal.times):
             # Create a new entry
             eaten = Eaten(user_id=uid, meal_id=mid)
             eaten.save()
             diet = user.diet if (user.diet != 'Others') else user.other_diet
-            return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'times':timesStr})
+            return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'times': timesStr})
 
-        if(eLen >= meal.times):
+        if (eLen >= meal.times):
             # user has eaten the limited quantity.
-            timesStr = str(eLen)+"/"+str(meal.times)
-            return JsonResponse({'success': False,  'message': 'User has already eaten', 'times':timesStr})
+            timesStr = str(eLen) + "/" + str(meal.times)
+            return JsonResponse({'success': False, 'message': 'User has already eaten', 'times': timesStr})
 
         return JsonResponse({'success': 'Something went wrong, please contact an administrator'})

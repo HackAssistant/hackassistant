@@ -17,7 +17,8 @@
             {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
         </form>
         <div class="ms-2">
-            <button title="Scan QR Code" id="qr_button" class="btn btn-secondary"><i class="bi bi-qr-code-scan"></i></button>
+            <button title="Scan QR Code" id="qr_button" class="btn btn-secondary"><i class="bi bi-qr-code-scan"></i>
+            </button>
         </div>
     </div>
 
@@ -41,7 +42,9 @@
                 popup_class: 'bg-{{ theme }}',
             })
 
-            qr_button.on('click', () => {scanner.show()})
+            qr_button.on('click', () => {
+                scanner.show()
+            })
         })
     </script>
 {% endblock %}

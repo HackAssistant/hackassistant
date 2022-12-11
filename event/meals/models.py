@@ -33,7 +33,7 @@ class Meal(models.Model):
 
 class Eaten(models.Model):
     """Represents when a hacker has eatean a meal"""
-    
+
     # Meal that was eaten
     meal = models.ForeignKey(Meal, null=False, on_delete=models.CASCADE)
     # User that ate the meal
