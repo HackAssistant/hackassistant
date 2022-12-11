@@ -1,5 +1,3 @@
-from django.urls import path
-
 from event import views
 
 from django.urls import path, include

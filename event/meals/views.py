@@ -1,9 +1,8 @@
 from django.views.generic import TemplateView
 from django_tables2 import SingleTableMixin
-from django.shortcuts import render
 from event.meals.tables import MealsTable
 from event.meals.models import Meal, Eaten
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 
 from user.models import User
 
@@ -62,7 +61,7 @@ class CheckinMeal(TemplateView):
         meal = Meal.objects.get(id=mid)
         try:
             user = User.objects.get(qr_code=request.POST.get("qrCode"))
-        except:
+        except (Meal.DoesNotExist, ValueError):
             return JsonResponse({'success': False, 'message': 'User not found with QRCode: ' + request.POST.get(
                 "qrCode") + ". Please try again"})
         uid = user.id
@@ -76,7 +75,7 @@ class CheckinMeal(TemplateView):
             diet = user.diet if (user.diet != 'Others') else user.other_diet
             return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'times': timesStr})
 
-        if (eLen >= meal.times):
+        if eLen >= meal.times:
             # user has eaten the limited quantity.
             timesStr = str(eLen) + "/" + str(meal.times)
             return JsonResponse({'success': False, 'message': 'User has already eaten', 'times': timesStr})
