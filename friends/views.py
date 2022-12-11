@@ -7,6 +7,7 @@ from django.views.generic import TemplateView
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
+from app.emails import EmailList
 from app.mixins import TabsViewMixin
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, Edition, ApplicationTypeConfig, ApplicationLog
@@ -14,7 +15,7 @@ from friends.filters import FriendsInviteTableFilter
 from friends.forms import FriendsForm
 from friends.models import FriendsCode
 from friends.tables import FriendInviteTable
-from review.emails import send_invitation_email
+from review.emails import get_invitation_email
 from review.views import ReviewApplicationTabsMixin, ApplicationListInvite
 from user.mixins import LoginRequiredMixin, IsOrganizerMixin
 from django.utils.translation import gettext_lazy as _
@@ -104,8 +105,8 @@ class FriendsListInvite(ApplicationPermissionRequiredMixin, IsOrganizerMixin, Re
 
     def post(self, request, *args, **kwargs):
         selection = request.POST.getlist('select')
-        error = 0
-        invited = 0
+        error = invited = 0
+        emails = EmailList()
         for application in Application.objects.actual().filter(user__friendscode__code__in=selection,
                                                                status=Application.STATUS_PENDING):
             log = ApplicationLog(application=application, user=request.user, name='Invited by friends')
@@ -115,12 +116,13 @@ class FriendsListInvite(ApplicationPermissionRequiredMixin, IsOrganizerMixin, Re
                 with transaction.atomic():
                     application.save()
                     log.save()
-                    send_invitation_email(request, application)
                     invited += 1
+                emails.add(get_invitation_email(request, application))
             except Error:
                 error += 1
+        emails = emails.send_all()
         if error > 0:
-            messages.error(request, _('Invited %s, Error: %s') % (invited, error))
+            messages.error(request, _('Invited %s, Emails sent: %s, Error: %s') % (invited, emails or 0, error))
         else:
-            messages.success(request, _('Invited: %s' % invited))
+            messages.success(request, _('Invited: %s, Emails sent: %s' % (invited, emails or 0)))
         return redirect(reverse('invite_friends') + ('?type=%s' % self.request.GET.get('type', 'hacker')))

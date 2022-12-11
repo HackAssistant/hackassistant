@@ -1,3 +1,6 @@
+import string
+from random import choice
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -52,10 +55,16 @@ class CheckinUser(TemplateView):
             pass
         return context
 
+    def get_code(self):
+        qr_code = self.request.POST.get('qr_code', None)
+        if qr_code == '':
+            return ''.join([choice(string.ascii_letters + string.digits + string.punctuation) for i in range(12)])
+        return qr_code
+
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        qr_code = request.POST.get('qr_code', '')
-        if context['has_permission'] and len(context['types']) > 0 and qr_code != '':
+        qr_code = self.get_code()
+        if context['has_permission'] and len(context['types']) > 0 and qr_code is not None:
             user = context['app_user']
             user.qr_code = qr_code
             applications = user.application_set.actual().filter(status=Application.STATUS_CONFIRMED)\
