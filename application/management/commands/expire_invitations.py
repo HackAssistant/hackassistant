@@ -4,7 +4,8 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from application.emails import send_email_last_reminder, send_email_expired
+from app.emails import EmailList
+from application.emails import get_email_last_reminder, get_email_expired
 from application.models import ApplicationTypeConfig, Application, ApplicationLog
 from user.models import User
 
@@ -13,6 +14,7 @@ class Command(BaseCommand):
     help = 'Expires all current applications that need to be expired'
 
     def handle(self, *args, **kwargs):
+        emails = EmailList()
         for application_type in ApplicationTypeConfig.objects.filter(expire_invitations__gt=0):
             now = timezone.now()
             server_email = re.search('(?<=<).+?(?=>)', getattr(settings, 'SERVER_EMAIL', ''))
@@ -31,7 +33,7 @@ class Command(BaseCommand):
                 application.save()
                 if user is not None:
                     log.save()
-                send_email_last_reminder(application)
+                emails.add(get_email_last_reminder(application))
             # Lastly we set the expired
             diff = timezone.timedelta(days=1)
             for application in application_type.application_set.actual().filter(status=Application.STATUS_LAST_REMINDER,
@@ -43,4 +45,5 @@ class Command(BaseCommand):
                 application.save()
                 if user is not None:
                     log.save()
-                send_email_expired(application)
+                emails.add(get_email_expired(application))
+            emails.send_all()

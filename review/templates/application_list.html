@@ -118,7 +118,9 @@
         </form>
         <script nonce="{{ request.csp_nonce }}">
             function select_all(source) {
-                $('input[name="select"]').prop('checked', source.checked);
+                let selects = $('input[name="select"]')
+                selects.prop('checked', source.checked);
+                selects.change();
             }
             {% block count_application_number %}
                 function get_invited_application_number() {
@@ -134,7 +136,7 @@
                 let free_spots = spots - ({{ application_stats.accepted }} + {{ application_stats.invited }});
                 let progress_bar = $('#progress-select')
                 let accepted_to_pass_limit = false
-                $('input[name="select"]').click((event) => {
+                $('input[name="select"]').change((event) => {
                     let selected = get_invited_application_number()
                     if (selected > free_spots && !accepted_to_pass_limit) {
                         accepted_to_pass_limit = confirm('{% translate 'You have reached the limit. Do you want to continue?' %}')

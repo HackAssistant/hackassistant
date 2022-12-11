@@ -263,7 +263,7 @@ class ApplicationEdit(LoginRequiredMixin, TemplateView):
                     application.save()
                 log.set_file_changes(files)
                 if len(log.changes) > 0:
-                    log.comment = self.request.POST.get('comment_applicationlog', '')
+                    log.comment = self.request.POST.get('comment_applicationlog', '')[:250]
                     log.save()
             messages.success(request, _('Edited successfully!'))
             return redirect('edit_application', **kwargs)
@@ -333,7 +333,7 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
         application.set_status(new_status)
         log = ApplicationLog.create_log(application=application, user=request.user, name=status_dict.get(new_status))
         if request.user.is_organizer:
-            log.comment = self.request.GET.get('comment', '')
+            log.comment = self.request.GET.get('comment', '')[:250]
         with transaction.atomic():
             application.save()
             log.save()

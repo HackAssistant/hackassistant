@@ -1,7 +1,7 @@
 asgiref==3.5.1
 backports.zoneinfo==0.2.1
 beautifulsoup4==4.11.1
-certifi==2022.6.15
+certifi==2022.12.7
 cffi==1.15.1
 charset-normalizer==2.1.0
 cryptography==38.0.3
