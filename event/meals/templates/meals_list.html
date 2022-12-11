@@ -33,7 +33,7 @@
             let scanner = new Scanner('qr-video', (content) => {
                 if (content.data) {
                     scanner.stop()
-                    window.location.href = '{% url 'checkin_meal' 'replace' %}'.replace('replace', content.data)
+                    window.location.href = '';
                 }
             }, {
                 popup: true,

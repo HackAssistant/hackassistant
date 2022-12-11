@@ -15,13 +15,13 @@
                 <div class="p-2">
                     <div class="row justify-content-between mb-3">
                         <div class="col-12 col-lg-4 d-grid d-md-block">
-                            <a href="{% url 'checkin_list' %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+                            <a href="{% url 'meals_list' %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
                         </div>
                     </div>
-                    {% if meal_obj != '' %}
+                    {% if meal != '' %}
                         <div class="row m-0">
-                            <div class="col-12 fw-bold text-start"><h1></h1>{% translate 'Scanning' %} {{ meal_obj.name }}</h1></div>
-                            <div class="text-muted">({{   meal_obj.starts }})</div>
+                            <div class="col-12 fw-bold text-start"><h1>{% translate 'Scanning' %} {{ meal.name }}</h1></div>
+                            <div class="text-muted">({{ meal.starts }})</div>
                             <div class="mt-2" style="display: flex">
                                 <form method="get" id="filter-form" style="width: 100%" class="mr-2">
                                     {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
@@ -42,11 +42,19 @@
             </div>
         </div>
     </div>
+    {#  Hidden Form to create csrf_token to use it on fetch requests without reloading this page  #}
+    <form action="?" method="POST">
+        {%  csrf_token %}
+    </form>
     <script nonce="{{ request.csp_nonce }}">
         $(document).ready(() => {
             let scanner = new Scanner('qr-video', (content) => {
                 if (content.data) {
-                    $('input[name="qr_code"]').val(content.data)
+                    // send POST request to endpoint.
+                    var csrf = $('input[name="csrfmiddlewaretoken"]')[0].value;
+                    var qrCodeData = content.data;
+
+                    send(csrf,qrCodeData);
                     scanner.hide()
                     $('#button-rescan').show()
                 }
@@ -58,5 +66,14 @@
                 scanner.show()
             })
         })
+
+        // function works with: send($('input[name="csrfmiddlewaretoken"]')[0].value, "qrValue")
+        function send(csrf,qrCodeData){
+            $.post("{% url 'checkin_meal' mid=meal.id %}",
+              {'qrCode':qrCodeData,'csrfmiddlewaretoken':csrf},
+              function(data, status){
+                console.log(data.text);
+              });
+        }
     </script>
 {% endblock %}
