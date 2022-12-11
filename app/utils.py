@@ -32,3 +32,10 @@ def is_installed(app):
 
 def is_instance_on_db(instance):
     return instance is not None and instance._state.db is not None and not instance._state.adding
+
+
+def notify_user(message, user):
+    if is_installed('event.messages'):
+        from event.messages.services import MessageServiceManager
+        return MessageServiceManager().send_message_to_user(message, user)
+    return False

@@ -68,9 +68,10 @@ INSTALLED_APPS = [
     'user',
     'application',
     'review',
+    'stats',
     'friends',
     'event',
-    'stats',
+    'event.messages',
 ]
 
 MIDDLEWARE = [
@@ -431,3 +432,11 @@ if os.environ.get('GITHUB_CLIENT_ID', None) is not None and os.environ.get('GITH
 
 # Disposable email token from https://api.testmail.top/
 DISPOSABLE_EMAIL_TOKEN = os.environ.get('DISPOSABLE_EMAIL_TOKEN', None)
+
+# Messages services config
+MESSAGES_SERVICES = {
+    'SlackMessageService': {}
+}
+
+if len(MESSAGES_SERVICES) > 0:
+    CRONJOBS.append(('*/5 * * * *', 'django.core.management.call_command', ['send_announcements']))
