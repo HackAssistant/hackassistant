@@ -188,6 +188,8 @@ class ApplicationApply(TemplateView):
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
         application_type = context.get('application_type')
+        if application_type.closed():
+            raise PermissionDenied('Applications are closed')
         application_form_class = self.get_form_class(type_name=self.request.GET.get('type', 'Hacker'))
         application_form = application_form_class(request.POST, request.FILES)
         user_form_kwargs = {}
