@@ -58,10 +58,13 @@ class CheckinMeal(TemplateView):
     def post(self, request, *args, **kwargs):
         # DB retrieve
         mid = kwargs.get('mid')
-        meal = Meal.objects.get(id=mid)
+        try:
+            meal = Meal.objects.get(id=mid)
+        except (Meal.DoesNotExist, ValueError):
+            return JsonResponse({'success': False, 'message': 'Meal not found with id: ' + mid + ". Please try again"})
         try:
             user = User.objects.get(qr_code=request.POST.get("qrCode"))
-        except (Meal.DoesNotExist, ValueError):
+        except (User.DoesNotExist, ValueError):
             return JsonResponse({'success': False, 'message': 'User not found with QRCode: ' + request.POST.get(
                 "qrCode") + ". Please try again"})
         uid = user.id
@@ -78,6 +81,7 @@ class CheckinMeal(TemplateView):
         if eLen >= meal.times:
             # user has eaten the limited quantity.
             timesStr = str(eLen) + "/" + str(meal.times)
-            return JsonResponse({'success': False, 'message': 'User has already eaten', 'times': timesStr})
+            return JsonResponse({'success': False, 'message': 'User has already eaten', 'times': timesStr,
+                                 'timeSinceLastEaten': [i.time.timestamp() for i in entries.order_by('-time')][0]})
 
         return JsonResponse({'success': 'Something went wrong, please contact an administrator'})

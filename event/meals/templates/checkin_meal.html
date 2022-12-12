@@ -23,7 +23,15 @@
                         <div class="row m-0">
                             <div class="col-12 fw-bold text-start"><h1>{% translate 'Scanning' %} {{ meal.name }}</h1>
                             </div>
+                            <br>
                             <div class="text-muted">({{ meal.starts }})</div>
+                            <div id="alert" class="alert fade show">
+                                <h3 id="alertTitle"></h3>
+                                <p id="alertTimes"></p>
+                                <p id="alertDiet"></p>
+                                <p id="timeSinceLastEaten"></p>
+                            </div>
+                            <video id="qr-video" style="width: 100%; height: 100%; display: none"></video>
                             <div class="mt-2" style="display: flex">
                                 <form method="get" id="filter-form" style="width: 100%" class="mr-2">
                                     {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
@@ -52,31 +60,87 @@
     <script nonce="{{ request.csp_nonce }}">
         $(document).ready(() => {
             let scanner = new Scanner('qr-video', (content) => {
+                console.log("SCANING: " + content.data);
                 if (content.data) {
                     // send POST request to endpoint.
                     var csrf = $('input[name="csrfmiddlewaretoken"]')[0].value;
                     var qrCodeData = content.data;
 
                     send(csrf, qrCodeData);
-                    scanner.hide()
-                    $('#button-rescan').show()
                 }
-            })
-            scanner.show()
+            });
+            scanner.show();
             $('#button-rescan').on('click', (e) => {
                 $(e.target).hide()
                 $('input[name="qr_code"]').val('')
                 scanner.show()
-            })
-        })
+            });
+        });
+
+        $('#alert').hide();
 
         // function works with: send($('input[name="csrfmiddlewaretoken"]')[0].value, "qrValue")
         function send(csrf, qrCodeData) {
             $.post("{% url 'checkin_meal' mid=meal.id %}",
                 {'qrCode': qrCodeData, 'csrfmiddlewaretoken': csrf},
                 function (data, status) {
-                    console.log(data.text);
+                    console.log(data);
+                    $('#alert').fadeOut("fast");
+                    $('#alert').fadeOut("fast");
+                    $('#alert').fadeIn("fast");
+                    if (data.success) {
+                        $('#alert').removeClass("alert-danger");
+                        $('#alert').addClass("alert-success");
+                        $('#timeSinceLastEaten').hide();
+                        $('#alertTitle').text(data.message);
+
+                        if (data.diet != undefined && data.diet != "None") {
+
+                            $('#alertDiet').show();
+                            $('#alertDiet').text("Diet: " + data.diet);
+                            $('#alertDiet').addClass("alert alert-info");
+                        } else {
+                            $('#alertDiet').hide();
+                            $('#alertDiet').removeClass("alert alert-info");
+                            $('#alertDiet').text("No diet");
+                        }
+                        $('#alertTimes').text(data.times);
+                    } else {
+                        $('#alertDiet').hide();
+                        $('#timeSinceLastEaten').show();
+                        $('#alert').removeClass("alert-success");
+                        $('#alert').addClass("alert-danger");
+                        $('#alertTitle').text(data.message + "!");
+                        $('#alertTimes').text("Ate: " + data.times);
+                        $('#timeSinceLastEaten').text("Last ate " + timeDifference(new Date().getTime(), data.timeSinceLastEaten * 1000));
+                    }
                 });
+        }
+
+
+        function timeDifference(current, previous) {
+
+            var msPerMinute = 60 * 1000;
+            var msPerHour = msPerMinute * 60;
+            var msPerDay = msPerHour * 24;
+            var msPerMonth = msPerDay * 30;
+            var msPerYear = msPerDay * 365;
+
+            var elapsed = current - previous;
+
+            if (elapsed < msPerMinute) {
+                return Math.round(elapsed / 1000) + ' seconds ago';
+            } else if (elapsed < msPerHour) {
+                return Math.round(elapsed / msPerMinute) + ' minutes ago';
+            } else if (elapsed < msPerDay) {
+                return Math.round(elapsed / msPerHour) + ' hours ago';
+            } else if (elapsed < msPerMonth) {
+                return 'approximately ' + Math.round(elapsed / msPerDay) + ' days ago';
+            } else if (elapsed < msPerYear) {
+                return 'approximately ' + Math.round(elapsed / msPerMonth) + ' months ago';
+            } else {
+                return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago';
+            }
         }
     </script>
 {% endblock %}
