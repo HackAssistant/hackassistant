@@ -57,31 +57,29 @@ class CheckinMeal(TemplateView):
 
     def post(self, request, *args, **kwargs):
         # DB retrieve
-        mid = kwargs.get('mid')
+        meal_id = kwargs.get('mid')
         try:
-            meal = Meal.objects.get(id=mid)
+            meal = Meal.objects.get(id=meal_id)
         except (Meal.DoesNotExist, ValueError):
-            return JsonResponse({'success': False, 'message': 'Meal not found with id: ' + mid + ". Please try again"})
+            return JsonResponse({'message': 'Meal not found with id: ' + meal_id + ". Please try again"}, status=404)
         try:
             user = User.objects.get(qr_code=request.POST.get("qrCode"))
         except (User.DoesNotExist, ValueError):
-            return JsonResponse({'success': False, 'message': 'User not found with QRCode: ' + request.POST.get(
-                "qrCode") + ". Please try again"})
+            return JsonResponse({'message': 'User not found with QRCode: ' + request.POST.get(
+                "qrCode") + ". Please try again"}, status=404)
         uid = user.id
-        entries = Eaten.objects.all().filter(user_id=uid, meal_id=mid)
-        eLen = entries.count()
-        timesStr = str(eLen) + "/" + str(meal.times)
-        if (eLen == 0 or eLen < meal.times):
+        entries = Eaten.objects.all().filter(user_id=uid, mid=meal_id)
+        n_times_eaten = entries.count()
+        times_str = str(n_times_eaten) + "/" + str(meal.times)
+        if n_times_eaten == 0 or n_times_eaten < meal.times:
             # Create a new entry
-            eaten = Eaten(user_id=uid, meal_id=mid)
+            eaten = Eaten(user_id=uid, mid=meal_id)
             eaten.save()
             diet = user.diet if (user.diet != 'Others') else user.other_diet
-            return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'times': timesStr})
+            return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'times': times_str})
 
-        if eLen >= meal.times:
+        if n_times_eaten >= meal.times:
             # user has eaten the limited quantity.
-            timesStr = str(eLen) + "/" + str(meal.times)
-            return JsonResponse({'success': False, 'message': 'User has already eaten', 'times': timesStr,
+            times_str = str(n_times_eaten) + "/" + str(meal.times)
+            return JsonResponse({'success': False, 'message': 'User has already eaten', 'times': times_str,
                                  'timeSinceLastEaten': [i.time.timestamp() for i in entries.order_by('-time')][0]})
-
-        return JsonResponse({'success': 'Something went wrong, please contact an administrator'})
