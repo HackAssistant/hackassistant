@@ -393,6 +393,7 @@ CACHES = {
 # Content-Security-Policy
 CSP_DEFAULT_SRC = ["'self'", "www.w3.org", "data:", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"]
 CSP_FRAME_SRC = ['www.google.com']
+
 CSP_SCRIPT_SRC = ["'self'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "code.jquery.com", "d3js.org",
                   "www.google.com", "www.gstatic.com", "'unsafe-inline'"]
 CSP_STYLE_SRC = ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"]
