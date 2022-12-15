@@ -1,6 +1,8 @@
 from django.db import models
 from user.models import User
 
+from django.utils.translation import gettext_lazy as _
+
 MEAL_TYPE = (
     ('B', 'Breakfast'),
     ('L', 'Lunch'),
@@ -29,6 +31,11 @@ class Meal(models.Model):
 
     def eaten(self):
         return Eaten.objects.filter(meal=self).count()
+
+    class Meta:
+        permissions = (
+            ('can_checkin_meals', _('Can checkin meals')),
+        )
 
 
 class Eaten(models.Model):

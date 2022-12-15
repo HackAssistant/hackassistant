@@ -65,6 +65,7 @@
             let scanner = new Scanner('qr-video', (content) => {
                 console.log("SCANING: " + content.data);
                 if (content.data) {
+                    scanner.hide();
                     // send POST request to endpoint.
                     var csrf = $('input[name="csrfmiddlewaretoken"]')[0].value;
                     var qrCodeData = content.data;
@@ -115,7 +116,7 @@
                             $('#alertDiet').removeClass("alert alert-info");
                             $('#alertDiet').text("No diet");
                         }
-                        $('#alertTimes').text(data.times);
+                        $('#alertTimes').text(data.times_eaten + "/" + data.n_times_eaten);
                     } else {
                         $('#alertDiet').hide();
                         $('#timeSinceLastEaten').show();
@@ -128,7 +129,7 @@
                     }
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
-                    // this runs when either 4xx or 5xx is thrown as status
+                    // this runs when either 4xx is thrown as status
                     console.error("ERROR: " + jqXHR.responseJSON.message);
                     $("#loader").hide()
                     $('#alert').fadeOut("fast");
