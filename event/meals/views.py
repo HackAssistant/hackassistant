@@ -71,7 +71,7 @@ class CheckinMeal(TemplateView):
         entries = Eaten.objects.all().filter(user_id=uid, mid=meal_id)
         n_times_eaten = entries.count()
         times_str = str(n_times_eaten) + "/" + str(meal.times)
-        if n_times_eaten == 0 or n_times_eaten < meal.times:
+        if n_times_eaten < meal.times:
             # Create a new entry
             eaten = Eaten(user_id=uid, mid=meal_id)
             eaten.save()
