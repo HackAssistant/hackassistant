@@ -21,7 +21,8 @@ class MealsTable(tables.Table):
 
 class CheckinMealTable(tables.Table):
     full_name = tables.Column(accessor='get_full_name', order_by=('first_name', 'last_name'))
-    actions = tables.TemplateColumn(template_name='tables/checkin_action.html', verbose_name='Actions', orderable=False)
+    actions = tables.TemplateColumn(template_name='tables/checkin_meal_action.html', verbose_name='Actions',
+                                    orderable=False)
 
     class Meta:
         model = get_user_model()

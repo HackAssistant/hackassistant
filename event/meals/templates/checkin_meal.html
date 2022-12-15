@@ -8,167 +8,134 @@
     {% include 'components/import_qr_scanner.html' %}
 {% endblock %}
 
-{% block container %}
-    <div class="row justify-content-md-center" style="margin: 0">
-        <div class="col-lg-4" style="margin: 40px 0;">
-            <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
-                <div class="p-2">
-                    <div class="row justify-content-between mb-3">
-                        <div class="col-12 col-lg-4 d-grid d-md-block">
-                            <a href="{% url 'meals_list' %}" class="btn btn-secondary col-12"><i
-                                    class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
-                        </div>
+{% block content %}
+    <div class="row justify-content-between mb-3">
+        <div class="col-12 col-lg-3 d-grid d-md-block">
+            <a href="{% url 'meals_list' %}" class="btn btn-secondary col-12"><i
+                    class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+        </div>
+    </div>
+
+    <h1>{% translate 'Checkin in' %} {{ meal.name }}</h1>
+    <div class="text-muted">({{ meal.starts }})</div>
+    <div class="mt-2" style="display: flex">
+        <form method="get" id="filter-form" style="width: 100%" class="mr-2">
+            {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
+        </form>
+        <div class="ms-2">
+            <button title="Scan QR Code" id="qr_button" class="btn btn-secondary"><i class="bi bi-qr-code-scan"></i></button>
+        </div>
+    </div>
+
+    {% include 'components/table.html' %}
+
+    <video id="qr-video" style="width: 100%; height: 100%; display: none"></video>
+
+    <div class="veil" id="message-veil" style="z-index: 1500; display: none"></div>
+    <div id="message-box" style="position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1505; display: none;">
+        <div class="row justify-content-center m-0">
+            <div id="popup-scan-container" class="bg-{{ theme }} p-3 col-lg-4 mt-lg-5 text-center">
+                <h2>{% translate 'Result' %}</h2>
+                <div id="message-text" class="alert alert-danger show mt-4" role="alert"></div>
+                <div id="success-info" style="display: none">
+                    <div class="row m-0">
+                        <div class="col-4 fw-bold pb-3 text-end">{% translate 'Name' %}</div>
+                        <div id="full_name" class="col-8 pb-3 text-start"></div>
                     </div>
-                    {% if meal != '' %}
-                        <div class="row m-0">
-                            <div class="col-12 fw-bold text-start"><h1>{% translate 'Scanning' %} {{ meal.name }}</h1>
-                            </div>
-                            <br>
-                            <div class="text-muted">({{ meal.starts }})</div>
-                            <div class="spinner-border" role="status" id="loader" style="display: none">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <div id="alert" class="alert fade show">
-                                <h3 id="alertTitle"></h3>
-                                <p id="alertTimes"></p>
-                                <p id="alertDiet"></p>
-                                <p id="timeSinceLastEaten"></p>
-                            </div>
-                            <video id="qr-video" style="width: 100%; height: 100%; display: none"></video>
-                            <div class="mt-2" style="display: flex">
-                                <form method="get" id="filter-form" style="width: 100%" class="mr-2">
-                                    {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
-                                </form>
-                                <div class="ms-2">
-                                    <button title="Scan QR Code" id="qr_button" class="btn btn-secondary"><i
-                                            class="bi bi-qr-code-scan"></i></button>
-                                </div>
-                            </div>
-
-                        </div>
-
-                    {% else %}
-                        <div class="alert alert-danger text-center" role="alert">
-                            {% translate 'No meal found' %}
-                        </div>
-                    {% endif %}
+                    <div class="row m-0">
+                        <div class="col-4 fw-bold pb-3 text-end">{% translate 'Times' %}</div>
+                        <div id="times" class="col-8 pb-3 text-start"></div>
+                    </div>
+                    <div class="row m-0">
+                        <div class="col-4 fw-bold pb-3 text-end">{% translate 'Meal max times' %}</div>
+                        <div id="meals_max_times" class="col-8 pb-3 text-start"></div>
+                    </div>
+                    <div class="row m-0">
+                        <div class="col-4 fw-bold pb-3 text-end">{% translate 'Diet' %}</div>
+                        <div class="col-8 pb-3 text-start"><p id="diet" style="width: fit-content; border-radius: 5px;"></p></div>
+                    </div>
                 </div>
+                <button id="rescan-button" class="mt-2 btn btn-primary col-12">{% translate 'Scan again' %}</button>
             </div>
         </div>
     </div>
-    {#  Hidden Form to create csrf_token to use it on fetch requests without reloading this page  #}
-    <form action="?" method="POST">
-        {% csrf_token %}
-    </form>
+
     <script nonce="{{ request.csp_nonce }}">
         $(document).ready(() => {
+            let csrf_token = '{{ csrf_token }}'
+            let diet = $('#diet')
+            let times = $('#times')
+            let meals_max_times = $('#meals_max_times')
+            let full_name = $('#full_name')
+
+            let message_visibility = $('#message-veil, #message-box')
+            let message_text = $('#message-text')
+            let success_info = $('#success-info')
+
+            function submit_form(qr_code) {
+                $.ajax({
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: csrf_token,
+                        qr_code: qr_code
+                    },
+                    success: (data) => {
+                        message_text.removeClass('alert-danger alert-info')
+                        message_text.addClass('alert-success')
+                        message_text.text('{% translate 'Checked user!' %}')
+                        full_name.text(data.full_name)
+                        meals_max_times.text(data.meals_max_times)
+                        times.text(data.times_eaten)
+                        diet.removeClass()
+                        diet.addClass(`bg-diet-${data.diet_code.toLowerCase()}`)
+                        if (data.diet === 'Others') {
+                            diet.html(`&nbsp;${data.other_diet}&nbsp;`)
+                        } else {
+                            diet.html(`&nbsp;${data.diet}&nbsp;`)
+                        }
+                        success_info.show()
+                    },
+                    error: (error) => {
+                        message_text.removeClass('alert-success alert-info')
+                        message_text.addClass('alert-danger')
+                        message_text.text(error?.responseJSON?.errors?.join('\n') ?? 'Error')
+                    }
+                });
+            }
+
+            $('.checkin-user-meal-button').click((event) => {
+                message_visibility.show()
+                submit_form(event.target.value)
+            })
+
             let scanner = new Scanner('qr-video', (content) => {
-                console.log("SCANING: " + content.data);
                 if (content.data) {
                     scanner.hide();
-                    // send POST request to endpoint.
-                    var csrf = $('input[name="csrfmiddlewaretoken"]')[0].value;
-                    var qrCodeData = content.data;
+                    message_text.removeClass('alert-danger alert-success')
+                    message_text.addClass('alert-info')
+                    message_text.text('{% translate 'Loading...' %}')
+                    message_visibility.show()
 
-                    send(csrf, qrCodeData);
+                    // send POST request to endpoint.
+                    submit_form(content.data)
                 }
-            }, {popup: true});
+            }, {
+                popup: true,
+                popup_title: '{% translate 'QR scanner' %}',
+                popup_class: 'bg-{{ theme }}',
+            });
+
             scanner.show()
-            $('#button-rescan').on('click', () => {
+
+            $('#qr_button').css('margin-top', `${$('label[for="id_search"]').outerHeight(true)}px`)
+
+            $('#rescan-button, #qr_button').click(() => {
                 $('input[name="qr_code"]').val('')
                 scanner.show()
-            });
+                message_text.text('')
+                message_visibility.hide()
+                success_info.hide()
+            })
         });
-
-        $('#alert').hide();
-
-        // function works with: send($('input[name="csrfmiddlewaretoken"]')[0].value, "qrValue")
-        function send(csrf, qrCodeData) {
-            $("#alert").hide()
-            $("#loader").show()
-            $.post("{% url 'checkin_meal' mid=meal.id %}",
-                {'qrCode': qrCodeData, 'csrfmiddlewaretoken': csrf},
-                function (data, status) {
-                    // this function only runs when status 200 OK
-                    console.log(data);
-                    $("#loader").hide()
-                    $('#alert').fadeOut("fast");
-                    $('#alert').fadeOut("fast");
-                    $('#alert').fadeIn("fast");
-
-                    if (data.success) {
-                        $('#alert').removeClass("alert-danger");
-                        $('#alert').addClass("alert-success");
-                        $('#timeSinceLastEaten').hide();
-                        $('#alertTitle').text(data.message);
-
-                        if (data.diet != undefined && data.diet != "None") {
-                            $('#alertDiet').show();
-                            $('#alertDiet').addClass("alert alert-info");
-                            if (data.diet != "Others") {
-                                $('#alertDiet').text("Diet: " + data.diet);
-                            } else {
-                                $('#alertDiet').text("Diet: " + data.other_diet);
-                            }
-                        } else {
-                            $('#alertDiet').hide();
-                            $('#alertDiet').removeClass("alert alert-info");
-                            $('#alertDiet').text("No diet");
-                        }
-                        $('#alertTimes').text(data.times_eaten + "/" + data.n_times_eaten);
-                    } else {
-                        $('#alertDiet').hide();
-                        $('#timeSinceLastEaten').show();
-                        $('#alert').removeClass("alert-success");
-                        $('#alert').addClass("alert-danger");
-                        $('#alertTitle').text(data.message + "!");
-                        $('#alertTimes').text("Ate: " + data.times);
-                        var jsTime = data.timeSinceLastEaten * 1000;
-                        $('#timeSinceLastEaten').text("Last ate " + timeDifference(new Date().getTime(), jsTime));
-                    }
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    // this runs when either 4xx is thrown as status
-                    console.error("ERROR: " + jqXHR.responseJSON.message);
-                    $("#loader").hide()
-                    $('#alert').fadeOut("fast");
-                    $('#alert').fadeOut("fast");
-                    $('#alert').fadeIn("fast");
-                    $('#alertDiet').hide();
-                    $('#timeSinceLastEaten').show();
-                    $('#alert').removeClass("alert-success");
-                    $('#alert').addClass("alert-danger");
-                    $('#alertTitle').text(jqXHR.responseJSON.message + "!");
-                    $('#alertTimes').text("");
-                    $('#timeSinceLastEaten').text("");
-
-                });
-        }
-
-
-        function timeDifference(current, previous) {
-
-            var msPerMinute = 60 * 1000;
-            var msPerHour = msPerMinute * 60;
-            var msPerDay = msPerHour * 24;
-            var msPerMonth = msPerDay * 30;
-            var msPerYear = msPerDay * 365;
-
-            var elapsed = current - previous;
-
-            if (elapsed < msPerMinute) {
-                return Math.round(elapsed / 1000) + ' seconds ago';
-            } else if (elapsed < msPerHour) {
-                return Math.round(elapsed / msPerMinute) + ' minutes ago';
-            } else if (elapsed < msPerDay) {
-                return Math.round(elapsed / msPerHour) + ' hours ago';
-            } else if (elapsed < msPerMonth) {
-                return 'approximately ' + Math.round(elapsed / msPerDay) + ' days ago';
-            } else if (elapsed < msPerYear) {
-                return 'approximately ' + Math.round(elapsed / msPerMonth) + ' months ago';
-            } else {
-                return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago';
-            }
-        }
     </script>
 {% endblock %}
