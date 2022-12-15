@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import reverse
 
-from app.utils import get_theme
+from app.utils import get_theme, is_installed
 from application.models import ApplicationTypeConfig
 
 
@@ -36,7 +36,7 @@ def get_main_nav(request):
             nav.append(('Landing page', getattr(settings, 'HACKATHON_LANDING')))
     if request.user.has_module_perms('event'):
         nav.append(('Checkin', reverse('checkin_list')))
-        if request.user.has_perm('event.can_checkin_meals'):
+        if is_installed('event.meals') and request.user.has_perm('event.can_checkin_meals'):
             nav.append(('Meals', reverse('meals_list')))
     if request.user.is_organizer():
         nav.extend([('Stats', reverse('stats_home'))])
