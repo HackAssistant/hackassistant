@@ -105,7 +105,7 @@
                         if (data.diet != undefined && data.diet != "None") {
                             $('#alertDiet').show();
                             $('#alertDiet').addClass("alert alert-info");
-                            if(data.diet != "Others") {
+                            if (data.diet != "Others") {
                                 $('#alertDiet').text("Diet: " + data.diet);
                             } else {
                                 $('#alertDiet').text("Diet: " + data.other_diet);
@@ -123,7 +123,8 @@
                         $('#alert').addClass("alert-danger");
                         $('#alertTitle').text(data.message + "!");
                         $('#alertTimes').text("Ate: " + data.times);
-                        $('#timeSinceLastEaten').text("Last ate " + timeDifference(new Date().getTime(), data.timeSinceLastEaten * 1000));
+                        var jsTime = data.timeSinceLastEaten * 1000;
+                        $('#timeSinceLastEaten').text("Last ate " + timeDifference(new Date().getTime(), jsTime));
                     }
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
