@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'event',
     'stats',
     'event.meals',
+    'event.baggage',
 ]
 
 MIDDLEWARE = [
