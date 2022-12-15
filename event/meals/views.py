@@ -23,7 +23,7 @@ from user.models import User
 
 
 class MealsList(PermissionRequiredMixin, SingleTableMixin, TemplateView):
-    permission_required = 'event.can_checkin_meals'
+    permission_required = 'meals.can_checkin_meals'
     template_name = 'meals_list.html'
     table_class = MealsTable
 
@@ -33,7 +33,7 @@ class MealsList(PermissionRequiredMixin, SingleTableMixin, TemplateView):
 
 class CheckinMeal(PermissionRequiredMixin, SingleTableMixin, FilterView):
     template_name = 'checkin_meal.html'
-    permission_required = 'event.can_checkin_meals'
+    permission_required = 'meals.can_checkin_meals'
     table_class = CheckinMealTable
     filterset_class = MealsTableFilter
 
