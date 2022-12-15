@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-*9+h@8wtz_f0i#0i@*8(d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'true').lower() != 'false'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 HOST = os.environ.get('HOST')
 
 if DEBUG:
@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'friends',
     'event',
     'stats',
+    'event.meals',
 ]
 
 MIDDLEWARE = [
@@ -392,6 +393,7 @@ CACHES = {
 # Content-Security-Policy
 CSP_DEFAULT_SRC = ["'self'", "www.w3.org", "data:", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"]
 CSP_FRAME_SRC = ['www.google.com']
+CSP_WORKER_SRC = ['blob:']
 CSP_SCRIPT_SRC = ["'self'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "code.jquery.com", "d3js.org",
                   "www.google.com", "www.gstatic.com", "'unsafe-inline'"]
 CSP_STYLE_SRC = ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"]

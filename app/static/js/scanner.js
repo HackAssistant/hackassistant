@@ -74,7 +74,6 @@ function Scanner(videoId, scanFunction=null, extraOpts={}) {
 }
 
 Scanner.prototype.start = function () {
-    console.log(this)
     this.scanner.hasFlash().then((response) => {
         let flash = $('#toggle-flash')
         if (response) flash.show()
