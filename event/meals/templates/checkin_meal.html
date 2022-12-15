@@ -72,10 +72,9 @@
 
                     send(csrf, qrCodeData);
                 }
-            });
-            scanner.show();
-            $('#button-rescan').on('click', (e) => {
-                $(e.target).hide()
+            }, {popup: true});
+            scanner.show()
+            $('#button-rescan').on('click', () => {
                 $('input[name="qr_code"]').val('')
                 scanner.show()
             });
