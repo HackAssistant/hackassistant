@@ -77,7 +77,9 @@ class CheckinMeal(TemplateView):
             eaten.save()
             diet = user.get_diet_display()
             other_diet = user.other_diet
-            return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'other_diet': other_diet, 'times': times_str})
+            return JsonResponse(
+                {'success': True, 'message': 'User allowed to eat', 'diet': diet, 'other_diet': other_diet,
+                 'times': times_str})
 
         if n_times_eaten >= meal.times:
             # user has eaten the limited quantity.
