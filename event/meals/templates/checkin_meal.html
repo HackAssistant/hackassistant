@@ -25,6 +25,9 @@
                             </div>
                             <br>
                             <div class="text-muted">({{ meal.starts }})</div>
+                            <div class="spinner-border" role="status" id="loader" style="display: none">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
                             <div id="alert" class="alert fade show">
                                 <h3 id="alertTitle"></h3>
                                 <p id="alertTimes"></p>
@@ -81,13 +84,18 @@
 
         // function works with: send($('input[name="csrfmiddlewaretoken"]')[0].value, "qrValue")
         function send(csrf, qrCodeData) {
+            $("#alert").hide()
+            $("#loader").show()
             $.post("{% url 'checkin_meal' mid=meal.id %}",
                 {'qrCode': qrCodeData, 'csrfmiddlewaretoken': csrf},
                 function (data, status) {
+                    // this function only runs when status 200 OK
                     console.log(data);
+                    $("#loader").hide()
                     $('#alert').fadeOut("fast");
                     $('#alert').fadeOut("fast");
                     $('#alert').fadeIn("fast");
+
                     if (data.success) {
                         $('#alert').removeClass("alert-danger");
                         $('#alert').addClass("alert-success");
@@ -95,10 +103,13 @@
                         $('#alertTitle').text(data.message);
 
                         if (data.diet != undefined && data.diet != "None") {
-
                             $('#alertDiet').show();
-                            $('#alertDiet').text("Diet: " + data.diet);
                             $('#alertDiet').addClass("alert alert-info");
+                            if(data.diet != "Others") {
+                                $('#alertDiet').text("Diet: " + data.diet);
+                            } else {
+                                $('#alertDiet').text("Diet: " + data.other_diet);
+                            }
                         } else {
                             $('#alertDiet').hide();
                             $('#alertDiet').removeClass("alert alert-info");
@@ -114,6 +125,22 @@
                         $('#alertTimes').text("Ate: " + data.times);
                         $('#timeSinceLastEaten').text("Last ate " + timeDifference(new Date().getTime(), data.timeSinceLastEaten * 1000));
                     }
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    // this runs when either 4xx or 5xx is thrown as status
+                    console.error("ERROR: " + jqXHR.responseJSON.message);
+                    $("#loader").hide()
+                    $('#alert').fadeOut("fast");
+                    $('#alert').fadeOut("fast");
+                    $('#alert').fadeIn("fast");
+                    $('#alertDiet').hide();
+                    $('#timeSinceLastEaten').show();
+                    $('#alert').removeClass("alert-success");
+                    $('#alert').addClass("alert-danger");
+                    $('#alertTitle').text(jqXHR.responseJSON.message + "!");
+                    $('#alertTimes').text("");
+                    $('#timeSinceLastEaten').text("");
+
                 });
         }
 

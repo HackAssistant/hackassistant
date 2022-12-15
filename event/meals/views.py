@@ -68,15 +68,16 @@ class CheckinMeal(TemplateView):
             return JsonResponse({'message': 'User not found with QRCode: ' + request.POST.get(
                 "qrCode") + ". Please try again"}, status=404)
         uid = user.id
-        entries = Eaten.objects.all().filter(user_id=uid, mid=meal_id)
+        entries = Eaten.objects.all().filter(user_id=uid, meal_id=meal_id)
         n_times_eaten = entries.count()
         times_str = str(n_times_eaten) + "/" + str(meal.times)
         if n_times_eaten < meal.times:
             # Create a new entry
-            eaten = Eaten(user_id=uid, mid=meal_id)
+            eaten = Eaten(user_id=uid, meal_id=meal_id)
             eaten.save()
-            diet = user.diet if (user.diet != 'Others') else user.other_diet
-            return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'times': times_str})
+            diet = user.get_diet_display()
+            other_diet = user.other_diet
+            return JsonResponse({'success': True, 'message': 'User allowed to eat', 'diet': diet, 'other_diet': other_diet, 'times': times_str})
 
         if n_times_eaten >= meal.times:
             # user has eaten the limited quantity.
