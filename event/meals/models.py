@@ -30,7 +30,7 @@ class Meal(models.Model):
         return str(self.name)
 
     def eaten(self):
-        return Eaten.objects.filter(meal=self).count()
+        return self.eaten_set.count()
 
     class Meta:
         permissions = (

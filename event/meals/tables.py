@@ -7,6 +7,8 @@ from event.meals.models import Meal
 class MealsTable(tables.Table):
     starts = tables.DateTimeColumn(format='d/m/Y, H:i:s')
     ends = tables.DateTimeColumn(format='d/m/Y, H:i:s')
+    eaten = tables.Column(verbose_name='Total scans')
+    times = tables.Column(verbose_name='Limit per person')
     actions = tables.TemplateColumn(template_name='tables/meals_action.html', verbose_name='Actions', orderable=False)
 
     class Meta:
@@ -15,7 +17,7 @@ class MealsTable(tables.Table):
         # HTML classes
         attrs = {'class': 'table table-striped'}
         # Table columns
-        fields = ('name', 'starts', 'ends', 'times', 'actions')  # opt: kind
+        fields = ('name', 'starts', 'ends', 'times', 'eaten', 'actions')  # opt: kind
         order_by = ('starts', )
 
 
