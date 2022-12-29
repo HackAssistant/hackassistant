@@ -32,11 +32,6 @@ class Meal(models.Model):
     def eaten(self):
         return self.eaten_set.count()
 
-    class Meta:
-        permissions = (
-            ('can_checkin_meals', _('Can checkin meals')),
-        )
-
 
 class Eaten(models.Model):
     """Represents when a hacker has eatean a meal"""
