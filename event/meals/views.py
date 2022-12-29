@@ -15,15 +15,8 @@ from application.mixins import PermissionRequiredMixin
 from user.models import User
 
 
-# TODO: create --> meal list
-#   First meal, closest to time
-#   API amb python
-# TODO: QR view (que el meal seleccionat no és actual)
-# TODO: optional: meal edit i meal create (UI)
-
-
 class MealsList(PermissionRequiredMixin, SingleTableMixin, TemplateView):
-    permission_required = 'meals.can_checkin_meals'
+    permission_required = 'event.can_checkin_meal'
     template_name = 'meals_list.html'
     table_class = MealsTable
 
@@ -33,12 +26,16 @@ class MealsList(PermissionRequiredMixin, SingleTableMixin, TemplateView):
 
 class CheckinMeal(PermissionRequiredMixin, SingleTableMixin, FilterView):
     template_name = 'checkin_meal.html'
-    permission_required = 'meals.can_checkin_meals'
+    permission_required = 'event.can_checkin_meal'
     table_class = CheckinMealTable
     filterset_class = MealsTableFilter
 
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+    def handle_no_permission(self):
+        if self.request.method == 'POST':
+            if not self.request.user.is_authenticated:
+                return JsonResponse({'errors': ['Unauthorized, you are not logged in.']}, status=401)
+            return JsonResponse({'errors': ['You have no permissions.']}, status=403)
+        return super().handle_no_permission()
 
     def get_queryset(self):
         return get_user_model().objects.filter(application__status=Application.STATUS_ATTENDED,

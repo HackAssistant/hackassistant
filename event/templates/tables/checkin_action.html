@@ -1,1 +1,1 @@
-<a class="btn btn-primary btn-sm" href='{% url 'checkin_user' record.get_encoded_pk %}'>Check-in</a>
+<a class="btn btn-primary btn-sm" href='{% url 'checkin_user' record.get_encoded_pk %}?next={{ request.get_full_path|urlencode }}'>Check-in</a>
