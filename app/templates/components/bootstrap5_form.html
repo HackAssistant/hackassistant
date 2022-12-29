@@ -107,6 +107,7 @@
                                     field.fadeIn()
                                 } else {
                                     field.fadeOut()
+                                    field.find('input,textarea,select').val('')
                                 }
                             })
                             if (!{{ values|safe }}.includes(objectifyForm(form)['{{ cond_field_name }}'])) {

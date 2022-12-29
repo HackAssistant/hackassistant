@@ -28,6 +28,53 @@
             <div class="alert alert-info alert-dismissible fade show" role="alert">
                 {{ application_type.name }} {% translate 'applications are open. Hurry, they will close in' %} {{ application_type.time_left }}.
             </div>
+            {% if request.user.is_authenticated %}
+                <script>
+                    $(document).ready(() => {
+                        let timer
+                        let clear_timer
+                        let timeout = 5000; // Timout duration
+                        $('input,textarea,select').bind('change keyup', function () {
+                            if (timer) {
+                                clearTimeout(timer);
+                            }
+                            timer = setTimeout(saveData, timeout);
+                        });
+
+                        // Save data
+                        function saveData() {
+                            if (clear_timer) {
+                                clearTimeout(clear_timer);
+                            }
+                            $('.saved-string').html('Saving...');
+                            let form_obj = {};
+                            let form_array = $('form').serializeArray();
+                            $.each(form_array, function () {
+                                if (form_obj[this.name]) {
+                                    if (!form_obj[this.name].push) {
+                                        form_obj[this.name] = [form_obj[this.name]];
+                                    }
+                                    form_obj[this.name].push(this.value || '');
+                                } else {
+                                    form_obj[this.name] = this.value || '';
+                                }
+                            });
+
+                            form_obj['csrfmiddlewaretoken'] = '{{ csrf_token }}'
+
+                            // AJAX request
+                            $.ajax({
+                                url: '{% url 'save_draft' %}',
+                                type: 'post',
+                                data: form_obj,
+                                success: function () {
+                                    ToastManager.info('Saved!', timeout)
+                                }
+                            });
+                    }
+                    })
+                </script>
+            {% endif %}
         {% endif %}
 
         <form method="post" enctype="multipart/form-data" class="mt-4">

@@ -11,4 +11,5 @@ urlpatterns = [
     path('file/<str:field>/<str:uuid>/preview/', views.ApplicationFilePreview.as_view(),
          name='application_file_preview'),
     path('file/<str:field>/<str:uuid>/', views.ApplicationFile.as_view(), name='application_file'),
+    path('apply/save_draft/', views.SaveDraftApplication.as_view(), name='save_draft'),
 ]
