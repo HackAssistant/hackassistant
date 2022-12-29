@@ -12,14 +12,21 @@ class EventConfig(AppConfig):
         from application.models import ApplicationTypeConfig
 
         permissions = ['can_checkin', ]
+        not_type_permissions = ['can_checkin_meal', ]
 
         content_type = ContentType.objects.get_or_create(app_label='event', model='event')[0]
 
+        for permission in not_type_permissions:
+            name = permission.replace('_', ' ').capitalize()
+            Permission.objects.get_or_create(codename=permission, defaults={'name': name,
+                                                                            'content_type': content_type})
+
+        application_types = ApplicationTypeConfig.objects.all()
+
         for permission in permissions:
             name = permission.replace('_', ' ').capitalize()
-            Permission.objects.get_or_create(codename=permission, defaults={'name': 'Can checkin',
+            Permission.objects.get_or_create(codename=permission, defaults={'name': name,
                                                                             'content_type': content_type})
-            application_types = ApplicationTypeConfig.objects.all()
             for application_type in application_types:
                 Permission.objects.get_or_create(
                     codename='%s_%s' % (permission, application_type.name.lower()),
