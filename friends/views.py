@@ -63,9 +63,13 @@ class JoinFriendsView(LoginRequiredMixin, TabsViewMixin, TemplateView):
         form = FriendsForm(self.request.POST)
         if form.is_valid():
             code = form.cleaned_data.get("friends_code", None)
-            if code is not None and FriendsCode.objects.filter(code=code).exists():
-                return self.create(code=code)
-            form.add_error("friends_code", "Invalid code!")
+            friend_code = FriendsCode.objects.filter(code=code).first()
+            if friend_code is not None:
+                if not friend_code.is_closed():
+                    return self.create(code=code)
+                form.add_error("friends_code", "This team has one application invited and cannot be joined")
+            else:
+                form.add_error("friends_code", "Invalid code!")
         context = self.get_context_data()
         context.update({"friends_form": form})
         return self.render_to_response(context)
