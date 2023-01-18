@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from application.models import Edition, ApplicationTypeConfig, PromotionalCode
+from application.models import Edition, ApplicationTypeConfig, PromotionalCode, Application, DraftApplication
 
 
 @receiver(post_delete, sender=Edition, weak=False)
@@ -11,6 +11,7 @@ from application.models import Edition, ApplicationTypeConfig, PromotionalCode
 def clear_groups(sender, instance, **kwargs):
     created = kwargs.get('created', None)
     if created is None or created:
+        DraftApplication.objects.all().delete()
         for application_type in ApplicationTypeConfig.objects.all().values_list('name', flat=True):
             group = Group.objects.get(name=application_type)
             group.user_set.clear()
@@ -30,3 +31,9 @@ def clear_file_fields(sender, instance, **kwargs):
 @receiver(post_save, sender=PromotionalCode, weak=False)
 def reload_active(sender, instance, **kwargs):
     sender.active(force_update=True)
+
+
+@receiver(post_save, sender=Application, weak=False)
+def delete_draft_on_apply(sender, instance, created, **kwargs):
+    if created:
+        DraftApplication.objects.filter(user_id=instance.user_id).delete()

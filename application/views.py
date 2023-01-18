@@ -19,7 +19,7 @@ from app.mixins import TabsViewMixin
 from app.utils import is_installed
 from application import forms
 from application.emails import send_email_to_blocked_admins
-from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition
+from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition, DraftApplication
 from user.emails import send_verification_email
 from user.forms import UserProfileForm, RecaptchaForm
 from user.mixins import LoginRequiredMixin
@@ -109,11 +109,19 @@ class ApplicationApply(TemplateView):
         except Application.DoesNotExist:
             pass
 
+    def update_from_draft_application(self, initial_data):
+        try:
+            draft = DraftApplication.objects.get(user_id=self.request.user.id)
+            initial_data.update(draft.form_data)
+        except DraftApplication.DoesNotExist:
+            pass
+
     def get_forms(self, application_type, application_form_class):
         initial_data = {key: value for key, value in self.request.GET.dict().items()
                         if key not in application_form_class.exclude_save}
         if self.request.user.is_authenticated:
             self.update_from_last_edition_application(application_type, initial_data)
+            self.update_from_draft_application(initial_data)
         app_form_kwargs = {'initial': initial_data}
         user_form_kwargs = app_form_kwargs.copy()
         if self.request.user.is_authenticated:
@@ -166,6 +174,15 @@ class ApplicationApply(TemplateView):
         except Application.MultipleObjectsReturned:
             pass
 
+    def forms_are_valid(self, user_form, application_form, context):
+        if not self.request.user.is_authenticated and getattr(settings, 'RECAPTCHA_REGISTER', False) \
+                and RecaptchaForm.active():
+            recaptcha_form = RecaptchaForm(self.request.POST, request=self.request)
+            if not recaptcha_form.is_valid():
+                context.update({'recaptcha_form': recaptcha_form})
+                return False
+        return user_form.is_valid() and application_form.is_valid()
+
     def save_user(self, form, create_active_user):
         user = form.save(commit=False)
         user_registered = False
@@ -176,18 +193,11 @@ class ApplicationApply(TemplateView):
         user.save()
         return user, user_registered
 
-    def forms_are_valid(self, user_form, application_form, context):
-        if not self.request.user.is_authenticated and getattr(settings, 'RECAPTCHA_REGISTER', False) \
-                and RecaptchaForm.active():
-            recaptcha_form = RecaptchaForm(self.request.POST, request=self.request)
-            if not recaptcha_form.is_valid():
-                context.update({'recaptcha_form': recaptcha_form})
-                return False
-        return user_form.is_valid() and application_form.is_valid()
-
     def post(self, request, **kwargs):
         context = self.get_context_data(**kwargs)
         application_type = context.get('application_type')
+        if application_type.closed():
+            raise PermissionDenied('Applications are closed')
         application_form_class = self.get_form_class(type_name=self.request.GET.get('type', 'Hacker'))
         application_form = application_form_class(request.POST, request.FILES)
         user_form_kwargs = {}
@@ -345,3 +355,23 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
                     .filter(user=application.user, type__compatible_with_others=False)\
                     .update(status=Application.STATUS_CANCELLED, status_update_date=timezone.now())
         return redirect(next_page)
+
+
+class SaveDraftApplication(LoginRequiredMixin, View):
+    def get_data(self):
+        data = self.request.POST.dict()
+        del data['csrfmiddlewaretoken']
+        for key, value in self.request.POST.dict().items():
+            if key[-2:] == '[]':
+                del data[key]
+                data[key[:-2]] = self.request.POST.getlist(key)
+        return data
+
+    def post(self, request, **kwargs):
+        data = self.get_data()
+        draft, created = DraftApplication.objects.get_or_create(user_id=self.request.user.id,
+                                                                defaults={'form_data': data})
+        if not created:
+            draft.form_data = data
+            draft.save()
+        return HttpResponse('OK!')

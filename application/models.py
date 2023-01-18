@@ -394,3 +394,32 @@ class ApplicationLog(models.Model):
                     changes[field] = change
             log.changes = changes
         return log
+
+
+class DraftApplicationManager(models.QuerySet):
+    def get_or_create(self, defaults=None, **kwargs):
+        if isinstance(defaults, dict) and defaults.get('form_data', None) is not None:
+            defaults['data'] = json.dumps(defaults['form_data'])
+            del defaults['form_data']
+        return super().get_or_create(defaults, **kwargs)
+
+
+class DraftApplication(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+
+    data = models.TextField(blank=True)
+
+    objects = DraftApplicationManager.as_manager()
+
+    @property
+    def form_data(self):
+        try:
+            return json.loads(self.data)
+        except json.JSONDecodeError:
+            return {}
+
+    @form_data.setter
+    def form_data(self, new_data: dict):
+        data = self.form_data
+        data.update(new_data)
+        self.data = json.dumps(data)

@@ -32,7 +32,7 @@ class MentorForm(ApplicationForm):
     study_work = forms.TypedChoiceField(
         required=True,
         label='Are you studying or working?',
-        choices=(('Study', _('Study')), ('Study', _('Work'))),
+        choices=(('Study', _('Study')), ('Work', _('Work'))),
         widget=forms.RadioSelect(attrs={'class': 'inline'})
     )
 

@@ -35,14 +35,14 @@
                                 </div>
                                 <div class="row m-0">
                                     <div class="col-3 fw-bold pb-3 text-end" style="border: hidden"><p class="border-2" style="border: solid; border-color: transparent">{% translate 'Diet' %}</p></div>
-                                    <div class="col-9 pb-3"><p style="width: fit-content; border-radius: 5px; border: solid" class="bg-diet-{{ app_user.diet|lower }} m-0">&nbsp;{{ app_user.get_diet_display_public }}&nbsp;</p></div>
+                                    <div class="col-9 pb-3"><p style="width: fit-content; border-radius: 5px;" class="bg-diet-{{ app_user.diet|lower }} m-0">&nbsp;{{ app_user.get_diet_display_public }}&nbsp;</p></div>
                                 </div>
                                 <form method="post">
                                     {% csrf_token %}
                                     <div class="mb-3 ms-3 me-3">
                                         <video id="qr-video" style="width: 100%; height: auto; display: none"></video>
                                         <div style="position: relative">
-                                            <input type="text" name="qr_code" class="form-control bg-{{ theme }} text-white" placeholder="{% translate 'QR code' %}" id="id_qr_code">
+                                            <input type="text" name="qr_code" class="form-control bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}" placeholder="{% translate 'QR code' %}" id="id_qr_code">
                                             <i id="button-rescan" class="bi bi-arrow-repeat fs-4" style="display: none; position: absolute; z-index: 1; right: 3%; top: 7%; cursor: pointer"></i>
                                         </div>
                                     </div>

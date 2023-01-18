@@ -38,6 +38,8 @@ def get_main_nav(request):
         nav.append(('Checkin', reverse('checkin_list')))
         if is_installed('event.messages') and request.user.has_perm('event_messages.view_announcement'):
             nav.append(('Announcements', reverse('announcement_list')))
+        if is_installed('event.meals') and request.user.has_perm('meals.can_checkin_meals'):
+            nav.append(('Meals', reverse('meals_list')))
     if request.user.is_organizer():
         nav.extend([('Stats', reverse('stats_home'))])
     return nav
