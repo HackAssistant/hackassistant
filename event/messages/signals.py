@@ -7,11 +7,12 @@ from event.messages.models import Announcement
 
 @receiver(post_init, sender=Announcement, weak=False)
 def secondary_center_on_change(sender, instance: Announcement, **kwargs):
-    instance.__old_sent = instance.sent or False
+    instance.__old_sent = instance.status or instance.STATUS_PENDING
 
 
 @receiver(pre_save, sender=Announcement, weak=False)
 def inscription_on_change(sender, instance: Announcement, **kwargs):
-    if (not is_instance_on_db(instance) or hasattr(instance, '__old_sent') and not instance.__old_sent) and \
-            instance.sent:
+    pending = instance.STATUS_PENDING
+    if not is_instance_on_db(instance) and getattr(instance, '__old_sent', pending) != pending \
+            and instance.status == instance.STATUS_SENT:
         instance.send()

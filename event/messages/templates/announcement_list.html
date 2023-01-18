@@ -21,7 +21,10 @@
         </div>
     </form>
 
-    {% include 'components/table.html' %}
+    <form method="post">
+        {% csrf_token %}
+        {% include 'components/table.html' %}
+    </form>
 
     <div class="row justify-content-around">
         <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
@@ -33,6 +36,9 @@
         $(document).ready(() => {
             let qr_button = $('#search_button')
             qr_button.css('margin-top', `${$('label[for="id_search"]').outerHeight(true)}px`)
+            $('button[name="send"]').click(() => {
+                return confirm('{% trans 'You are going to send a message. Are you sure?' %}')
+            })
         })
     </script>
 {% endblock %}

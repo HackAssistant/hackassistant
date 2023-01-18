@@ -44,7 +44,7 @@ class MessageServiceManager(metaclass=SingletonMeta):
                 pool = Pool(processes=1)
                 pool.apply_async(service.send_message, kwds={'message': message, 'user': user})
 
-    def make_announcement(self, message: str, sent_to_services=None):
+    def make_announcement(self, message: str, sent_to_services=None, error_callback=lambda x: x):
         if sent_to_services is not None and not isinstance(sent_to_services, list) \
                 and not isinstance(sent_to_services, tuple):
             raise self.MessageServiceDoNotExists('sent_to_services must be list, tuple or None and %s was found' %
@@ -52,4 +52,4 @@ class MessageServiceManager(metaclass=SingletonMeta):
         for service_name, service in self.services.items():
             if sent_to_services is None or service_name in sent_to_services:
                 pool = Pool(processes=1)
-                pool.apply_async(service.make_announcement, kwds={'message': message})
+                pool.apply_async(service.make_announcement, kwds={'message': message}, error_callback=error_callback)

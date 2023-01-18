@@ -131,7 +131,26 @@ body.dark {
     .c3-tooltip tr {
         color: #222222;
     }
+    .tempus-dominus-widget {
+        background: lighten($dark, 5%) !important;
+        color: $white !important;
+        .date-container-days div:not(.no-highlight).active, .date-container-decades div:not(.no-highlight).active, .date-container-months div:not(.no-highlight).active, .date-container-years div:not(.no-highlight).active, .time-container-clock div:not(.no-highlight).active, .time-container-hour div:not(.no-highlight).active, .time-container-minute div:not(.no-highlight).active, .time-container-second div:not(.no-highlight).active {
+            color: $white !important;
+            background: $primary !important;
+        }
+    }
 }
+.light {
+    .tempus-dominus-widget {
+        background: darken($light, 5%) !important;
+        color: $black !important;
+        .date-container-days div:not(.no-highlight).active, .date-container-decades div:not(.no-highlight).active, .date-container-months div:not(.no-highlight).active, .date-container-years div:not(.no-highlight).active, .time-container-clock div:not(.no-highlight).active, .time-container-hour div:not(.no-highlight).active, .time-container-minute div:not(.no-highlight).active, .time-container-second div:not(.no-highlight).active {
+            color: $white !important;
+            background: $primary !important;
+        }
+    }
+}
+
 
 ::-moz-selection {
   color: $white;

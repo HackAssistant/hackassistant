@@ -88,6 +88,41 @@ class BootstrapFormMixin:
                 return False
         return True
 
+    def __check_field_visibility(self, field, visible):
+        if field.get('space', 0) <= 0:
+            field['field'].field.widget = forms.HiddenInput()
+        visible[field['field'].auto_id] = {
+            self.fields.get(visible_name).get_bound_field(self, visible_name).html_name:
+                ([str(x) for x in values] if isinstance(values, list) else [str(values)])
+            for visible_name, values in field.get('visible', {}).items()
+        }
+
+    def __check_field_is_required(self, field):
+        if field['field'].field.required:
+            field['field'].label = mark_safe(field['field'].label + ' <span class="text-danger">*</span>')
+
+    def __add_field_api_settings(self, field, name):
+        api_fields = getattr(getattr(self, 'Meta', None), 'api_fields', {})
+        if name in api_fields:
+            field['api'] = api_fields[name]
+            if field['api'].get('restrict', False):
+                field['field'].help_text += _("Please select one of the autocomplete options "
+                                              "or write 'Others'.")
+
+    def __add_field_datetime_settings(self, field, name):
+        field_instance = field['field'].field
+        if isinstance(field_instance, forms.DateField):
+            field['datetimepicker'] = {'type': 'DateField'}
+        elif isinstance(field_instance, forms.DateTimeField):
+            field['datetimepicker'] = {'type': 'DateTimeField'}
+        elif isinstance(field_instance, forms.TimeField):
+            field['datetimepicker'] = {'type': 'TimeField'}
+        else:
+            return None
+        datetimepicker_fields = getattr(getattr(self, 'Meta', None), 'datetimepicker_fields', {})
+        if name in datetimepicker_fields:
+            field['datetimepicker'].update(datetimepicker_fields[name])
+
     def get_fields(self):
         result = self.get_bootstrap_field_info()
         for list_fields in result.values():
@@ -95,21 +130,10 @@ class BootstrapFormMixin:
             for field in list_fields.get('fields', []):
                 name = field.get('name')
                 field.update({'field': self.fields.get(name).get_bound_field(self, name)})
-                if field.get('space', 0) <= 0:
-                    field['field'].field.widget = forms.HiddenInput()
-                visible[field['field'].auto_id] = {
-                    self.fields.get(visible_name).get_bound_field(self, visible_name).html_name:
-                        ([str(x) for x in values] if isinstance(values, list) else [str(values)])
-                    for visible_name, values in field.get('visible', {}).items()
-                }
-                if field['field'].field.required:
-                    field['field'].label = mark_safe(field['field'].label + ' <span class="text-danger">*</span>')
-                api_fields = getattr(getattr(self, 'Meta', None), 'api_fields', {})
-                if name in api_fields:
-                    field['api'] = api_fields[name]
-                    if field['api'].get('restrict', False):
-                        field['field'].help_text += _("Please select one of the autocomplete options "
-                                                      "or write 'Others'.")
+                self.__check_field_visibility(field, visible)
+                self.__check_field_is_required(field)
+                self.__add_field_api_settings(field, name)
+                self.__add_field_datetime_settings(field, name)
                 if not visible[field['field'].auto_id]:
                     del visible[field['field'].auto_id]
             list_fields['visible'] = visible

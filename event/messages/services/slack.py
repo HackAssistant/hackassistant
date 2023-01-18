@@ -40,10 +40,10 @@ class SlackMessageService(ServiceAbstract):
 
     def make_announcement(self, message: str) -> bool:
         if self.client is None:
-            return False
+            raise self.ServiceException('Slack token missing')
         try:
             self.client.chat_postMessage(channel=self.announcement_channel, text=message)
             return True
         except SlackApiError as e:
             self.logger.error(e)
-            return False
+            raise self.ServiceException(e)

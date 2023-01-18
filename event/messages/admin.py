@@ -12,7 +12,7 @@ class AnnouncementAdminForm(AnnouncementModelFormMixin, forms.ModelForm):
 
 
 class AnnouncementAdmin(admin.ModelAdmin):
-    list_filter = ('sent', 'services')
+    list_filter = ('status', 'services')
     search_fields = ('name', 'message')
     form = AnnouncementAdminForm
 

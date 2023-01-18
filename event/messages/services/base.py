@@ -4,6 +4,9 @@ from user.models import User
 
 
 class ServiceAbstract(ABC):
+    class ServiceException(Exception):
+        pass
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
 

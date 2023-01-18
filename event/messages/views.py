@@ -1,3 +1,4 @@
+from django.db.models import Case, When
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -17,8 +18,19 @@ class AnnouncementList(PermissionRequiredMixin, SingleTableMixin, FilterView):
     template_name = 'announcement_list.html'
     table_class = AnnouncementTable
     filterset_class = AnnouncementTableFilter
-    queryset = Announcement.objects.all()
-    ordering = ('sent', 'datetime')
+    queryset = Announcement.objects.all().annotate(pending=Case(When(status=Announcement.STATUS_PENDING, then=1),
+                                                                default=0)).order_by('-pending', 'datetime')
+
+    def get_permission_required(self):
+        if self.request.method == 'POST':
+            return ['event_messages.change_announcement']
+        return super().get_permission_required()
+
+    def post(self, request, **kwargs):
+        announcement = get_object_or_404(Announcement, id=request.POST.get('send'))
+        announcement.status = announcement.STATUS_SENT
+        announcement.save()
+        return redirect(reverse('announcement_list'))
 
 
 class AnnouncementFormView(PermissionRequiredMixin, TemplateView):

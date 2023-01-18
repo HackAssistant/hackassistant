@@ -440,3 +440,10 @@ MESSAGES_SERVICES = {
 
 if len(MESSAGES_SERVICES) > 0:
     CRONJOBS.append(('*/5 * * * *', 'django.core.management.call_command', ['send_announcements']))
+
+# DateTime formats
+USE_L10N = False
+DATETIME_FORMAT = 'N j, Y, H:i'
+SHORT_DATETIME_FORMAT = 'Y/m/d H:i'
+TIME_FORMAT = 'H:i:s'
+SHORT_DATE_FORMAT = 'Y/m/d'

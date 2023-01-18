@@ -17,7 +17,7 @@ class AnnouncementModelFormMixin:
 
 class AnnouncementForm(BootstrapFormMixin, AnnouncementModelFormMixin, forms.ModelForm):
     bootstrap_field_info = {'': {
-        'fields': [{'name': 'name', 'space': 12}, {'name': 'datetime', 'space': 4}, {'name': 'sent', 'space': 4},
+        'fields': [{'name': 'name', 'space': 12}, {'name': 'datetime', 'space': 4}, {'name': 'status', 'space': 4},
                    {'name': 'services', 'space': 4}, {'name': 'message', 'space': 12}]
     }}
 
@@ -31,5 +31,5 @@ class AnnouncementForm(BootstrapFormMixin, AnnouncementModelFormMixin, forms.Mod
             'sent': _('Message sent')
         }
         help_texts = {
-            'sent': _('The message will be sent if you modify this field!')
+            'sent': _('The message will be sent immediately if you modify this field to sent status!')
         }

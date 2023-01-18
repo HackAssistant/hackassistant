@@ -73,6 +73,105 @@
                         })
                     </script>
                 {% endif %}
+                {% if field.datetimepicker %}
+                    <script>
+                        $(document).ready(() => {
+                            let field = document.getElementById('{{ field.field.auto_id }}')
+                            let options = {
+                                ...(TempusDominusSettings ?? {}),
+                            }
+                            {% if field.datetimepicker.type == "TimeField" %}
+                                options.display.components = {
+                                    calendar: false,
+                                    date: false,
+                                    month: false,
+                                    year: false,
+                                    decades: false,
+                                    clock: true,
+                                    hours: true,
+                                    minutes: true,
+                                    seconds: true,
+                                }
+                                options.localization.format = 'HH:mm:ss'
+                            {% elif field.datetimepicker.type == "DateField" %}
+                                options.display.components = {
+                                    calendar: true,
+                                    date: true,
+                                    month: true,
+                                    year: true,
+                                    decades: true,
+                                    clock: false,
+                                    hours: false,
+                                    minutes: false,
+                                    seconds: false,
+                                }
+                                options.localization.format = 'yyyy-MM-dd'
+                            {% elif field.datetimepicker.type == "DateTimeField" %}
+                                options.display.components = {
+                                    calendar: true,
+                                    date: true,
+                                    month: true,
+                                    year: true,
+                                    decades: true,
+                                    clock: true,
+                                    hours: true,
+                                    minutes: true,
+                                    seconds: false,
+                                }
+                                options.localization.format = 'yyyy-MM-dd HH:mm:ss'
+                            {% endif %}
+                            {% if field.datetimepicker.minDate %}
+                                options.restrictions.minDate = Date('{{ field.datetimepicker.minDate }}');
+                            {% endif %}
+                            {% if field.datetimepicker.maxDate %}
+                                options.restrictions.maxDate = Date('{{ field.datetimepicker.maxDate }}');
+                            {% endif %}
+                            {% if field.datetimepicker.disabledDates %}
+                                let disabledDates = []
+                                {% for date in field.datetimepicker.disabledDates %}
+                                    disabledDates.push(Date('{{ date }}'))
+                                {% endfor %}
+                                options.restrictions.disabledDates = disabledDates
+                            {% endif %}
+                            {% if field.datetimepicker.enabledDates %}
+                                let enabledDates = []
+                                {% for date in field.datetimepicker.enabledDates %}
+                                    enabledDates.push(Date('{{ date }}'))
+                                {% endfor %}
+                                options.restrictions.enabledDates = enabledDates
+                            {% endif %}
+                            {% if field.datetimepicker.daysOfWeekDisabled %}
+                                let daysOfWeekDisabled = []
+                                {% for day in field.datetimepicker.daysOfWeekDisabled %}
+                                    daysOfWeekDisabled.push('{{ day }}')
+                                {% endfor %}
+                                options.restrictions.daysOfWeekDisabled = daysOfWeekDisabled
+                            {% endif %}
+                            {% if field.datetimepicker.disabledTimeIntervals %}
+                                let disabledTimeIntervals = []
+                                {% for interval in field.datetimepicker.disabledTimeIntervals %}
+                                    disabledTimeIntervals.push(parseInt('{{ interval }}'))
+                                {% endfor %}
+                                options.restrictions.disabledTimeIntervals = disabledTimeIntervals
+                            {% endif %}
+                            {% if field.datetimepicker.disabledHours %}
+                                let disabledHours = []
+                                {% for hour in field.datetimepicker.disabledHours %}
+                                    disabledHours.push('{{ hour }}')
+                                {% endfor %}
+                                options.restrictions.disabledHours = disabledHours
+                            {% endif %}
+                            {% if field.datetimepicker.enabledHours %}
+                                let enabledHours = []
+                                {% for hour in field.datetimepicker.enabledHours %}
+                                    disabledHours.push('{{ hour }}')
+                                {% endfor %}
+                                options.restrictions.enabledHours = enabledHours
+                            {% endif %}
+                            new tempusDominus.TempusDominus(field, options)
+                        })
+                    </script>
+                {% endif %}
             {% endfor %}
             </div>
             <script nonce="{{ CSP_NONCE }}">
