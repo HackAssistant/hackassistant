@@ -437,7 +437,10 @@ DISPOSABLE_EMAIL_TOKEN = os.environ.get('DISPOSABLE_EMAIL_TOKEN', None)
 
 # Messages services config
 MESSAGES_SERVICES = {
-    'SlackMessageService': {}
+    'SlackMessageService': {
+        'ACCESS_TOKEN': os.environ.get('SLACK_ACCESS_TOKEN', None),
+        'ANNOUNCEMENT_CHANNEL': os.environ.get('SLACK_ANNOUNCEMENT_CHANNEL', '#announcements')
+    }
 }
 
 if len(MESSAGES_SERVICES) > 0:

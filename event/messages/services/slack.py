@@ -46,4 +46,4 @@ class SlackMessageService(ServiceAbstract):
             return True
         except SlackApiError as e:
             self.logger.error(e)
-            raise self.ServiceException(e)
+            raise self.ServiceException(str(getattr(e, 'response', e)))

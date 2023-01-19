@@ -7,4 +7,4 @@ class MessagesConfig(AppConfig):
     label = 'event_messages'
 
     def ready(self):
-        from . import signals
+        pass

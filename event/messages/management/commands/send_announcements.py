@@ -8,6 +8,8 @@ class Command(BaseCommand):
     help = 'Send announcements from the database'
 
     def handle(self, *args, **kwargs):
-        for announcement in Announcement.objects.filter(datetime__lte=timezone.now(), sent=False):
-            announcement.sent = True
+        for announcement in Announcement.objects.filter(datetime__lte=timezone.now(),
+                                                        status=Announcement.STATUS_PENDING):
+            announcement.status = Announcement.STATUS_SENT
             announcement.save()
+            announcement.send()

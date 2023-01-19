@@ -30,6 +30,7 @@ class AnnouncementList(PermissionRequiredMixin, SingleTableMixin, FilterView):
         announcement = get_object_or_404(Announcement, id=request.POST.get('send'))
         announcement.status = announcement.STATUS_SENT
         announcement.save()
+        announcement.send()
         return redirect(reverse('announcement_list'))
 
 

@@ -25,11 +25,8 @@ class AnnouncementForm(BootstrapFormMixin, AnnouncementModelFormMixin, forms.Mod
         model = Announcement
         exclude = ('id', )
         widgets = {
-            'message': forms.Textarea(attrs={'rows': 4})
+            'message': forms.Textarea(attrs={'rows': 4}),
         }
         labels = {
             'sent': _('Message sent')
-        }
-        help_texts = {
-            'sent': _('The message will be sent immediately if you modify this field to sent status!')
         }
