@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block subtitle %}{% translate 'Announcements' %}{% endblock %}
+
+{% block head %}
+    {% include 'components/import_qr_scanner.html' %}
+{% endblock %}
+
+{% block content %}
+
+    <h1 class="mt-3">{% translate 'Announcements' %}</h1>
+
+    <form class="mt-2" style="display: flex">
+        <div method="get" id="filter-form" style="width: 100%" class="mr-2">
+            {% include 'components/bootstrap5_form.html' with form=filter.form is_filter=True %}
+        </div>
+        <div class="ms-2">
+            <button id="search_button" type="submit" class="btn btn-secondary"><i class="bi bi-search"></i></button>
+        </div>
+    </form>
+
+    <form method="post">
+        {% csrf_token %}
+        {% include 'components/table.html' %}
+    </form>
+
+    <div class="row justify-content-around">
+        <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+            <a href="{% url 'new_announcement' %}" class="btn btn-primary col-12">{% trans 'New announcement' %}</a>
+        </div>
+    </div>
+
+    <script nonce="{{ request.csp_nonce }}">
+        $(document).ready(() => {
+            let qr_button = $('#search_button')
+            qr_button.css('margin-top', `${$('label[for="id_search"]').outerHeight(true)}px`)
+            $('button[name="send"]').click(() => {
+                return confirm('{% trans 'You are going to send a message. Are you sure?' %}')
+            })
+        })
+    </script>
+{% endblock %}

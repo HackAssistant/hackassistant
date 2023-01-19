@@ -1,0 +1,87 @@
+{% load i18n %}
+<script>
+    tempusDominus.extend(tempusDominus.plugins.customDateFormat);
+    const TempusDominusSettings = {
+        restrictions: {
+            minDate: undefined,
+            maxDate: undefined,
+            disabledDates: [],
+            enabledDates: [],
+            daysOfWeekDisabled: [],
+            disabledTimeIntervals: [],
+            disabledHours: [],
+            enabledHours: []
+        },
+        display: {
+            icons: {
+                type: 'icons',
+                time: 'fa-solid fa-clock',
+                date: 'fa-solid fa-calendar',
+                up: 'fa-solid fa-arrow-up',
+                down: 'fa-solid fa-arrow-down',
+                previous: 'fa-solid fa-chevron-left',
+                next: 'fa-solid fa-chevron-right',
+                today: 'fa-solid fa-calendar-check',
+                clear: 'fa-solid fa-trash',
+                close: 'fa-solid fa-xmark'
+            },
+            sideBySide: false,
+                calendarWeeks: false,
+                viewMode: 'calendar',
+                toolbarPlacement: 'bottom',
+                keepOpen: false,
+                buttons: {
+                    today: true,
+                    clear: false,
+                    close: false
+            },
+            inline: false,
+            theme: '{{ theme }}'
+        },
+        localization: {
+            today: '{% trans 'Go to today' %}',
+            clear: '{% trans 'Clear selection' %}',
+            close: '{% trans 'Close the picker' %}',
+            selectMonth: '{% trans 'Select Month' %}',
+            previousMonth: '{% trans 'Previous Month' %}',
+            nextMonth: '{% trans 'Next Month' %}',
+            selectYear: '{% trans 'Select Year' %}',
+            previousYear: '{% trans 'Previous Year' %}',
+            nextYear: '{% trans 'Next Year' %}',
+            selectDecade: '{% trans 'Select Decade' %}',
+            previousDecade: '{% trans 'Previous Decade' %}',
+            nextDecade: '{% trans 'Next Decade' %}',
+            previousCentury: '{% trans 'Previous Century' %}',
+            nextCentury: '{% trans 'Next Century' %}',
+            pickHour: '{% trans 'Pick Hour' %}',
+            incrementHour: '{% trans 'Increment Hour' %}',
+            decrementHour: '{% trans 'Decrement Hour' %}',
+            pickMinute: '{% trans 'Pick Minute' %}',
+            incrementMinute: '{% trans 'Increment Minute' %}',
+            decrementMinute: '{% trans 'Decrement Minute' %}',
+            pickSecond: '{% trans 'Pick Second' %}',
+            incrementSecond: '{% trans 'Increment Second' %}',
+            decrementSecond: '{% trans 'Decrement Second' %}',
+            toggleMeridiem: '{% trans 'Toggle Meridiem' %}',
+            selectTime: '{% trans 'Select Time' %}',
+            selectDate: '{% trans 'Select Date' %}',
+            dayViewHeaderFormat: { month: 'long', year: '2-digit' },
+            locale: 'default',
+            startOfTheWeek: 1,
+            hourCycle: 'h23',
+            /**
+            * This is only used with the customDateFormat plugin
+            */
+            format: 'yyyy-MM-dd HH:mm:ss'
+        },
+        keepInvalid: false,
+        debug: false,
+        allowInputToggle: true,
+        multipleDates: false,
+        multipleDatesSeparator: '; ',
+        promptTimeOnDateChange: true,
+        promptTimeOnDateChangeTransitionDelay: 200,
+        meta: {},
+        container: undefined
+    }
+</script>

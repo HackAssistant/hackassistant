@@ -1,0 +1,5 @@
+{% load i18n %}
+<a class="btn btn-primary btn-sm" href='{% url 'edit_announcement' record.pk %}'>{% translate 'Edit' %}</a>
+{% if record.status != record.STATUS_SENT %}
+    <button class="btn btn-secondary btn-sm ms-lg-2 mt-2 mt-lg-0" name="send" value="{{ record.pk }}">{% translate 'Send now' %}</button>
+{% endif %}
