@@ -64,12 +64,14 @@ class JoinFriendsView(LoginRequiredMixin, TabsViewMixin, TemplateView):
         if form.is_valid():
             code = form.cleaned_data.get("friends_code", None)
             friend_code = FriendsCode.objects.filter(code=code).first()
-            if friend_code is not None:
-                if not friend_code.is_closed():
-                    return self.create(code=code)
+            if friend_code is None:
+                form.add_error("friends_code", "Invalid code!")
+            elif friend_code.reached_max_capacity():
+                form.add_error("friends_code", "This team is already full")
+            elif friend_code.is_closed():
                 form.add_error("friends_code", "This team has one application invited and cannot be joined")
             else:
-                form.add_error("friends_code", "Invalid code!")
+                return self.create(code=code)
         context = self.get_context_data()
         context.update({"friends_form": form})
         return self.render_to_response(context)
