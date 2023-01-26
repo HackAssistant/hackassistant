@@ -20,3 +20,4 @@ SERVER_EMAIL = 'MyHackUPC <server@my.hackupc.com>'
 ADMINS = [('Admins', 'devs@hackupc.com')]
 
 SUPPORTED_RESUME_EXTENSIONS = ['.pdf']
+FRIENDS_MAX_CAPACITY = None
