@@ -2,12 +2,13 @@
 {% load i18n %}
 {% block subtitle %}{% translate "Friends' group" %}{% endblock %}
 {% block content %}
-    <h1>{% translate "Friends' group" %}</h1>
+    <h1>{% translate "Apply with friends" %}</h1>
+    <p>{% translate "The friends group created is not required to be your final team for the hackathon." %}</p>
     <form method="post" id="invite-form">
         {% csrf_token %}
         {% include 'components/bootstrap5_form.html' with form=friends_form %}
         {% if friends_code %}
-            <p>{% translate "Your group's code:" %} {{ friends_code.code }}</p>
+            <p>{% translate "Your friend group's code:" %} {{ friends_code.code }}</p>
             <ul>
                 {% for member in friends_code.get_members %}
                     <li>{{ member.user.get_full_name }}</li>
@@ -16,10 +17,10 @@
         {% endif %}
         <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
             {% if friends_form %}
-                <button class="btn btn-primary" name="action" value="join">{% translate 'Join' %}</button>
-                <button class="btn btn-secondary" name="action" value="create">{% translate 'Create' %}</button>
+                <button class="btn btn-primary" name="action" value="join">{% translate 'Join group' %}</button>
+                <button class="btn btn-secondary" name="action" value="create">{% translate 'Create group' %}</button>
             {% else %}
-                <button class="btn btn-danger" name="action" value="leave">{% translate 'Leave' %}</button>
+                <button class="btn btn-danger" name="action" value="leave">{% translate 'Leave group' %}</button>
             {% endif %}
         </div>
     </form>
