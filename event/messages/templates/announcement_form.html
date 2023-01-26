@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block subtitle %}{% if announcement %}{% translate 'Editing announcement:' %} {{ announcement.name }}{% else %}{% translate 'New announcement' %}{% endif %}{% endblock %}
+{% block content %}
+    <div class="row justify-content-between mb-3">
+        <div class="col-12 col-lg-2 d-grid d-md-block">
+            <a href="{% url 'announcement_list' %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% trans 'Back' %}</a>
+        </div>
+    </div>
+    <h1 style="text-align: center">{% if announcement %}{% translate 'Editing announcement:' %} {{ announcement.name }}{% else %}{% translate 'New announcement' %}{% endif %}</h1>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        {% include 'components/bootstrap5_form.html' %}
+
+        <div class="row justify-content-around">
+            <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+                <button type="submit" class="btn btn-primary col-12">{% trans 'Save' %}</button>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(()=> {
+                {% if not instance.sent %}
+                    $('form').submit((event) => {
+                        if ($('input[name="sent"]').prop("checked") && !window.confirm('{% translate 'You selected to send the message right now. Are you sure?' %}')) {
+                            event.preventDefault()
+                        }
+                    })
+                {% endif %}
+            })
+        </script>
+
+    </form>
+
+
+{% endblock %}

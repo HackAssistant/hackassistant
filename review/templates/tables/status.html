@@ -1,1 +1,1 @@
-<p class="bg-{{ record.get_status_color }} m-0" style="width: fit-content; border-radius: 5px">&nbsp{{ record.get_status_display }}&nbsp</p>
+<p class="bg-{{ record.get_status_color }} m-0" {% if record.get_status_title %} title="{{ record.get_status_title }}" {% endif %} style="width: fit-content; border-radius: 5px">&nbsp{{ record.get_status_display }}&nbsp</p>

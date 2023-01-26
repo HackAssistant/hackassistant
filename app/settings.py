@@ -68,9 +68,10 @@ INSTALLED_APPS = [
     'user',
     'application',
     'review',
+    'stats',
     'friends',
     'event',
-    'stats',
+    'event.messages',
     'event.meals',
 ]
 
@@ -433,3 +434,21 @@ if os.environ.get('GITHUB_CLIENT_ID', None) is not None and os.environ.get('GITH
 
 # Disposable email token from https://api.testmail.top/
 DISPOSABLE_EMAIL_TOKEN = os.environ.get('DISPOSABLE_EMAIL_TOKEN', None)
+
+# Messages services config
+MESSAGES_SERVICES = {
+    'SlackMessageService': {
+        'ACCESS_TOKEN': os.environ.get('SLACK_ACCESS_TOKEN', None),
+        'ANNOUNCEMENT_CHANNEL': os.environ.get('SLACK_ANNOUNCEMENT_CHANNEL', '#announcements')
+    }
+}
+
+if len(MESSAGES_SERVICES) > 0:
+    CRONJOBS.append(('*/5 * * * *', 'django.core.management.call_command', ['send_announcements']))
+
+# DateTime formats
+USE_L10N = False
+DATETIME_FORMAT = 'N j, Y, H:i'
+SHORT_DATETIME_FORMAT = 'Y/m/d H:i'
+TIME_FORMAT = 'H:i:s'
+SHORT_DATE_FORMAT = 'Y/m/d'
