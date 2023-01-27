@@ -14,6 +14,10 @@
 - Ip block on failed login tries & ip blocklist ✋ (Optional)
 - Dark mode 🌚 🌝 Light mode (Optional)
 
+## Documentation
+
+There's a really extended documentation for configurations or development of the application [here](/docs/README.md).
+
 ## Development
 
 The development if this Django app can be made by Python or Docker-Compose. 
