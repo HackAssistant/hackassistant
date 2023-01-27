@@ -3,7 +3,14 @@
 {% block subtitle %}{% translate "Friends' group" %}{% endblock %}
 {% block content %}
     <h1>{% translate "Apply with friends" %}</h1>
-    <p>{% translate "The friends group created is not required to be your final team for the hackathon." %}</p>
+    <p>{% translate 'Please keep this in mind:' %}</p>
+    <ul>
+        <li>{% translate 'The friends group created is not required to be your final team for the hackathon.' %}</li>
+        <li>{% translate 'If someone of the group is invited, the group will be closed and no one will be able to join.' %}</li>
+        {% if friends_max_capacity is not None %}
+            <li>{% translate 'Max group capacity:' %} {{ friends_max_capacity }}</li>
+        {% endif %}
+    </ul>
     <form method="post" id="invite-form">
         {% csrf_token %}
         {% include 'components/bootstrap5_form.html' with form=friends_form %}
