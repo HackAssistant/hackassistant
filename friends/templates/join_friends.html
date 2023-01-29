@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block subtitle %}{% translate "Friends' group" %}{% endblock %}
+{% block subtitle %}{% translate "Apply with friends" %}{% endblock %}
 {% block content %}
     <h1>{% translate "Apply with friends" %}</h1>
-    <p>{% translate 'Please keep this in mind:' %}</p>
+    <p>{% translate 'Form a group of friends to apply together. Please keep in mind:' %}</p>
     <ul>
-        <li>{% translate 'The friends group created is not required to be your final team for the hackathon.' %}</li>
-        <li>{% translate 'If someone of the group is invited, the group will be closed and no one will be able to join.' %}</li>
+        <li>{% translate 'The group of friends created does not have to be the final team for the hackathon.' %}</li>
+        <li>{% translate 'If one member of the group is invited, the group will no longer be open to new members.' %}</li>
+        <li>{% translate 'The likelihood of the entire group being invited increases when half of the group is already invited.' %}</li>
         {% if friends_max_capacity is not None %}
             <li>{% translate 'Max group capacity:' %} {{ friends_max_capacity }}</li>
         {% endif %}
