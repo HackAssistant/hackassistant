@@ -39,3 +39,10 @@ def notify_user(message, user):
         from event.messages.services import MessageServiceManager
         return MessageServiceManager().send_message_to_user(message, user)
     return False
+
+
+def announcement(message):
+    if is_installed('event.messages'):
+        from event.messages.services import MessageServiceManager
+        return MessageServiceManager().make_announcement(message)
+    return False
