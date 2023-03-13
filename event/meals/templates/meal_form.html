@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block subtitle %}{% if meal %}{% translate 'Editing meal:' %} {{ meal.name }}{% else %}{% translate 'New meal' %}{% endif %}{% endblock %}
+{% block content %}
+    <div class="row justify-content-between mb-3">
+        <div class="col-12 col-lg-2 d-grid d-md-block">
+            <a href="{% url 'meals_list' %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% trans 'Back' %}</a>
+        </div>
+    </div>
+    <h1 style="text-align: center">{% if meal %}{% translate 'Editing meal:' %} {{ meal.name }}{% else %}{% translate 'New meal' %}{% endif %}</h1>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        {% include 'components/bootstrap5_form.html' %}
+
+        <div class="row justify-content-around">
+            <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
+                <button type="submit" class="btn btn-primary col-12">{% trans 'Save' %}</button>
+            </div>
+        </div>
+        {% if meal and announcement_enabled %}
+            <script>
+                $(document).ready(()=> {
+                let times = {{ meal.times }}
+                    $('form').submit((event) => {
+                        let new_times = parseInt($('input[name="times"]').val())
+                        if (isNaN(new_times)) {
+                            event.preventDefault()
+                            window.alert('Times field modified as non numeric value. Why?')
+                        }
+                        if (new_times > times) {
+                            let announcement = window.confirm('Do you want to make an announcement?')
+                            if (announcement) {
+                                $('<input>', {
+                                    type: 'hidden',
+                                    name: 'announcement',
+                                    value: 'true'
+                                }).appendTo(event.target);
+                            }
+                        }
+                    })
+                })
+            </script>
+        {% endif %}
+
+    </form>
+
+
+{% endblock %}
