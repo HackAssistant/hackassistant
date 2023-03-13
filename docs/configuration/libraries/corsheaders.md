@@ -8,7 +8,7 @@ A Django App that adds Cross-Origin Resource Sharing (CORS) headers to responses
 
 ## Integration to Hackassistant
 
-- This is used by the [Django JWT](configuration/django_jwt_oidc.md) and allows the other services to use apis from the Hackassistant.
+- This is used by the [Django JWT](django_jwt_oidc.md) and allows the other services to use apis from the Hackassistant.
 - You can add more pages with the configuration in the library documentation.
 
 ## Future work

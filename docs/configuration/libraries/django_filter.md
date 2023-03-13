@@ -8,7 +8,7 @@ Django-filter is a generic, reusable application to alleviate writing some of th
 
 ## Integration to Hackassistant
 
-- Integrated this with the [BootstrapFormMixin](../utility/bootstrap_form_mixin.md) for rendering the filters forms with Boostrap 5.
+- Integrated this with the [BootstrapFormMixin](../../utility/generic/bootstrap_form_mixin.md) for rendering the filters forms with Boostrap 5.
 - Need to create a Form for setting the BootstrapFormMixin settings and then add the form to the Filter class.
 
 ## Future work

@@ -8,7 +8,7 @@ Bootstrap 5 for Django.
 
 ## Integration to Hackassistant
 
-- Used by [BootstrapFormMixin](../utility/bootstrap_form_mixin.md) for rendering the forms with Boostrap 5 with more options.
+- Used by [BootstrapFormMixin](../../utility/generic/bootstrap_form_mixin.md) for rendering the forms with Boostrap 5 with more options.
 
 ## Future work
 
