@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.db import Error, transaction
 from django.http import HttpResponseBadRequest
@@ -42,6 +43,7 @@ class JoinFriendsView(LoginRequiredMixin, TabsViewMixin, TemplateView):
             context.update({"friends_code": friends_code})
         except FriendsCode.DoesNotExist:
             context.update({"friends_form": FriendsForm()})
+        context.update({'friends_max_capacity': getattr(settings, 'FRIENDS_MAX_CAPACITY', None)})
         return context
 
     def post(self, request, **kwargs):
