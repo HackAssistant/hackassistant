@@ -13,6 +13,7 @@ from django.views.generic import TemplateView
 from django.utils.translation import gettext as _
 
 from app.mixins import TabsViewMixin
+from application.emails import send_email_apply
 from user import emails
 from user.forms import LoginForm, UserProfileForm, ForgotPasswordForm, SetPasswordForm, \
     RegistrationForm, RecaptchaForm
@@ -184,6 +185,12 @@ class NeedsVerification(EmailNotVerifiedMixin, TemplateView):
 
 
 class VerifyEmail(EmailNotVerifiedMixin, View):
+    def redirect_successful(self):
+        next_ = self.request.GET.get('next', reverse('home'))
+        if next_[0] != '/':
+            next_ = reverse('home')
+        return redirect(next_)
+
     def get(self, request, **kwargs):
         try:
             uid = User.decode_encoded_pk(kwargs.get('uid'))
@@ -198,7 +205,10 @@ class VerifyEmail(EmailNotVerifiedMixin, View):
             messages.success(request, _("Email verified!"))
             user.email_verified = True
             user.save()
-            return redirect('home')
+            application = user.application_set.first()
+            if application is not None:
+                send_email_apply(application, request)
+            return self.redirect_successful()
         else:
             messages.error(request, _("Email verification url has expired. Log in so we can send it again!"))
         return redirect('needs_verification')

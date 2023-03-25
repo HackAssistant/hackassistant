@@ -18,7 +18,7 @@ from django.utils.translation import gettext as _
 from app.mixins import TabsViewMixin
 from app.utils import is_installed
 from application import forms
-from application.emails import send_email_to_blocked_admins
+from application.emails import send_email_to_blocked_admins, send_email_apply
 from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition, DraftApplication
 from user.emails import send_verification_email
 from user.forms import UserProfileForm, RecaptchaForm
@@ -68,7 +68,6 @@ class ApplicationHome(LoginRequiredMixin, TabsViewMixin, TemplateView):
 
 class ApplicationApply(TemplateView):
     template_name = 'application_form.html'
-    public = True
 
     def dispatch(self, request, *args, **kwargs):
         app_type = self.request.GET.get('type', None)
@@ -154,9 +153,7 @@ class ApplicationApply(TemplateView):
 
     def save_application(self, form, app_type, user):
         try:
-            if not self.public:
-                raise Application.DoesNotExist()
-            Application.objects.get(user=user, type_id=app_type.pk, edition=Edition.get_default_edition())
+            instance = Application.objects.get(user=user, type_id=app_type.pk, edition=Edition.get_default_edition())
         except Application.DoesNotExist:
             instance = form.save(commit=False)
             instance.user = user
@@ -172,7 +169,9 @@ class ApplicationApply(TemplateView):
                 instance.save()
                 form.save_files(instance=instance)
         except Application.MultipleObjectsReturned:
-            pass
+            instance = Application.objects.filter(user=user, type_id=app_type.pk,
+                                                  edition=Edition.get_default_edition()).first()
+        return instance
 
     def forms_are_valid(self, user_form, application_form, context):
         if not self.request.user.is_authenticated and getattr(settings, 'RECAPTCHA_REGISTER', False) \
@@ -206,19 +205,21 @@ class ApplicationApply(TemplateView):
         user_form = UserProfileForm(request.POST, **user_form_kwargs)
         if self.forms_are_valid(user_form, application_form, context):
             user, registered = self.save_user(user_form, application_type.create_user)
-            self.save_application(form=application_form, app_type=application_type, user=user)
-            return self.success_response(application_type, registered, user)
+            application = self.save_application(form=application_form, app_type=application_type, user=user)
+            return self.success_response(application_type, registered, user, application)
         context.update({'application_form': application_form, 'user_form': user_form})
         return self.render_to_response(context)
 
-    def success_response(self, application_type, registered, user):
+    def success_response(self, application_type, registered, user, application):
         messages.success(self.request, _('Applied successfully!'))
         if application_type.create_user and registered:
             send_verification_email(request=self.request, user=user)
             token = PasswordResetTokenGenerator().make_token(user)
             uuid = user.get_encoded_pk()
             return redirect(reverse('password_reset', kwargs={'uid': uuid, 'token': token}))
-        elif not application_type.create_user and not self.request.user.is_authenticated:
+        if not application_type.auto_confirm:
+            send_email_apply(application, request=self.request)
+        if not application_type.create_user and not self.request.user.is_authenticated:
             return render(self.request, 'application_success.html', {'application_type': application_type})
         return redirect('apply_home')
 

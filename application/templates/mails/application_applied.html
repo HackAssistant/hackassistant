@@ -1,0 +1,18 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>
+        Hi {{ application.get_full_name }},
+    </p>
+    <p>Thank you for applying to our hackathon! We appreciate your interest in participating in our event.</p>
+    <p>You will have 2 hours to change some information if needed after that we will start to review your application.</p>
+    {% include 'mails/components/button.html' with url=url text='Edit my application' %}
+    <p>We will be in touch with you regarding the status of your application, be patient.</p>
+    <p>We thank you again for your application and interest in {{ app_hack }}.
+        We look forward to potentially having you as a participant in our event!</p>
+
+
+    <p>Best regards,</p>
+    <p>{{ app_hack }} Team.</p>
+
+
+{% endblock %}

@@ -1,0 +1,1 @@
+Thanks for applying at {{ app_hack }} as {{ application.type.name|lower }}!

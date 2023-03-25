@@ -20,6 +20,7 @@ def get_email_last_reminder(application):
     context = {
         'application': application,
         'url': 'https://' + str(settings.HOST) + reverse('home'),
+        # Added global template variables as context processor not executed without request
         'app_hack': getattr(settings, 'HACKATHON_NAME'),
     }
     return Email(name='application_last_reminder', context=context, to=application.user.email)
@@ -28,7 +29,17 @@ def get_email_last_reminder(application):
 def get_email_expired(application):
     context = {
         'application': application,
+        # Added global template variables as context processor not executed without request
         'app_hack': getattr(settings, 'HACKATHON_NAME'),
         'app_contact': getattr(settings, 'HACKATHON_CONTACT_EMAIL', ''),
     }
     return Email(name='application_expired', context=context, to=application.user.email)
+
+
+def send_email_apply(application, request):
+    url = request.build_absolute_uri(reverse('edit_application', kwargs={'uuid': application.get_uuid}))
+    context = {
+        'application': application,
+        'url': url
+    }
+    Email(name='application_applied', context=context, to=application.user.email, request=request).send()
