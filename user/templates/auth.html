@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load socialaccount %}
+{% block head %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endblock %}
 {% block subtitle %}{{ auth|title }}{% endblock %}
 {% block container %}
     <div class="row justify-content-md-center" style="margin: 0">
@@ -10,7 +13,7 @@
             {% endif %}
             <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
                 {% if not blocked_message %}
-                    <form method="post">
+                    <form method="post" id="auth-form">
                         {% csrf_token %}
                         <div class="content p-4">
                             {% if auth != 'register' %}
@@ -55,4 +58,91 @@
             </div>
         </div>
     </div>
+    <script>
+        $(document).ready(() => {
+            {% if auth == 'register' %}
+                let min_chars = {{ auth_password_validators.min_characters|default:8 }};
+                let min_digits = {{ auth_password_validators.min_length_digit|default:0 }};
+                let min_special = {{ auth_password_validators.min_length_special|default:0 }};
+                let special = '{{ auth_password_validators.special_characters|default:'' }}';
+                let min_lower = {{ auth_password_validators.min_length_lower|default:0 }};
+                let min_upper = {{ auth_password_validators.min_length_upper|default:0 }};
+                function check_password_requirements(password_input, password_text) {
+                    let password = password_input.val()
+                    if (password.length < min_chars ||
+                        (password.match('[0-9]')?.length ?? 0) < min_digits ||
+                        (password.match({{ auth_password_validators.special_characters|default:'' }})?.length ?? 0) < min_special ||
+                        (password.match('[a-z]')?.length ?? 0) < min_lower ||
+                        (password.match('[A-Z]')?.length ?? 0) < min_upper) {
+                            password_input.addClass('is-invalid')
+                            password_text.removeClass('text-success list-check')
+                            password_text.addClass('text-danger list-cross')
+                            return false
+                    }
+                    password_input.removeClass('is-invalid')
+                    password_text.addClass('text-success list-check')
+                    password_text.removeClass('text-danger list-cross')
+                    return true
+                }
+                let special_to_see = special.slice(special.indexOf('[') + 1, special.lastIndexOf(']'))
+                let help_text = $(`<ul><li>This password be ${min_chars} must contain at least ${min_digits} digit, ${min_lower} lower case letter, ${min_upper} upper case letter, ${min_special} special character, such as ${special_to_see}.</li><ul>`)
+                $('.form-text > ul').css('margin', '0')
+                $('.form-text').append(help_text)
+                let password_input = $('#id_password1')
+                let password_input_repeat = $('#id_password2')
+                password_input.keyup(() => {
+                    check_password_requirements(password_input, help_text)
+                    if (password_input.val() !== password_input_repeat.val()) {
+                        password_input_repeat.addClass('is-invalid')
+                    } else {
+                        password_input_repeat.removeClass('is-invalid')
+                    }
+                })
+                password_input_repeat.keyup(() => {
+                    if (password_input.val() !== password_input_repeat.val()) {
+                        password_input_repeat.addClass('is-invalid')
+                    } else {
+                        password_input_repeat.removeClass('is-invalid')
+                    }
+                })
+            {% endif %}
+            async function digestMessage(message) {
+                const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+                const hashBuffer = await crypto.subtle.digest("SHA-512", msgUint8); // hash the message
+                const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+                const hashHex = hashArray
+                    .map((b) => b.toString(16).padStart(2, "0"))
+                    .join(""); // convert bytes to hex string
+                return hashHex;
+            }
+            async function hash_password_inputs(password_inputs_id) {
+                for (const password_input_id of password_inputs_id) {
+                    let password_input = $('#' + password_input_id)
+                    if (password_input.length > 0) {
+                        let text = window.location.hostname + ':' + password_input.val()
+                        let hash = await digestMessage(text)
+                        password_input.val(hash)
+                    }
+                }
+            }
+            let hashed = false
+            $('#auth-form').submit((event) => {
+                {% if auth == 'register' %}
+                    if (!check_password_requirements(password_input, help_text) || password_input.val() !== password_input_repeat.val()) {
+                        event.preventDefault()
+                        return
+                    }
+                {% endif %}
+                if (hashed) {
+                    hashed = false
+                    return
+                }
+                event.preventDefault()
+                hash_password_inputs(['id_password', 'id_password2', 'id_password1']).then(() => {
+                    hashed = true
+                    event.target.submit()
+                })
+            })
+        })
+    </script>
 {% endblock %}

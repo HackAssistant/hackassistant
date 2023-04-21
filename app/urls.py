@@ -27,6 +27,7 @@ urlpatterns = [
     path('privacy_and_cookies/', views.PrivacyCookies.as_view(), name='privacy_and_cookies'),
 
     path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
+    path('openid/', include('django_jwt.urls')),
     path(getattr(settings, 'ADMIN_URL', 'secret/'), admin.site.urls),
     path('auth/', include('user.urls')),
     path('application/', include('application.urls')),
@@ -38,9 +39,3 @@ urlpatterns = [
 
 if is_installed("friends"):
     urlpatterns.append(path('friends/', include('friends.urls')))
-
-# JWT fake login on DEBUG for development purposes
-if getattr(settings, 'DEBUG', True):
-    urlpatterns.append(path('openid/', include('django_jwt.urls')))
-else:
-    urlpatterns.append(path('openid/', include('django_jwt.server.urls')))

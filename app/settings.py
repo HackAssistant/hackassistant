@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'axes',
     'django_password_validators',
     'django_password_validators.password_history',
+    'rest_framework',
     'user',
     'application',
     'review',
@@ -145,27 +146,27 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
         'NAME': 'django_password_validators.password_history.password_validation.UniquePasswordsValidator',
-    },
-    {
-        'NAME': 'django_password_validators.password_character_requirements.password_validation.'
-                'PasswordCharacterValidator',
         'OPTIONS': {
-            'min_length_digit': 1,
-            'min_length_alpha': 1,
-            'min_length_special': 1,
-            'min_length_lower': 1,
-            'min_length_upper': 1,
-            'special_characters': ",.-~!@#$%^&*()_+{}\":;'[]"
+            # How many recently entered passwords matter.
+            # Passwords out of range are deleted.
+            # Default: 0 - All passwords entered by the user. All password hashes are stored.
+            'last_passwords': 5  # Only the last 5 passwords entered by the user
         }
     },
 ]
+
+# Validations are js because server does not get the password
+PASSWORD_VALIDATORS = {
+    'min_length_digit': 1,
+    'min_length_special': 1,
+    'min_length_lower': 1,
+    'min_length_upper': 1,
+    'min_characters': 8,
+    # regex format
+    'special_characters': "/[`~!@#$%\^\*\(\),\.\-=_+\\\\\[\]{}/\?]/g",
+
+}
 
 AUTHENTICATION_BACKENDS = [
     # AxesStandaloneBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
@@ -234,17 +235,10 @@ AUTH_USER_MODEL = 'user.User'
 LOGIN_URL = '/auth/login'
 
 # JWT settings
-JWT_CLIENT = {
-    'OPENID2_URL': os.environ.get('OPENID_CLIENT_ID', 'http://localhost:8000/openid'),  # Required
-    'CLIENT_ID': os.environ.get('OPENID_CLIENT_ID', 'client_id'),  # Required
-    'TYPE': 'fake' if DEBUG else 'local',  # Required
-    'RESPONSE_TYPE': 'id_token',  # Required
-    'RENAME_ATTRIBUTES': {'sub': 'email', 'groups': 'get_groups'},  # Optional
-
-}
-JWT_SERVER = {
-    'JWK_EXPIRATION_TIME': 3600,  # Optional
-    'JWT_EXPIRATION_TIME': 14400  # Optional
+JWT_OIDC = {
+    'TYPE': 'provider',  # Required
+    'DISCOVERY_ENDPOINT': os.environ.get('OIDC_DISCOVERY_ENDPOINT',
+                                         'http://localhost:8000/openid/.well-known/openid-configuration'),
 }
 
 DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap-responsive.html'
