@@ -46,19 +46,30 @@
                     </div>
                 </nav>
             {% endblock %}
-            {% block container %}
-                <div class="container-lg mb-4 mt-4">
-                    {% if tabs %}
-                        {% include 'components/tabs.html' %}
-                    {% endif %}
-                    <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
-                        <div class="p-4">
-                            {% block content %}
-                            {% endblock %}
+            <div id="js-disabled">
+                <div class="row justify-content-md-center" style="margin: 0">
+                    <div class="col-lg-4 mb-4 mt-4">
+                        <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+                            <h3 class="text-center p-5">{{ app_name }} does not work without Javascript. Enable it please!</h3>
                         </div>
                     </div>
                 </div>
-            {% endblock %}
+            </div>
+            <div id="js-enabled" style="display: none">
+                {% block container %}
+                    <div class="container-lg mb-4 mt-4">
+                        {% if tabs %}
+                            {% include 'components/tabs.html' %}
+                        {% endif %}
+                        <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+                            <div class="p-4">
+                                {% block content %}
+                                {% endblock %}
+                            </div>
+                        </div>
+                    </div>
+                {% endblock %}
+            </div>
             {% include 'components/toast.html' %}
             {% block footer %}
                 {% include 'components/footer.html' %}
@@ -68,6 +79,8 @@
         {% endblock %}
         <script nonce="{{ CSP_NONCE }}">
             $(document).ready(() => {
+                $('#js-disabled').hide()
+                $('#js-enabled').show()
                 // Timezone settings
                 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; // e.g. "America/New_York"
                 document.cookie = "django_timezone=" + timezone;

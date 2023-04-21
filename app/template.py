@@ -59,4 +59,5 @@ def app_variables(request):
         'theme': get_theme(request),
         'captcha_site_key': getattr(settings, 'GOOGLE_RECAPTCHA_SITE_KEY', ''),
         'socialaccount_providers': getattr(settings, 'SOCIALACCOUNT_PROVIDERS', {}),
+        'auth_password_validators': getattr(settings, 'PASSWORD_VALIDATORS', {})
     }
