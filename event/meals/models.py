@@ -19,14 +19,14 @@ class Meal(models.Model):
     # Meal type
     kind = models.CharField(max_length=63, null=False, choices=MEAL_TYPE)
     # Starting time
-    starts = models.DateTimeField(auto_now=False, auto_now_add=False, null=True)
+    starts = models.DateTimeField()
     # Ending time
-    ends = models.DateTimeField(auto_now=False, auto_now_add=False, null=True)
+    ends = models.DateTimeField()
     # Number of times a hacker can eat this meal
-    times = models.PositiveIntegerField(null=False, default=1)
+    times = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return str(self.name)
+        return self.name
 
     def eaten(self):
         return self.eaten_set.count()
@@ -40,4 +40,4 @@ class Eaten(models.Model):
     # User that ate the meal
     user = models.ForeignKey(User, null=False, on_delete=models.CASCADE)
     # Ate time
-    time = models.DateTimeField(auto_now=False, auto_now_add=True)
+    time = models.DateTimeField(auto_now_add=True)
