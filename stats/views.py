@@ -8,6 +8,7 @@ from app.mixins import TabsViewMixin
 from application.models import Application, Edition
 from stats import filters
 from stats import stats
+from stats.mixins import StatsPermissionRequiredMixin
 from stats.utils import cache_stats
 from user.mixins import IsOrganizerMixin
 from user.models import User
@@ -18,7 +19,12 @@ MODELS = ['user', 'application']
 
 class StatsHome(IsOrganizerMixin, View):
     def get(self, request, *args, **kwargs):
-        return redirect(reverse('stats', kwargs={'model': MODELS[0]}))
+        final_model = MODELS[0]
+        if not request.user.has_perms(['stats.view_stats']):
+            for model in MODELS:
+                if request.user.has_perms(['stats.view_stats_%s' % model.lower()]):
+                    final_model = model
+        return redirect(reverse('stats', kwargs={'model': final_model}))
 
 
 class StatsMixin:
@@ -35,11 +41,14 @@ class StatsMixin:
         return stats_class
 
 
-class StatsView(IsOrganizerMixin, TabsViewMixin, StatsMixin, TemplateView):
+class StatsView(StatsPermissionRequiredMixin, TabsViewMixin, StatsMixin, TemplateView):
     template_name = 'stats.html'
+    permission_required = ['stats.view_stats']
 
     def get_current_tabs(self, **kwargs):
-        return [(item.title() + 's', reverse('stats', kwargs={'model': item})) for item in MODELS]
+        all_perm = self.request.user.has_perms(self.permission_required)
+        return [(item.title() + 's', reverse('stats', kwargs={'model': item})) for item in MODELS
+                if all_perm or self.request.user.has_perms(['stats.view_stats_%s' % item.lower()])]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -55,7 +64,8 @@ def get_application_queryset():
     return Application.objects.filter(edition=edition)
 
 
-class StatsDataView(IsOrganizerMixin, StatsMixin, View):
+class StatsDataView(StatsPermissionRequiredMixin, StatsMixin, View):
+    permission_required = ['stats.view_stats']
     queryset = {'user': User.objects.filter(is_active=True), 'application': get_application_queryset}
 
     @cache_stats

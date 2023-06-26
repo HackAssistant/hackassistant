@@ -1,19 +1,19 @@
 from django.apps import AppConfig
 
 
-class StatsConfig(AppConfig):
+class TablesConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'stats'
+    name = 'tables'
 
     def create_new_permissions(self):
         from django.contrib.contenttypes.models import ContentType
         from django.contrib.auth.models import Permission
 
-        from stats.views import MODELS
+        from tables.views import MODELS
 
-        permissions = ['view_stats', ]
+        permissions = ['view_table', ]
 
-        content_type = ContentType.objects.get_or_create(app_label='stats', model='stats')[0]
+        content_type = ContentType.objects.get_or_create(app_label='tables', model='tables')[0]
 
         for permission in permissions:
             name = permission.replace('_', ' ').capitalize()

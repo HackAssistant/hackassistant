@@ -74,11 +74,15 @@ class ApplicationTypeConfig(models.Model):
     hidden = models.BooleanField(default=False, help_text=_('Setting this to True doesn\'t show the application '
                                                             'to registered users'))
     token = models.UUIDField(default=uuid.uuid4)
-    spots = models.PositiveIntegerField(default=100, help_text=_('Number of total spots for this type of participants'))
+    spots = models.PositiveIntegerField(default=100, help_text=_('Number of total spots for this type of participants. '
+                                                                 'Attrition rate will be added automatically.'))
 
     @property
     def get_token(self):
         return str(self.token)
+
+    def get_spots_with_attrition(self):
+        return int(self.spots * getattr(settings, 'ATTRITION_RATE', 1))
 
     def get_description(self):
         from application import forms
@@ -394,6 +398,16 @@ class ApplicationLog(models.Model):
                     changes[field] = change
             log.changes = changes
         return log
+
+    def get_grouped_reactions(self):
+        reactions = {}
+        for reaction in self.reactions.order_by('date'):
+            item = reactions.get(reaction.emoji, {'count': 0, 'users_id': {}, 'users_names': []})
+            item['count'] += 1
+            item['users_id'][reaction.user_id] = reaction.id
+            item['users_names'].append(reaction.user.get_full_name())
+            reactions[reaction.emoji] = item
+        return reactions
 
 
 class DraftApplicationManager(models.QuerySet):

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load perms %}
+{% load util %}
+{% load export_url from django_tables2 %}
+{% block subtitle %}{{ model_name|title }} {% translate 'table' %}{% endblock %}
+{% block content %}
+    {% if table.filterset %}
+        <div class="row">
+            <div class="col-lg-10">
+                <h1>{{ model_name|title }} {% translate 'table' %}</h1>
+            </div>
+            <div class="col-lg-2">
+                <div class="col-12 d-grid d-md-block">
+                    <button type="button" class="btn btn-secondary col-12" data-bs-toggle="modal" data-bs-target="#filterModal">Filter</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade modal-xl" id="filterModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content bg-{{ theme }}">
+                    <form method="get" id="filter_form">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="filterModalLabel">Filter</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {% include 'components/bootstrap5_form.html' with form=table.filterset.form %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="sumbit" class="btn btn-primary" data-bs-dismiss="modal" id="filter_button">Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <h1>{{ model_name|title }} {% translate 'table' %}</h1>
+    {% endif %}
+
+    <div class="row mb-2">
+        <div class="col-12 text-end"><small><b>Last updated:</b> <span id="update_date">{{ updated_time }}</span> minutes ago <i id="update_cache" class="bi bi-arrow-repeat" style="cursor: pointer" title="Update cache"></i></small></div>
+    </div>
+
+    {% include 'components/table.html' %}
+
+    {% if tables_export_supported %}
+        <div class="d-grid gap-2 col-lg-6 mx-auto mt-2 dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownExportButton" data-bs-toggle="dropdown" aria-expanded="false">Export as</button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownExportButton">
+                {% for format in tables_export_supported %}
+                    <li><a class="dropdown-item" href="{% export_url format %}">{{ format|upper }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <script>
+        $(document).ready(() => {
+            function removeURLParameter(url, parameter) {
+                //prefer to use l.search if you have a location/link object
+                var urlparts = url.split('?');
+                if (urlparts.length >= 2) {
+
+                    var prefix = encodeURIComponent(parameter) + '=';
+                    var pars = urlparts[1].split(/[&;]/g);
+
+                    //reverse iteration as may be destructive
+                    for (var i = pars.length; i-- > 0;) {
+                        //idiom for string.startsWith
+                        if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+                            pars.splice(i, 1);
+                        }
+                    }
+
+                    return urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : '');
+                }
+                return url;
+            }
+            window.history.replaceState({}, document.title, removeURLParameter(window.location.href, 'force_update'));
+            $('#update_cache').on('click', () => {window.location.href = window.location.href + "?force_update=true";})
+        })
+    </script>
+
+{% endblock %}

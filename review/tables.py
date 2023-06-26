@@ -15,6 +15,11 @@ class ApplicationTable(tables.Table):
     status = tables.TemplateColumn(template_name='tables/status.html')
     vote_avg = FloatColumn(float_digits=3)
     email = TruncatedEmailColumn(accessor='user.email')
+    promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
+
+    def __init__(self, promotional_code=False, *args, **kwargs):
+        self.base_columns['promotional_code'].visible = promotional_code
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def get_queryset(queryset):
@@ -27,30 +32,16 @@ class ApplicationTable(tables.Table):
     class Meta:
         model = Application
         attrs = {'class': 'table table-striped'}
-        fields = ('full_name', 'email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
-        empty_text = 'No applications available'
-        order_by = 'vote_avg'
-
-
-class ApplicationTableWithPromotion(ApplicationTable):
-    promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
-
-    class Meta(ApplicationTable.Meta):
         fields = ('full_name', 'email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified',
                   'detail')
+        empty_text = 'No applications available'
+        order_by = 'vote_avg'
 
 
 class ApplicationInviteTable(ApplicationTable):
     select = tables.CheckBoxColumn(accessor='pk', attrs={"th__input": {"onclick": "select_all(this)",
                                                                        'class': 'form-check-input'},
                                                          'td__input': {'class': 'form-check-input'}})
-
-    class Meta(ApplicationTable.Meta):
-        fields = ('select', 'full_name', 'email', 'status', 'votes', 'vote_avg', 'last_modified', 'detail')
-
-
-class ApplicationInviteTableWithPromotion(ApplicationInviteTable):
-    promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
 
     class Meta(ApplicationTable.Meta):
         fields = ('select', 'full_name', 'email', 'status', 'promotional_code', 'votes', 'vote_avg',

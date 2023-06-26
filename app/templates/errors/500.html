@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block subtitle %}Server error{% endblock %}
+{% block container %}
+    <div class="row justify-content-md-center" style="margin: 0">
+        <div class="col-lg-4 mb-4 mt-4">
+            <div class="bg-{{ theme }} text-{% if theme == 'dark' %}white{% else %}black{% endif %}">
+                <div class="content p-4 text-center">
+                    <h1 class="mb-4">Server error</h1>
+                    <img src="{% static 'img/biene.png' %}" style="width: 100px">
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

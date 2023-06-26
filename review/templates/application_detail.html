@@ -7,6 +7,7 @@
 
 {% block head %}
     {% include 'components/import_barrating.html' %}
+    <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -97,9 +98,24 @@
                             <div id="comment-block-{{ log.id }}">
                                 <div class="row">
                                     <div class="col-11">
+                                        <p class="m-0"><strong title="{{ log.user.get_full_name }}">{% if request.user != log.user %}{{ log.user.get_full_name }}{% else %}{{ request.user.get_full_name }}{% endif %}</strong>
+                                            <small class="pull-right" style="color:gray">{{ log.date|timesince }} ago</small>
+                                        </p>
                                         <p class="fs-5 mb-0 text-break" id="comment-text-{{ log.id }}">{{ log.comment }}</p>
-                                        <p style="color:gray; margin: 0">by <span title="{{ log.user.get_full_name }}">{% if request.user != log.user %}{{ log.user.email }}{% else %}{% translate 'me' %}{% endif %}</span>
-                                            <small class="pull-right">{{ log.date|timesince }} ago</small>
+                                        <p id="reactions-div-{{ log.id }}" class="m-0 mt-2">
+                                            {% for emoji, reaction in log.get_grouped_reactions.items %}
+                                                <span log="{{ log.id }}" style="cursor: pointer" class="reaction-item me-1 {% if request.user.id in reaction.users_id.keys %}active{% endif %} reaction border-1 border rounded-pill p-1 ps-2 pe-2 fs-6">
+                                                    <em-emoji {% if request.user.id in reaction.users_id.keys %}reaction_id="{{ reaction.users_id|get_item:request.user.id }}"{% endif %} shortcodes="{{ emoji }}"></em-emoji>
+                                                    <span id="count">{{ reaction.count }}</span>
+                                                    <span class="bg-{{ theme }} reaction-popup p-2 mt-2 border-1 rounded">
+                                                        {% for name in reaction.users_names %}
+                                                            <span>{{ name }}<br></span>
+                                                        {% endfor %}
+                                                    </span>
+                                                </span>
+
+                                            {% endfor %}
+                                            <span log="{{ log.id }}" style="cursor: pointer" class="reaction-add reaction border-1 border rounded-pill p-1 ps-2 pe-2 fs-6"><svg class="ms-1 me-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M7 9.5C7 8.67 7.67 8 8.5 8s1.5.67 1.5 1.5S9.33 11 8.5 11S7 10.33 7 9.5zm5 8c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5zm3.5-6.5c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8S14 8.67 14 9.5s.67 1.5 1.5 1.5zM22 1h-2v2h-2v2h2v2h2V5h2V3h-2V1zm-2 11c0 4.42-3.58 8-8 8s-8-3.58-8-8s3.58-8 8-8c1.46 0 2.82.4 4 1.08V2.84A9.929 9.929 0 0 0 11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12c0-1.05-.17-2.05-.47-3H19.4c.38.93.6 1.94.6 3z"/></svg></span>
                                         </p>
                                     </div>
                                     <div class="col-1" style="text-align: right">
@@ -129,11 +145,14 @@
             <div id="comment-template" style="display: none">
                 <div>
                     <div id="comment-block-">
-                        <p class="fs-5 mb-0 text-break" id="comment-text-"></p>
                         <div class="row">
                             <div class="col-11">
-                                <p style="color:gray; margin: 0">by <span title="{{ request.user.get_full_name }}">me</span>
-                                    <small class="pull-right">now</small>
+                                <p class="m-0"><strong title="{{ request.user.get_full_name }}">{{ request.user.get_full_name }}</strong>
+                                    <small class="pull-right" style="color:gray">now</small>
+                                </p>
+                                <p class="fs-5 mb-0 text-break" id="comment-text-"></p>
+                                <p id="reactions-div-" class="m-0 mt-2">
+                                    <span id="span-reaction-log" style="cursor: pointer" class="reaction-add reaction border-1 border rounded-pill p-1 ps-2 pe-2 fs-6"><svg class="ms-1 me-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M7 9.5C7 8.67 7.67 8 8.5 8s1.5.67 1.5 1.5S9.33 11 8.5 11S7 10.33 7 9.5zm5 8c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5zm3.5-6.5c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8S14 8.67 14 9.5s.67 1.5 1.5 1.5zM22 1h-2v2h-2v2h2v2h2V5h2V3h-2V1zm-2 11c0 4.42-3.58 8-8 8s-8-3.58-8-8s3.58-8 8-8c1.46 0 2.82.4 4 1.08V2.84A9.929 9.929 0 0 0 11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12c0-1.05-.17-2.05-.47-3H19.4c.38.93.6 1.94.6 3z"/></svg></span>
                                 </p>
                             </div>
                             <div class="col-1" style="text-align: right">
@@ -163,10 +182,12 @@
                 $(`#comment-form-${log_id}`).hide()
             }
             function new_comment(data) {
-                let template = $('#comment-template').clone()
+                let template = $('#comment-template').clone(true)
                 template.attr('id', '')
                 template.find('#comment-block-').attr('id', `comment-block-${data.id}`)
                 template.find('#comment-form-').attr('id', `comment-form-${data.id}`)
+                template.find('#reactions-div-').attr('id', `reactions-div-${data.id}`)
+                template.find('#span-reaction-log').attr('log', data.id)
                 let text = template.find('#comment-text-')
                 text.attr('id', `comment-text-${data.id}`)
                 text.text(data.comment)
@@ -203,6 +224,102 @@
                         return false
                     }
                 })
+                EmojiMart.init({ data: EmojiMart.data })
+                let picker = null
+                function add_reaction(log_id, emoji) {
+                    $.post('{% url 'reaction' %}', {
+                        action: 'CREATE',
+                        emoji: emoji,
+                        comment: log_id,
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                    }, function(data) {
+                        let reactions_div = $(`#reactions-div-${log_id}`)
+                        let reaction = reactions_div.find(`em-emoji[shortcodes="${emoji}"`)
+                        if (reaction.length !== 0) {
+                            let reaction_parent = reaction.parent()
+                            let reaction_count = reaction_parent.find('#count')
+                            reaction_count.text(parseInt(reaction_count.text()) + 1)
+                            reaction_parent.addClass('active')
+                            reaction.attr('reaction_id', data.reaction_id)
+                            reaction_parent.find('.reaction-popup').append('<span>{{ request.user.get_full_name }}<br></span>')
+                        } else {
+                            let new_emoji = $(`<span log="${log_id}" style="cursor: pointer" class="reaction-item me-1 active reaction border-1 border rounded-pill p-1 ps-2 pe-2 fs-6"><em-emoji reaction_id="${data.reaction_id}" shortcodes="${emoji}"></em-emoji> <span id="count">1</span><span class="bg-{{ theme }} reaction-popup p-2 mt-2 border-1 rounded"><span>{{ request.user.get_full_name }}<br></span></span></span>`)
+                            $(`#reactions-div-${log_id} > .reaction-add`).before(new_emoji)
+                            new_emoji.click(() => {delete_reaction(new_emoji.find('em-emoji'))})
+                        }
+                    }, 'json').fail(function() {
+                        ToastManager.error('Server error')
+                    })
+                }
+                function delete_reaction(reaction) {
+                    $.post('{% url 'reaction' %}'.replace('0', ), {
+                        reaction_id: reaction.first().attr('reaction_id'),
+                        action: 'DELETE',
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                    }).done(function() {
+                        let reaction_parent = reaction.parent()
+                        reaction_parent.removeClass('active')
+                        let reaction_count = reaction_parent.find('#count')
+                        let count = parseInt(reaction_count.text()) - 1
+                        if (count === 0) {
+                            reaction_parent.remove()
+                        } else {
+                            reaction_count.text(count)
+                            reaction_parent.find('.reaction-popup > span').filter((_, item) => {
+                                return $(item).text() === '{{ request.user.get_full_name }}'
+                            }).remove()
+                        }
+                    }).fail(function() {
+                        ToastManager.error('Server error')
+                    })
+                }
+                $('.reaction-item').click((event) => {
+                    let target = $(event.currentTarget)
+                    let emoji = target.find('em-emoji')
+                    if (target.hasClass('active')) {
+                        delete_reaction(emoji)
+                    } else {
+                        let code = emoji.attr('shortcodes')
+                        let log_id = target.attr('log')
+                        add_reaction(log_id, code)
+                    }
+                })
+                $('.reaction-add').click((event) => {
+                    if (picker === null || (!picker.is(event.target) && picker.has(event.target).length === 0)) {
+                        let target = $(event.currentTarget)
+                        const pickerOptions = {
+                            data: EmojiMart.data,
+                            onEmojiSelect: (emoji) => {
+                                let log_id = target.attr('log')
+                                let reactions_div = $(`#reactions-div-${log_id}`)
+                                let reaction = reactions_div.find(`.active > em-emoji[shortcodes="${emoji.shortcodes}"]`)
+                                if (reaction.length === 0) {
+                                    add_reaction(log_id, emoji.shortcodes)
+                                } else {
+                                    delete_reaction(reaction)
+                                }
+                                picker.remove()
+                            },
+                            emojiButtonRadius: '6px',
+                            emojiButtonColors: [
+                              'rgba(155,223,88,.7)',
+                              'rgba(149,211,254,.7)',
+                              'rgba(247,233,34,.7)',
+                              'rgba(238,166,252,.7)',
+                              'rgba(255,213,143,.7)',
+                              'rgba(211,209,255,.7)',
+                            ],
+                            theme: '{{ theme }}'
+                        }
+                        picker = $(new EmojiMart.Picker(pickerOptions))
+                        picker.appendTo(target)
+                    }
+                })
+                $(document).mouseup(function(event) {
+                    if (picker !== null && !picker.is(event.target) && picker.has(event.target).length === 0) {
+                        picker.remove()
+                    }
+                });
             })
         </script>
         <div class="mt-2">

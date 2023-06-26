@@ -1,1 +1,1 @@
-Last reminder email for {{ app_hack }} as {{ application.type.name|lower }}
+ACTION REQUIRED Last reminder for your {{ application.type.name|lower }} application

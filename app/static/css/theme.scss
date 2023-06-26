@@ -139,6 +139,9 @@ body.dark {
             background: $primary !important;
         }
     }
+    .reaction-popup {
+        background: lighten($dark, 5%) !important;
+    }
 }
 .light {
     .tempus-dominus-widget {
@@ -148,6 +151,9 @@ body.dark {
             color: $white !important;
             background: $primary !important;
         }
+    }
+    .reaction-popup {
+        background: darken($light, 5%) !important;
     }
 }
 
@@ -160,4 +166,30 @@ body.dark {
 ::selection {
   color: $white;
   background: $primary;
+}
+
+.reaction:hover, .reaction.active {
+    color: $primary !important;
+    border-color: $primary !important;
+    background-color: transparentize($primary, 0.95);
+}
+
+.reaction-popup {
+    position: absolute;
+    display: none;
+    z-index: 100;
+}
+
+.reaction-item:hover .reaction-popup {
+    display: block
+}
+
+.reaction-item {
+    display: inline;
+    line-height: 35px;
+}
+
+em-emoji-picker {
+    position: absolute;
+    z-index: 100;
 }

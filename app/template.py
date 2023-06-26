@@ -41,7 +41,10 @@ def get_main_nav(request):
         if is_installed('event.meals') and request.user.has_perm('meals.can_checkin_meals'):
             nav.append(('Meals', reverse('meals_list')))
     if request.user.is_organizer():
-        nav.extend([('Stats', reverse('stats_home'))])
+        if request.user.has_module_perms('tables'):
+            nav.extend([('Tables', reverse('tables_home'))])
+        if request.user.has_module_perms('stats'):
+            nav.extend([('Stats', reverse('stats_home'))])
     return nav
 
 
@@ -59,5 +62,6 @@ def app_variables(request):
         'theme': get_theme(request),
         'captcha_site_key': getattr(settings, 'GOOGLE_RECAPTCHA_SITE_KEY', ''),
         'socialaccount_providers': getattr(settings, 'SOCIALACCOUNT_PROVIDERS', {}),
-        'auth_password_validators': getattr(settings, 'PASSWORD_VALIDATORS', {})
+        'auth_password_validators': getattr(settings, 'PASSWORD_VALIDATORS', {}),
+        'tables_export_supported': getattr(settings, 'DJANGO_TABLES2_EXPORT_FORMATS', []),
     }

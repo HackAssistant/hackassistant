@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Avg, F
+from django.utils import timezone
 
 
 class Vote(models.Model):
@@ -86,3 +87,10 @@ class FileReview(models.Model):
 
     class Meta:
         unique_together = ('application', 'field_name')
+
+
+class CommentReaction(models.Model):
+    comment = models.ForeignKey('application.ApplicationLog', on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    emoji = models.CharField(max_length=30)
+    date = models.DateTimeField(default=timezone.now)
