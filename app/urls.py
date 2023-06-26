@@ -34,8 +34,15 @@ urlpatterns = [
     path('review/', include('review.urls')),
     path('event/', include('event.urls')),
     path('stats/', include('stats.urls')),
+    path('tables/', include('tables.urls')),
     path('accounts/', include('allauth.urls')),
 ]
 
 if is_installed("friends"):
     urlpatterns.append(path('friends/', include('friends.urls')))
+
+# Error handlers
+handler404 = "app.views.handler_error_404"
+handler500 = "app.views.handler_error_500"
+handler403 = "app.views.handler_error_403"
+handler400 = "app.views.handler_error_400"

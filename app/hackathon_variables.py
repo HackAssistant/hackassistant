@@ -21,3 +21,5 @@ ADMINS = [('Admins', 'devs@hackupc.com')]
 
 SUPPORTED_RESUME_EXTENSIONS = ['.pdf']
 FRIENDS_MAX_CAPACITY = None
+
+ATTRITION_RATE = 1.5

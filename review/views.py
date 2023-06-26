@@ -29,9 +29,8 @@ from application.models import Application, FileField, ApplicationLog, Applicati
 from review.emails import get_invitation_email
 from review.filters import ApplicationTableFilter, ApplicationTableFilterWithPromotion
 from review.forms import CommentForm, DubiousApplicationForm
-from review.models import Vote, FileReview
-from review.tables import ApplicationTable, ApplicationInviteTable, ApplicationTableWithPromotion, \
-    ApplicationInviteTableWithPromotion
+from review.models import Vote, FileReview, CommentReaction
+from review.tables import ApplicationTable, ApplicationInviteTable
 from user.mixins import IsOrganizerMixin
 from user.models import BlockedUser
 
@@ -66,14 +65,11 @@ class ReviewApplicationTabsMixin(TabsViewMixin):
 class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableMixin, FilterView):
     template_name = 'application_list.html'
     table_class = ApplicationTable
-    table_class_with_promotion = ApplicationTableWithPromotion
     table_pagination = {'per_page': 50}
     filterset_class = ApplicationTableFilter
 
-    def get_table_class(self):
-        if PromotionalCode.active():
-            return self.table_class_with_promotion
-        return super().get_table_class()
+    def get_table(self, **kwargs):
+        return super().get_table(promotional_code=PromotionalCode.active(), **kwargs)
 
     def get_filterset_class(self):
         if PromotionalCode.active():
@@ -255,6 +251,32 @@ class CommentSubmit(IsOrganizerMixin, PermissionRequiredMixin, View):
         return JsonResponse(dict(comment_form.errors), status=400)
 
 
+class CommentReactionView(IsOrganizerMixin, View):
+
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action', None)
+        if action == 'CREATE':
+            comment_id = self.request.POST.get('comment', None)
+            emoji = self.request.POST.get('emoji', None)
+            try:
+                reaction = CommentReaction.objects.get_or_create(user=request.user, comment_id=comment_id,
+                                                                 emoji=emoji)[0]
+            except Exception:
+                return JsonResponse({'error': 'Database error'}, status=400)
+            return JsonResponse({'reaction_id': reaction.id})
+        elif action == 'DELETE':
+            reaction_id = self.request.POST.get('reaction_id', None)
+            try:
+                reaction = CommentReaction.objects.get(id=reaction_id)
+                if reaction.user != request.user:
+                    raise PermissionDenied()
+            except CommentReaction.DoesNotExist:
+                raise Http404()
+            reaction.delete()
+            return JsonResponse({'reaction_id': reaction.id})
+        return JsonResponse({}, status=401)
+
+
 class ApplicationLogs(IsOrganizerMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'application_logs.html'
     permission_required = 'application.view_applicationlog'
@@ -268,7 +290,6 @@ class ApplicationLogs(IsOrganizerMixin, PermissionRequiredMixin, TemplateView):
 
 class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList):
     table_class = ApplicationInviteTable
-    table_class_with_promotion = ApplicationInviteTableWithPromotion
     permission_required = 'application.can_invite_application'
 
     def get_current_tabs(self, **kwargs):

@@ -1,13 +1,12 @@
 {% extends 'mails/base.html' %}
 {% block content %}
     <p>Hi {{ application.user.first_name }},</p>
-    <p>Congratulations, you have been invited at {{ app_hack }} as {{ application.type.name|lower }}! We can't wait to see you at the event.</p>
+    <p>Your {{ application.type.name|lower }} application for {{ app_hack }} has been updated.</p>
     {% if application.type.expire_invitations > 0 %}
-        <p><strong>The invitation will last for {{ application.type.expire_invitations }} days, after that, your application will expire and we will give your spot to another
-          {{ application.type.name|lower }}.</strong></p>
+        <p><strong>You have {{ application.type.expire_invitations }} days to answer, after that, your application will expire.</strong></p>
     {% endif %}
 
-    <p>Please confirm or cancel your application through our app.</p>
+    <p>Please enter to your application through our app and check your status.</p>
 
     {% include 'mails/components/button.html' with url=url text='Go to my applications' %}
 

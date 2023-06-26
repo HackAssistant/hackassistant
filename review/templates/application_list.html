@@ -100,8 +100,8 @@
         {% endif %}
     {% else %}
         <div class="progress">
-            <div class="progress-bar bg-primary" role="progressbar" aria-label="Invited" style="width: {{ application_stats.accepted|percent:application_type.spots }}%">{{ application_stats.accepted }} accepted</div>
-            <div class="progress-bar bg-secondary" role="progressbar" aria-label="Invited" style="width: {{ application_stats.invited|percent:application_type.spots }}%">{{ application_stats.invited }} invited</div>
+            <div class="progress-bar bg-primary" role="progressbar" aria-label="Invited" style="width: {{ application_stats.accepted|percent:application_type.get_spots_with_attrition }}%">{{ application_stats.accepted }} accepted</div>
+            <div class="progress-bar bg-secondary" role="progressbar" aria-label="Invited" style="width: {{ application_stats.invited|percent:application_type.get_spots_with_attrition }}%">{{ application_stats.invited }} invited</div>
             <div id="progress-select" class="progress-bar bg-info" style="width: 0%" role="progressbar" aria-label="Selected">0 selected</div>
         </div>
         <form method="post" id="invite-form">
@@ -132,7 +132,7 @@
                 return confirm(number_checked + ' {% translate 'applications will be invited. Are you sure?' %}')
             }
             $(document).ready(() => {
-                let spots = {{ application_type.spots }};
+                let spots = {{ application_type.get_spots_with_attrition }};
                 let free_spots = spots - ({{ application_stats.accepted }} + {{ application_stats.invited }});
                 let progress_bar = $('#progress-select')
                 let accepted_to_pass_limit = false

@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'application',
     'review',
     'stats',
+    'tables',
     'friends',
     'event',
     'event.messages',
@@ -242,6 +243,7 @@ JWT_OIDC = {
 }
 
 DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap-responsive.html'
+DJANGO_TABLES2_EXPORT_FORMATS = ['csv', 'json', 'latex', 'ods', 'tsv', 'xls', 'xlsx', 'yaml']
 
 # Toast styles
 MESSAGE_TAGS = {

@@ -1,1 +1,1 @@
-You have been invited as {{ application.type.name|lower }}
+ACTION REQUIRED for the {{ application.type.name|lower }} application
