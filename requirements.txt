@@ -11,7 +11,7 @@ charset-normalizer==2.1.0
 cryptography==39.0.1
 defusedxml==0.7.1
 Deprecated==1.2.13
-Django==4.0.10
+Django==4.1.9
 django-admin-honeypot @ https://github.com/dmpayton/django-admin-honeypot/archive/a840496d183df89965eeb33c9a5dd9ea3919dfff.zip
 django-allauth==0.51.0
 django-appconf==1.0.5
