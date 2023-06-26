@@ -31,12 +31,12 @@ class VoteTable(AbstractTableMixin, tables.Table):
 class ReactionTable(AbstractTableMixin, tables.Table):
     counter = tables.TemplateColumn('{{ row_counter|add:1 }}', verbose_name='Position', orderable=False)
     comment = tables.TemplateColumn(template_name='tables/comment_field_table.html')
-    reaction_count = tables.Column(verbose_name='Reactions')
+    reaction_count = tables.Column(verbose_name='User reactions')
 
     @cache_tables
     def get_queryset(self):
-        reactions = ApplicationLog.objects.exclude(comment='').annotate(reaction_count=Count('reactions__user'))\
-            .exclude(reaction_count=0)
+        reactions = ApplicationLog.objects.exclude(comment='')\
+            .annotate(reaction_count=Count('reactions__user_id', distinct=True)).exclude(reaction_count=0)
         return list(reactions)
 
     class Meta:
