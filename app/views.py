@@ -1,5 +1,4 @@
 from django.shortcuts import redirect, render
-from django.template import RequestContext
 from django.views import View
 
 from user.mixins import LoginRequiredMixin

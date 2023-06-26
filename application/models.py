@@ -6,8 +6,6 @@ from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import models
-from django.db.models import Count, Value
-from django.db.models.functions import Cast, Concat
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
