@@ -47,4 +47,4 @@ Stable at Python v.3.8.X (tested at Python 3.8.17)
 - `pip install -r requirements.txt`
 - `python manage.py migrate`
 - `python manage.py createadmin` (creates admin to manage all the app: CUSTOM COMMAND!)
-- `python manage.py runserver`
+- `python manage.py runserver localhost:8000` (specifies to localhost, since admin is created under that specific domain, otherwise it wont work)
