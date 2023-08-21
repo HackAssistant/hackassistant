@@ -1,4 +1,7 @@
-from backports import zoneinfo
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 from django.utils import timezone
 
 

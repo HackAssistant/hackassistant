@@ -38,7 +38,6 @@ elif HOST is not None:
     ALLOWED_HOSTS.append(HOST)
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

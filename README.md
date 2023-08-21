@@ -45,5 +45,5 @@ Needs: Python 3.X, virtualenv
 - `source ./env/bin/activate`
 - `pip install -r requirements.txt`
 - `python manage.py migrate`
-- `python manage.py createsuperuser` (creates superuser to manage all the app)
+- `python manage.py createadmin` (creates admin to manage all the app: CUSTOM COMMAND!)
 - `python manage.py runserver`
