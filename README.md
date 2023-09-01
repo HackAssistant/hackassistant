@@ -39,7 +39,8 @@ That is all! 😃 If you need to run any python command just do as the following
 ### Python
 
 Needs: Python 3.X, virtualenv
-Stable at Python v.3.8.X (tested at Python 3.8.17)
+
+Stable at Python v.3.8.X and 3.10 (tested at Python 3.8.17 and 3.10)
 
 - `git clone git@github.com:HackAssistant/hackassistant.git && cd hackassistant`
 - `virtualenv env --python=python3`
