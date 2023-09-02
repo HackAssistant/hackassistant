@@ -41,6 +41,9 @@ urlpatterns = [
 if is_installed("friends"):
     urlpatterns.append(path('friends/', include('friends.urls')))
 
+if is_installed("reimbursment"):
+    urlpatterns.append(path('reimbursment/', include('reimbursment.urls')))
+
 # Error handlers
 handler404 = "app.views.handler_error_404"
 handler500 = "app.views.handler_error_500"
