@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 
 from app.utils import get_theme, is_installed
 from application.models import ApplicationTypeConfig
@@ -48,6 +49,13 @@ def get_main_nav(request):
     return nav
 
 
+def get_date(text):
+    try:
+        return timezone.datetime.strptime(text, '%d/%m/%Y')
+    except ValueError:
+        return None
+
+
 def app_variables(request):
     return {
         'main_nav': get_main_nav(request),
@@ -64,4 +72,8 @@ def app_variables(request):
         'socialaccount_providers': getattr(settings, 'SOCIALACCOUNT_PROVIDERS', {}),
         'auth_password_validators': getattr(settings, 'PASSWORD_VALIDATORS', {}),
         'tables_export_supported': getattr(settings, 'DJANGO_TABLES2_EXPORT_FORMATS', []),
+        'participant_can_upload_permission_slip': getattr(settings, 'PARTICIPANT_CAN_UPLOAD_PERMISSION_SLIP', False),
+        'hack_start_date': get_date(getattr(settings, 'HACKATHON_START_DATE', '')),
+        'hack_end_date': get_date(getattr(settings, 'HACKATHON_END_DATE', '')),
+        'hack_location': getattr(settings, 'HACKATHON_LOCATION', ''),
     }

@@ -151,3 +151,7 @@ footer {
 .g-recaptcha {
     display: inline-block;
 }
+
+.a-none:link, .a-none:visited, .a-none:hover, .a-none:active, .a-none {
+    text-decoration: none !important;
+}

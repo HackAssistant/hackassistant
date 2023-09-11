@@ -1,6 +1,8 @@
 from django.shortcuts import redirect, render
 from django.views import View
+from django_tex.shortcuts import render_to_pdf
 
+from app.template import app_variables
 from user.mixins import LoginRequiredMixin
 
 
@@ -40,3 +42,15 @@ def handler_error_403(request, exception=None, **kwargs):
 
 def handler_error_400(request, exception=None, **kwargs):
     return render(request=request, template_name='errors/400.html', context={'exception': exception}, status=400)
+
+
+class LatexTemplateView(View):
+    template_name = ''
+    file_name = ''
+
+    def get_context_data(self, **kwargs):
+        return app_variables(self.request)
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return render_to_pdf(request, self.template_name, context, filename=self.file_name)

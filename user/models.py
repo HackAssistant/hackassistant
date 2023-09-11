@@ -222,12 +222,33 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.other_diet
         return self.get_diet_display()
 
+    def get_gender_display_public(self):
+        if self.gender == self.GENDER_OTHER:
+            return self.other_gender
+        return self.get_gender_display()
+
     @classmethod
     def get_users_with_permissions(cls, perms):
         if isinstance(perms, str):
             perms = [perms, ]
         return cls.objects.filter(Q(groups__permissions__name__in=perms) | Q(user_permissions__name__in=perms) |
                                   Q(is_superuser=True)).distinct()
+
+    def under_age_document_required(self):
+        if getattr(settings, 'REQUIRE_PERMISSION_SLIP_TO_UNDER_AGE', False) and self.under_age:
+            from application.models import Application
+            return self.application_set.actual().filter(status__in=[Application.STATUS_INVITED,
+                                                                    Application.STATUS_CONFIRMED])
+        return False
+
+    def under_age_document_accepted(self):
+        if getattr(settings, 'REQUIRE_PERMISSION_SLIP_TO_UNDER_AGE', False) and self.under_age:
+            from application.models import Edition
+            permission_slip = self.permissionslip_set.filter(edition_id=Edition.get_default_edition()).first()
+            if permission_slip is None:
+                return False
+            return permission_slip.status == permission_slip.STATUS_ACCEPTED
+        return True
 
 
 class BlockedUser(models.Model):
