@@ -40,10 +40,12 @@ That is all! 😃 If you need to run any python command just do as the following
 
 Needs: Python 3.X, virtualenv
 
+Stable at Python v.3.8.X and 3.10 (tested at Python 3.8.17 and 3.10)
+
 - `git clone git@github.com:HackAssistant/hackassistant.git && cd hackassistant`
 - `virtualenv env --python=python3`
 - `source ./env/bin/activate`
 - `pip install -r requirements.txt`
 - `python manage.py migrate`
 - `python manage.py createadmin` (creates admin to manage all the app: CUSTOM COMMAND!)
-- `python manage.py runserver`
+- `python manage.py runserver localhost:8000` (specifies to localhost, since admin is created under that specific domain, otherwise it wont work)
