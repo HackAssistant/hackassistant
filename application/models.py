@@ -187,6 +187,10 @@ class ApplicationQueryset(models.QuerySet):
         kwargs = self.convert_kwargs(kwargs)
         return super().exclude(*args, **kwargs)
 
+    def invited(self):
+        return self.filter(status__in=[self.model.STATUS_INVITED, self.model.STATUS_LAST_REMINDER,
+                                       self.model.STATUS_CONFIRMED, self.model.STATUS_ATTENDED])
+
 
 class Application(models.Model):
     STATUS_PENDING = 'P'
@@ -343,6 +347,15 @@ class Application(models.Model):
             self.last_modified = timezone.now()
         super().save(*args, **kwargs)
 
+    def get_permission_slip(self, raise_404=False):
+        try:
+            return PermissionSlip.objects.get(user_id=self.user_id, edition_id=self.edition_id)
+        except PermissionSlip.DoesNotExist:
+            if raise_404:
+                from django.http import Http404
+                raise Http404
+            return None
+
     class Meta:
         unique_together = ('type', 'user', 'edition')
         permissions = (
@@ -437,3 +450,52 @@ class DraftApplication(models.Model):
         data = self.form_data
         data.update(new_data)
         self.data = json.dumps(data)
+
+
+def get_permission_slip_file_name(instance, filename):
+    return '%s/User/permission_slip/%s_%s.%s' % (instance.edition.name, instance.user.get_full_name().replace(' ', '-'),
+                                                 instance.user.id, filename.split('.')[-1])
+
+
+class PermissionSlip(models.Model):
+    STATUS_ACCEPTED = 'A'
+    STATUS_UPLOADED = 'U'
+    STATUS_NONE = 'N'
+    STATUS_DENIED = 'D'
+    STATUS = (
+        (STATUS_NONE, _('Missing document')),
+        (STATUS_DENIED, _('Not accepted')),
+        (STATUS_UPLOADED, _('On review')),
+        (STATUS_ACCEPTED, _('Accepted')),
+    )
+    STATUS_DESCRIPTION = {
+        STATUS_NONE: _('Upload the permission slip signed by your parents or legal tutors'),
+        STATUS_DENIED: _('The document has been reviewed and has some problem'),
+        STATUS_UPLOADED: _('Document uploaded successfully, now we will review it'),
+        STATUS_ACCEPTED: _('The document has been accepted!'),
+    }
+    STATUS_COLORS = {
+        STATUS_NONE: 'danger',
+        STATUS_DENIED: 'warning',
+        STATUS_UPLOADED: 'info',
+        STATUS_ACCEPTED: 'success',
+    }
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    edition = models.ForeignKey(Edition, null=True, on_delete=models.SET_NULL)
+    status = models.CharField(choices=STATUS, max_length=2, default=STATUS_NONE)
+    file = models.FileField(upload_to=get_permission_slip_file_name, null=True)
+
+    def __str__(self):
+        return '%s - %s' % (self.edition.name, self.user.get_full_name())
+
+    def get_status_color(self):
+        return self.STATUS_COLORS.get(self.status)
+
+    def get_status_description(self):
+        return self.STATUS_DESCRIPTION.get(self.status)
+
+    class Meta:
+        permissions = (
+            ('can_review_permission_slip', _('Can review permission slip')),
+        )

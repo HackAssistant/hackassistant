@@ -1,6 +1,9 @@
 HACKATHON_NAME = 'HackUPC'
 HACKATHON_DESCRIPTION = 'Join us for BarcelonaTech\'s hackathon. 36h.'
 HACKATHON_ORG = 'Hackers@UPC'
+HACKATHON_START_DATE = '12/12/2012'
+HACKATHON_END_DATE = '14/12/2012'
+HACKATHON_LOCATION = 'Barcelona'
 
 HACKATHON_CONTACT_EMAIL = 'contact@hackupc.com'
 HACKATHON_SOCIALS = {'Facebook': ('https://www.facebook.com/hackupc', 'bi-facebook'),
@@ -21,5 +24,9 @@ ADMINS = [('Admins', 'devs@hackupc.com')]
 
 SUPPORTED_RESUME_EXTENSIONS = ['.pdf']
 FRIENDS_MAX_CAPACITY = None
+
+REQUIRE_PERMISSION_SLIP_TO_UNDER_AGE = True
+SUPPORTED_PERMISSION_SLIP_EXTENSIONS = ['.pdf']
+PARTICIPANT_CAN_UPLOAD_PERMISSION_SLIP = True
 
 ATTRITION_RATE = 1.5

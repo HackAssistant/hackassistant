@@ -1,0 +1,1 @@
+New permission slip from {{ user.get_full_name }}!

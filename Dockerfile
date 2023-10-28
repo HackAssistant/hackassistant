@@ -1,6 +1,7 @@
 FROM python:3.9.13
 RUN apt-get update
 RUN apt-get install -y cron && touch /var/log/cron.log
+RUN apt-get install texlive-latex-extra -y
 RUN pip install --upgrade pip
 WORKDIR /code
 

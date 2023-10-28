@@ -69,7 +69,8 @@ class ApplicationList(IsOrganizerMixin, ReviewApplicationTabsMixin, SingleTableM
     filterset_class = ApplicationTableFilter
 
     def get_table(self, **kwargs):
-        return super().get_table(promotional_code=PromotionalCode.active(), **kwargs)
+        permission_slip = self.request.GET.get('user__under_age', '') == 'true'
+        return super().get_table(promotional_code=PromotionalCode.active(), slip=permission_slip, **kwargs)
 
     def get_filterset_class(self):
         if PromotionalCode.active():

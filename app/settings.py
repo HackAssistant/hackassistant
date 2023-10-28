@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'django_jwt',
     'django_jwt.server',
     'django_bootstrap5',
+    'django_tex',
     'compressor',
     'colorfield',
     'corsheaders',
@@ -102,7 +103,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.request',
                 'app.template.app_variables',
                 'csp.context_processors.nonce',
             ],
@@ -110,6 +110,20 @@ TEMPLATES = [
                 'util': 'app.templatetags.util',
                 'crispy_forms_tags': 'app.templatetags.util',
             },
+        },
+    },
+    {
+        'NAME': 'tex',
+        'BACKEND': 'django_tex.engine.TeXEngine',
+        'DIRS': [BASE_DIR / 'app' / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'app.template.app_variables',
+            ]
         },
     },
 ]
@@ -446,6 +460,11 @@ if len(MESSAGES_SERVICES) > 0:
 # DateTime formats
 USE_L10N = False
 DATETIME_FORMAT = 'N j, Y, H:i'
+DATE_FORMAT = 'N j, Y'
 SHORT_DATETIME_FORMAT = 'Y/m/d H:i'
 TIME_FORMAT = 'H:i:s'
 SHORT_DATE_FORMAT = 'Y/m/d'
+
+# Latex binary
+LATEX_INTERPRETER = 'pdflatex'
+LATEX_GRAPHICSPATH = [os.path.join(BASE_DIR, 'latex_graphics')]

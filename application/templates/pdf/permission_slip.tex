@@ -1,0 +1,90 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[hmargin=2cm, vmargin={3cm,1cm}, a4paper]{geometry}
+\usepackage{graphicx}
+\usepackage{datetime}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+{% graphicspath %}
+
+\hypersetup{hidelinks}
+
+\def\tab#1{\parbox[t]{.3\linewidth}{ {{- '#' -}} 1}\hfill}
+\parindent0pt
+\parskip.5em
+
+% Customize the title, date, and event details here
+\newcommand{\eventname}{ {{- app_hack -}} }
+\newcommand{\eventorganization}{ {{- app_author -}} }
+\newcommand{\eventstartdate}{ {{- hack_start_date|date(DATE_FORMAT) -}} }
+\newcommand{\eventenddate}{ {{- hack_end_date|date(DATE_FORMAT) -}} }
+\newcommand{\eventlocation}{ {{- hack_location -}} }
+
+% Define custom lengths for consistent spacing
+\newlength{\customlength}
+\setlength{\customlength}{6cm}
+
+\let\oldTextField\TextField
+\renewcommand{\TextField}[2][] {
+        \vbox{\hbox{\oldTextField[#1, borderwidth=0, bordercolor=white, backgroundcolor=white]{ {{- '#' -}}2}}\kern2pt\hrule}
+}
+
+% Define a command for a filled-in line
+\newcommand{\filledline}{\textcolor{blue}{\TextField[name=filledline,width=\customlength,height=0.5cm]{} }}
+
+% Define a command for a signature line
+\newcommand{\signatureline}{\textcolor{blue}{\TextField[name=signatureline,width=\customlength,height=0.5cm]{} }}
+
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+\includegraphics[width=0.3\textwidth]{logo_hack.png} % Include your hackathon logo here
+\end{center}
+
+\begin{center}
+\textbf{\large Permission and consent for participation in the event \eventname}
+\end{center}
+
+\begin{Form}
+
+\textbf{Participant Information:} \\
+Full Name of Participant: \TextField[name=participantname,width=12cm, default= {{- application.user.get_full_name() -}} ]{}\\
+Date of Birth: \TextField[name=participantbirthday,width=0.5cm]{} / \TextField[name=participantbirthmonth,width=0.5cm]{} / \TextField[name=participantbirthyear,width=1cm]{},
+Gender: \TextField[name=participantgender,width=5.8cm, default= {{- application.user.get_gender_display_public() -}} ]{}, Age: \TextField[name=participantage,width=1.5cm]{}\\
+
+\textbf{Parent/Legal guardian Information:} \\
+Full Name of Parent/Legal guardian: \TextField[name=parentname,width=10cm]{}\\
+Home phone: \TextField[name=parenthomephone,width=8cm]{+}\\
+Alternate phone: \TextField[name=parentotherphone,width=8cm]{+}\\
+
+I, the undersigned, certify that I am the parent or legal guardian of the above mentioned
+Participant. I hereby authorize my minor child named above to attend and participate in the
+event named \eventname, organized by “\eventorganization”, which will take place in Barcelona
+between \eventstartdate\ and \eventenddate.\\
+
+I hereby give \eventorganization\ the right and permission to photograph, digitally record,
+videotape, or audio tape, my above named child while s/he is attending participating in any
+event related to \eventname. I further agree that any or all of the material recorded may be
+used in any form , in publications, including electronic publications, or in audio-visual
+presentations, promotional literature, advertising, or in other similar ways, and that such use
+shall be without payment of fees, royalties, special credit, or other compensation. I
+understand that all such recordings, in whatever medium, shall remain the property of
+\eventorganization.\\
+
+Finally, I agree not to hold \eventorganization\ responsible for any damages that the minor may
+provoke or suffer from participating in the event \eventname.\\
+
+\textbf{I have read, understood and agreed to the information above. All releases,
+authorizations and permission granted above shall remain in effect unless revoked in
+writing by the undersigned.}\\
+
+Date: \TextField[name=dateday,width=0.5cm]{} / \TextField[name=datemonth,width=0.5cm]{} / \TextField[name=dateyear,width=1cm]{}\\
+
+\vspace{2cm}
+
+\vbox{\rule{12.1cm}{0.02cm}\\[0.05cm]\hbox{\oldTextField[borderwidth=0,bordercolor=white,backgroundcolor=white,name=parentname,width=10cm]{Signature of }}}
+
+\end{Form}
+
+\end{document}

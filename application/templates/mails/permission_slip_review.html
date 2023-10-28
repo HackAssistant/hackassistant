@@ -1,0 +1,16 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>Hi {{ user.first_name }},</p>
+
+
+    {% if permission_slip.status == permission_slip.STATUS_ACCEPTED %}
+        <p>Your permission slip has just been reviewed and has been accepted!</p>
+    {% else %}
+        <p>Your permission slip has some problem and has been denied. Check that everything on the permission slip is ok and sent it again. Remember it has to be signed by one of your parents or legal tutors</p>
+
+        {% include 'mails/components/button.html' with url=url text='Check permission slip' %}
+    {% endif %}
+
+    <p>Best regards,</p>
+    <p>{{ app_name }}.</p>
+{% endblock %}

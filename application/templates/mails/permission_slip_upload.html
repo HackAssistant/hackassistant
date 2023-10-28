@@ -1,0 +1,10 @@
+{% extends 'mails/base.html' %}
+{% block content %}
+    <p>Hi there,</p>
+    <p>{{ user.get_full_name }} has just upload the permission slip or updated it.</p>
+
+    {% include 'mails/components/button.html' with url=url text='Review permission slip' %}
+
+    <p>Best regards,</p>
+    <p>{{ app_name }}.</p>
+{% endblock %}
