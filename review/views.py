@@ -26,7 +26,7 @@ from app.utils import is_installed
 from application import forms
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, FileField, ApplicationLog, ApplicationTypeConfig, PromotionalCode
-from review.emails import get_invitation_email
+from review.emails import get_invitation_or_waitlist_email
 from review.filters import ApplicationTableFilter, ApplicationTableFilterWithPromotion
 from review.forms import CommentForm, DubiousApplicationForm
 from review.models import Vote, FileReview, CommentReaction
@@ -318,24 +318,26 @@ class ApplicationListInvite(ApplicationPermissionRequiredMixin, ApplicationList)
         selection = request.POST.getlist('select')
         error = 0
         emails = EmailList()
+        new_status = request.POST.get('status', Application.STATUS_INVITED)
+        status_name = [y for x, y in Application.STATUS if x == new_status][0]
         for application in Application.objects.actual().filter(uuid__in=selection):
-            log = ApplicationLog(application=application, user=request.user, name='Invited')
-            log.changes = {'status': {'old': application.status, 'new': Application.STATUS_INVITED}}
-            application.set_status(Application.STATUS_INVITED)
-            try:
-                application.save()
-                log.save()
-                emails.add(get_invitation_email(request, application))
-            except Error:
-                error += 1
+            if application.status != new_status:
+                log = ApplicationLog(application=application, user=request.user, name=status_name)
+                log.changes = {'status': {'old': application.status, 'new': new_status}}
+                application.set_status(new_status)
+                try:
+                    application.save()
+                    log.save()
+                    emails.add(get_invitation_or_waitlist_email(request, application))
+                except Error:
+                    error += 1
         emails = emails.send_all()
         if error > 0:
-            messages.error(request, _('Invited %s, Emails sent: %s, Error: %s') %
-                           (len(selection) - error, emails or 0, error))
+            messages.error(request, _('%s %s, Emails sent: %s, Error: %s') %
+                           (status_name, len(selection) - error, emails or 0, error))
         else:
-            messages.success(request, _('Invited: %s, Emails sent: %s' % (len(selection), emails or 0)))
-        return redirect(reverse('application_list') + '?type=%s&status=%s' % (self.get_application_type(),
-                                                                              Application.STATUS_INVITED))
+            messages.success(request, _('%s: %s, Emails sent: %s' % (status_name, len(selection), emails or 0)))
+        return redirect(reverse('application_list') + '?type=%s&status=%s' % (self.get_application_type(), new_status))
 
 
 class FileReviewView(ApplicationPermissionRequiredMixin, TabsViewMixin, TemplateView):

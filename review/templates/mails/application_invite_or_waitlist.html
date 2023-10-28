@@ -2,7 +2,7 @@
 {% block content %}
     <p>Hi {{ application.user.first_name }},</p>
     <p>Your {{ application.type.name|lower }} application for {{ app_hack }} has been updated.</p>
-    {% if application.type.expire_invitations > 0 %}
+    {% if application.type.expire_invitations > 0 and application.status == application.STATUS_INVITED %}
         <p><strong>You have {{ application.type.expire_invitations }} days to answer, after that, your application will expire.</strong></p>
     {% endif %}
 

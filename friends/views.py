@@ -16,7 +16,7 @@ from friends.filters import FriendsInviteTableFilter
 from friends.forms import FriendsForm
 from friends.models import FriendsCode
 from friends.tables import FriendInviteTable
-from review.emails import get_invitation_email
+from review.emails import get_invitation_or_waitlist_email
 from review.views import ReviewApplicationTabsMixin, ApplicationListInvite
 from user.mixins import LoginRequiredMixin, IsOrganizerMixin
 from django.utils.translation import gettext_lazy as _
@@ -125,7 +125,7 @@ class FriendsListInvite(ApplicationPermissionRequiredMixin, IsOrganizerMixin, Re
                     application.save()
                     log.save()
                     invited += 1
-                emails.add(get_invitation_email(request, application))
+                emails.add(get_invitation_or_waitlist_email(request, application))
             except Error:
                 error += 1
         emails = emails.send_all()

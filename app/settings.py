@@ -391,6 +391,8 @@ else:
     }
 
 SESSION_COOKIE_AGE = 86400
+SESSION_COOKIE_SAMESITE = "Strict"
+CSRF_COOKIE_SAMESITE = "Strict"
 
 # Cache system
 CACHES = {

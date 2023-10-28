@@ -1,1 +1,0 @@
-ACTION REQUIRED for the {{ application.type.name|lower }} application
