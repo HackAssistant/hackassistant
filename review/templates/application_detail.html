@@ -22,12 +22,16 @@
         {% endif %}
     </div>
     <div class="row">
-        <div class="col-10">
-            <h1 {% if application.user.under_age %}class="text-danger"{% endif %}>{% if votes %}{% translate 'Review application' %}{% else %}{{ application.user.get_full_name }}'s {{ application.type.name|lower }} application{% endif %}</h1>
+        <div class="col-9">
+            <h1>{% if votes %}{% translate 'Review application' %}{% else %}{{ application.user.get_full_name }}'s {{ application.type.name|lower }} application{% endif %}</h1>
         </div>
-        <div class="col-2">
+        <div class="col-3">
             {% if application.user.under_age %}
-                <p style="text-align: right" class="text-danger">{% translate 'Under age' %} <i class="bi bi-exclamation-triangle-fill"></i></p>
+                {% if application.get_permission_slip is None %}
+                    <p style="text-align: right" class="text-danger">{% translate 'Under age' %} <i class="bi bi-exclamation-triangle-fill"></i></p>
+                {% else %}
+                    <a href="{% url 'permission_slip' application.get_uuid %}" class="btn col-12 btn-{{ application.get_permission_slip.get_status_color }}">{% translate 'Permission slip' %}: {{ application.get_permission_slip.get_status_display }} <i class="bi bi-exclamation-triangle-fill"></i></a>
+                {% endif %}
             {% endif %}
         </div>
     </div>

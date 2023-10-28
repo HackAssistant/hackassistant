@@ -17,25 +17,38 @@ from django.utils.translation import gettext as _
 
 from app.mixins import TabsViewMixin
 from app.utils import is_installed
+from app.views import LatexTemplateView
 from application import forms
-from application.emails import send_email_to_blocked_admins
-from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition, DraftApplication
+from application.emails import send_email_to_blocked_admins, send_email_permission_slip_upload, \
+    send_email_permission_slip_review
+from application.models import Application, ApplicationTypeConfig, ApplicationLog, Edition, DraftApplication, \
+    PermissionSlip
+from application.other_forms import PermissionSlipForm
 from user.emails import send_verification_email
 from user.forms import UserProfileForm, RecaptchaForm
 from user.mixins import LoginRequiredMixin
 from user.models import BlockedUser
 
 
-class ApplicationHome(LoginRequiredMixin, TabsViewMixin, TemplateView):
-    template_name = 'application_home.html'
-
+class ParticipantTabsMixin(TabsViewMixin):
     def get_current_tabs(self, **kwargs):
         tabs = [("Applications", reverse("apply_home"))]
         edition = Edition.get_default_edition()
+        if self.request.user.under_age_document_required():
+            action = PermissionSlip.objects.filter(
+                status__in=[PermissionSlip.STATUS_NONE, PermissionSlip.STATUS_DENIED],
+                user=self.request.user, edition=edition).exists()
+            application = self.request.user.application_set.invited().first()
+            tabs.append(("Permission slip", reverse("permission_slip",
+                                                    kwargs={'uuid': application.get_uuid}), action))
         if is_installed("friends") and Application.objects.filter(type__name="Hacker", user=self.request.user,
                                                                   edition=edition).exists():
             tabs.append(("Friends", reverse("join_friends")))
         return tabs if len(tabs) > 1 else []
+
+
+class ApplicationHome(LoginRequiredMixin, ParticipantTabsMixin, TemplateView):
+    template_name = 'application_home.html'
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.is_organizer():
@@ -53,7 +66,7 @@ class ApplicationHome(LoginRequiredMixin, TabsViewMixin, TemplateView):
 
     def get_application_type_left(self, user_applications):
         user_types = [item.type_id for item in user_applications]
-        return ApplicationTypeConfig.objects.filter(hidden=False).exclude(id__in=user_types)\
+        return ApplicationTypeConfig.objects.filter(hidden=False).exclude(id__in=user_types) \
             .exclude(end_application_date__lt=timezone.now())
 
     def get_context_data(self, **kwargs):
@@ -61,8 +74,12 @@ class ApplicationHome(LoginRequiredMixin, TabsViewMixin, TemplateView):
         user_applications = Application.objects.actual().filter(user=self.request.user)
         user_applications_grouped = self.get_user_applications_grouped(user_applications)
         apply_types = self.get_application_type_left(user_applications)
+        # Getting the needs_action from permission slip tab
+        permission_slip_action = (next(filter(lambda x: x['title'] == "Permission slip", context.get('tabs', [])), {})
+                                  .get('needs_action', False))
         context.update({'user_applications': user_applications, 'user_applications_grouped': user_applications_grouped,
-                        'apply_types': apply_types, 'Application': Application})
+                        'apply_types': apply_types, 'Application': Application,
+                        'permission_slip_action': permission_slip_action})
         return context
 
 
@@ -160,6 +177,8 @@ class ApplicationApply(TemplateView):
         except Application.DoesNotExist:
             instance = form.save(commit=False)
             instance.user = user
+            if getattr(settings, 'REQUIRE_PERMISSION_SLIP_TO_UNDER_AGE', False) and user.under_age:
+                PermissionSlip.objects.get_or_create(user_id=instance.user_id, edition_id=instance.edition_id)
             instance.type_id = app_type.pk
             if app_type.auto_confirm:
                 instance.status = Application.STATUS_CONFIRMED
@@ -351,8 +370,8 @@ class ApplicationChangeStatus(LoginRequiredMixin, View):
                 group = Group.objects.get_or_create(application.type.name)
                 group.user_set.add(application.user)
             if new_status == application.STATUS_CONFIRMED:
-                Application.objects.actual().exclude(uuid=application.get_uuid)\
-                    .filter(user=application.user, type__compatible_with_others=False)\
+                Application.objects.actual().exclude(uuid=application.get_uuid) \
+                    .filter(user=application.user, type__compatible_with_others=False) \
                     .update(status=Application.STATUS_CANCELLED, status_update_date=timezone.now())
         return redirect(next_page)
 
@@ -375,3 +394,78 @@ class SaveDraftApplication(LoginRequiredMixin, View):
             draft.form_data = data
             draft.save()
         return HttpResponse('OK!')
+
+
+class PermissionSlipView(LoginRequiredMixin, ParticipantTabsMixin, TemplateView):
+    template_name = 'permission_slip.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        application = get_object_or_404(Application, uuid=kwargs.get('uuid'))
+        if ((not self.request.user.is_organizer() or
+             not self.request.user.has_perm('application.can_review_permission_slip')) and
+                (self.request.user.id != application.user_id or
+                 not self.request.user.under_age_document_required())):
+            raise PermissionDenied()
+        permission_slip = application.get_permission_slip(raise_404=True)
+        context.update({'application': application, 'permission_slip': permission_slip,
+                        'file_link': self.request.build_absolute_uri(
+                            reverse('permission_slip_file', kwargs={'uuid': application.get_uuid})),
+                        'form': PermissionSlipForm(instance=permission_slip)})
+        if self.request.user.is_organizer():
+            context.pop('tabs')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        application = get_object_or_404(Application, uuid=kwargs.get('uuid'))
+        if ((not self.request.user.is_organizer() or
+            not self.request.user.has_perm('application.can_review_permission_slip')) and
+                (self.request.user.id != application.user_id or
+                 not self.request.user.under_age_document_required())):
+            raise PermissionDenied()
+        permission_slip = application.get_permission_slip(raise_404=True)
+        if self.request.POST.get('action', '') == 'review':
+            if not self.request.user.is_organizer():
+                raise PermissionDenied()
+            permission_slip.status = self.request.POST.get('status', permission_slip.STATUS_UPLOADED)
+            permission_slip.save()
+            send_email_permission_slip_review(request=request, application=application, permission_slip=permission_slip)
+            return redirect(reverse('permission_slip', kwargs={'uuid': kwargs.get('uuid')}))
+        form = PermissionSlipForm(request.POST, request.FILES, instance=permission_slip)
+        if form.is_valid():
+            form.save()
+            send_email_permission_slip_upload(request=request, application=application)
+            return redirect(reverse('permission_slip', kwargs={'uuid': kwargs.get('uuid')}))
+        context = self.get_context_data(**kwargs)
+        context.update({'form': form})
+        return self.render_to_response(context)
+
+
+class PermissionSlipTemplateFile(LoginRequiredMixin, LatexTemplateView):
+    template_name = 'pdf/permission_slip.tex'
+    file_name = 'permission_slip.pdf'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        application = get_object_or_404(Application, uuid=kwargs.get('uuid'))
+        if ((not self.request.user.is_organizer() or
+             not self.request.user.has_perm('application.can_review_permission_slip')) and
+                (self.request.user.id != application.user_id or
+                 not self.request.user.under_age_document_required())):
+            raise PermissionDenied()
+        context.update({'application': application})
+        return context
+
+
+class PermissionSlipFile(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        application = get_object_or_404(Application, uuid=kwargs.get('uuid'))
+        if ((not self.request.user.is_organizer() or
+             not self.request.user.has_perm('application.can_review_permission_slip')) and
+                (self.request.user.id != application.user_id or
+                 not self.request.user.under_age_document_required())):
+            raise PermissionDenied()
+        permission_slip = application.get_permission_slip(raise_404=True)
+        response = HttpResponse(permission_slip.file, content_type='application/pdf')
+        response['Content-Disposition'] = 'filename=signed_permission_slip.pdf'
+        return response

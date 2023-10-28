@@ -9,9 +9,9 @@ from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
 from app.emails import EmailList
-from app.mixins import TabsViewMixin
 from application.mixins import ApplicationPermissionRequiredMixin
 from application.models import Application, Edition, ApplicationTypeConfig, ApplicationLog
+from application.views import ParticipantTabsMixin
 from friends.filters import FriendsInviteTableFilter
 from friends.forms import FriendsForm
 from friends.models import FriendsCode
@@ -22,7 +22,7 @@ from user.mixins import LoginRequiredMixin, IsOrganizerMixin
 from django.utils.translation import gettext_lazy as _
 
 
-class JoinFriendsView(LoginRequiredMixin, TabsViewMixin, TemplateView):
+class JoinFriendsView(LoginRequiredMixin, ParticipantTabsMixin, TemplateView):
     template_name = "join_friends.html"
 
     def handle_permissions(self, request):

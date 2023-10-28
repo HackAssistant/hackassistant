@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load util %}
+{% load static %}
+{% block head %}
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.10.377/build/pdf.min.js"></script>
+{% endblock %}
+{% block subtitle %}{% translate 'Permission slip' %}{% endblock %}
+{% block content %}
+    {% if request.user.is_organizer %}
+        <div class="row justify-content-between mb-3">
+            <div class="col-12 col-lg-2 d-grid d-md-block">
+                <a href="{% url 'application_detail' application.get_uuid %}" class="btn btn-secondary col-12"><i class="bi bi-caret-left-fill"></i> {% translate 'Back' %}</a>
+            </div>
+        </div>
+    {% endif %}
+    <div>
+        {% if permission_slip.status != permission_slip.STATUS_ACCEPTED %}
+            <div class="mt-2 rounded-3 p-3 bg-contrast">
+                <h2 class="text-center">{% translate 'Get your permission slip' %}</h2>
+                <p>{% blocktrans %}To participate in the hackathon, we need your permission slip since you're underage. This is a standard requirement for participants under 18 to ensure your safety during the event.{% endblocktrans %}{% if not participant_can_upload_permission_slip %} {% translate 'After signing it, send it to' %} <a href="mailto:{{ app_contact }}">{{ app_contact }}</a>{% endif %}</p>
+                <div class="row justify-content-around">
+                    <div class="col-12 col-lg-4 d-grid d-md-block">
+                        <a href="{% url 'permission_slip_template' application.get_uuid %}" class="btn btn-info col-12">{% trans 'Download template' %}</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if permission_slip.status == permission_slip.STATUS_ACCEPTED or permission_slip.status == permission_slip.STATUS_UPLOADED %}
+            <div class="mt-2 rounded-3 p-3 bg-contrast">
+                <h2>{% translate 'Signed permission slip' %}</h2>
+                <h4 class="mt-3 mb-3 text-center">{% translate 'Permission file status' %}: <span class="bg-{{ permission_slip.get_status_color }} m-0" title="{{ permission_slip.get_status_description }}" style="width: fit-content; border-radius: 5px">&nbsp{{ permission_slip.get_status_display }}&nbsp</span></h4>
+                {% include 'components/pdf_preview.html' with pdf_link=file_link %}
+                {% if request.user.is_organizer and permission_slip.status != permission_slip.STATUS_ACCEPTED %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input hidden name="action" value="review">
+                        <div class="row justify-content-around">
+                            <div class="col-12 col-lg-6 d-grid d-md-block">
+                                <button type="submit" name="status" value="{{ permission_slip.STATUS_DENIED }}" class="btn btn-danger col-12">{% trans 'Deny permission' %}</button>
+                            </div>
+                            <div class="col-12 col-lg-6 d-grid d-md-block">
+                                <button type="submit" name="status" value="{{ permission_slip.STATUS_ACCEPTED }}"  class="btn btn-success col-12">{% trans 'Accept permission' %}</button>
+                            </div>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if participant_can_upload_permission_slip and permission_slip.status != permission_slip.STATUS_ACCEPTED %}
+            <form class="mt-2 rounded-3 p-3 bg-contrast" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <h2 class="text-center">{% translate 'Upload the signed permission slip' %}</h2>
+                <h4 class="mt-3 mb-3 text-center">{% translate 'Permission file status' %}: <span class="bg-{{ permission_slip.get_status_color }} m-0" title="{{ permission_slip.get_status_description }}" style="width: fit-content; border-radius: 5px">&nbsp{{ permission_slip.get_status_display }}&nbsp</span></h4>
+                {% include 'components/bootstrap5_form.html' with form=form %}
+                <div class="row justify-content-around">
+                    <div class="col-12 col-lg-6 d-grid d-md-block">
+                        <button type="submit" class="btn btn-success col-12">{% trans 'Upload permission' %}</button>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

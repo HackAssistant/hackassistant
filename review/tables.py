@@ -16,9 +16,11 @@ class ApplicationTable(tables.Table):
     vote_avg = FloatColumn(float_digits=3)
     email = TruncatedEmailColumn(accessor='user.email')
     promotional_code = tables.TemplateColumn(template_name='tables/promotional_code.html')
+    slip = tables.TemplateColumn(template_name='tables/permission_slip.html', orderable=False)
 
-    def __init__(self, promotional_code=False, *args, **kwargs):
+    def __init__(self, promotional_code=False, slip=False, *args, **kwargs):
         self.base_columns['promotional_code'].visible = promotional_code
+        self.base_columns['slip'].visible = slip
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -32,7 +34,7 @@ class ApplicationTable(tables.Table):
     class Meta:
         model = Application
         attrs = {'class': 'table table-striped'}
-        fields = ('full_name', 'email', 'status', 'promotional_code', 'votes', 'vote_avg', 'last_modified',
+        fields = ('full_name', 'email', 'status', 'promotional_code', 'votes', 'vote_avg', 'slip', 'last_modified',
                   'detail')
         empty_text = 'No applications available'
         order_by = 'vote_avg'

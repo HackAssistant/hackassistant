@@ -62,6 +62,17 @@
 {% endwith %}
 {% with applications_confirmed=user_applications_grouped|get_item:'C' %}
     {% if applications_confirmed %}
+        {% if request.user.under_age_document_required and permission_slip_action %}
+            <div class="mt-2 rounded-3 p-3 bg-contrast">
+                <h2 class="text-center">{% translate 'Permission slip required for attendance' %}</h2>
+                <p class="text-center">Action needed to attend to the event!</p>
+                <div class="row justify-content-around mt-3 mb-3">
+                    <div class="col-12 col-lg-6 d-grid d-md-block">
+                        <a href="{% url 'permission_slip' applications_confirmed.0.get_uuid %}" class="btn btn-info col-12">{% trans 'Manage my permission slip' %}</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
         <div class="mt-2 rounded-3 p-3 bg-contrast">
             <div class="row">
                 <div class="col-12 col-lg-8">
@@ -91,6 +102,17 @@
     {% endif %}
 {% endwith %}
 {% for app in user_applications_grouped|get_item:'default' %}
+    {% if request.user.under_age_document_required and permission_slip_action %}
+        <div class="mt-2 rounded-3 p-3 bg-contrast">
+            <h2 class="text-center">{% translate 'Permission slip required for attendance' %}</h2>
+            <p class="text-center">Action needed to attend to the event!</p>
+            <div class="row justify-content-around mt-3 mb-3">
+                <div class="col-12 col-lg-6 d-grid d-md-block">
+                    <a href="{% url 'permission_slip' app.get_uuid %}" class="btn btn-info col-12">{% trans 'Manage my permission slip' %}</a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
     <div class="mt-2 rounded-3 p-3 bg-contrast">
         <div class="row">
             <div class="col-12 col-md-9"><h2>{{ app.type.name }} {% translate 'application' %}</h2></div>
