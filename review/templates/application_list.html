@@ -95,7 +95,7 @@
         </div>
         {% if not application_type.auto_confirm and perms|add_type:application_type.name|has_application_perm:'can_invite_application' %}
             <div class="d-grid gap-2 col-lg-6 mx-auto mt-3">
-                <a href="{% url 'application_invite' %}?type={{ application_type.name }}&status={{ Application.STATUS_PENDING }}" class="btn btn-primary">{% translate 'Invite' %}</a>
+                <a href="{% url 'application_invite' %}?type={{ application_type.name }}&status={{ Application.STATUS_PENDING }}&status={{ Application.STATUS_REJECTED }}" class="btn btn-primary">{% translate 'Invite or reject' %}</a>
             </div>
         {% endif %}
     {% else %}
@@ -108,11 +108,14 @@
             {% csrf_token %}
             {% include 'components/table.html' %}
             <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
-                <button class="btn btn-primary" onclick="return confirm_invite()">{% translate 'Confirm invite' %}</button>
+                <button class="btn btn-primary" name="status" value="{{ Application.STATUS_INVITED }}" onclick="return confirm_invite()">{% translate 'Confirm invite' %}</button>
             </div>
             {% block more_invites %}
                 <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
                     <a href="{% url 'invite_friends' %}?type={{ application_type.name }}" class="btn btn-secondary">{% translate 'Group by friends' %}</a>
+                </div>
+                <div class="d-grid gap-2 col-lg-6 mx-auto mt-2">
+                    <button class="btn btn-danger" name="status" value="{{ Application.STATUS_REJECTED }}" onclick="return confirm_reject()">{% translate 'Reject selected' %}</button>
                 </div>
             {% endblock %}
         </form>
@@ -130,6 +133,10 @@
             function confirm_invite() {
                 let number_checked = get_invited_application_number()
                 return confirm(number_checked + ' {% translate 'applications will be invited. Are you sure?' %}')
+            }
+            function confirm_reject() {
+                let number_checked = get_invited_application_number()
+                return confirm(number_checked + ' {% translate 'applications will be rejected. Are you sure?' %}')
             }
             $(document).ready(() => {
                 let spots = {{ application_type.get_spots_with_attrition }};

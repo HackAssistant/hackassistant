@@ -21,9 +21,9 @@ def send_dubious_email(request, application, reason, name):
           bcc=[request.user.email, ], request=request).send()
 
 
-def get_invitation_email(request, application):
+def get_invitation_or_waitlist_email(request, application):
     context = {
         'application': application,
         'url': request.build_absolute_uri(reverse('home')),
     }
-    return Email(name='application_invite', context=context, to=application.user.email, request=request)
+    return Email(name='application_invite_or_waitlist', context=context, to=application.user.email, request=request)
