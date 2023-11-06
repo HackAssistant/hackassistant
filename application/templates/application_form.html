@@ -96,7 +96,7 @@
             <div class="row justify-content-around">
                 {% if edit and not request.user.is_organizer %}
                     <div class="col-12 col-lg-6 d-grid d-md-block">
-                        <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you changed your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-12">{% trans 'Cancel my application' %}</a>
+                        <a href="{% url 'change_status_application' application_form.instance.get_uuid application_form.instance.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you change your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-12">{% trans 'Cancel my application' %}</a>
                     </div>
                 {% endif %}
                 {% if not application_form.is_read_only %}

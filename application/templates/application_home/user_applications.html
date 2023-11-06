@@ -128,7 +128,7 @@
         {% elif app.get_public_status == app.STATUS_INVITED or app.get_public_status == app.STATUS_LAST_REMINDER %}
             <div class="row justify-content-around mt-3 mb-3">
                 <div class="col-12 col-lg-6 d-grid d-md-block">
-                    <a href="{% url 'change_status_application' app.get_uuid app.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you changed your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-12">{% trans 'Cancel my application' %}</a>
+                    <a href="{% url 'change_status_application' app.get_uuid app.STATUS_CANCELLED %}" onclick="return confirm('{% trans "Did you change your mind? Are you sure you want to cancel this application?" %}')" class="btn btn-danger col-12">{% trans 'Cancel my application' %}</a>
                 </div>
                 <div class="col-12 col-lg-6 d-grid d-md-block mt-2 mt-lg-0">
                     <a href="{% url 'change_status_application' app.get_uuid app.STATUS_CONFIRMED %}" onclick="return confirm('{% blocktrans %}Your {{ app.type.name }} invitation will be confirmed. This means that all your other applications will be cancelled. Are you sure you want to confirm this one?{% endblocktrans %}')" class="btn btn-success col-12">{% trans 'Confirm invitation' %}</a>
