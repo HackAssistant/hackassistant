@@ -36,7 +36,7 @@ flake8==4.0.1
 frozenlist==1.3.3
 idna==3.3
 Jinja2==3.1.2
-jwcrypto==1.4
+jwcrypto==1.5.1
 libsass==0.22.0
 MarkupSafe==2.1.3
 mccabe==0.6.1
