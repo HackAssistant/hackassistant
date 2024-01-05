@@ -45,7 +45,7 @@ oauthlib==3.2.2
 Pillow==10.0.1
 pycodestyle==2.8.0
 pycparser==2.21
-pycryptodome==3.15.0
+pycryptodome==3.19.1
 pyflakes==2.4.0
 PyJWT==2.6.0
 python-http-client==3.3.7
