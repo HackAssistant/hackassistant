@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'event',
     'event.messages',
     'event.meals',
+    'reimbursment',
 ]
 
 MIDDLEWARE = [
